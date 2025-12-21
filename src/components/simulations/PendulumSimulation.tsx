@@ -35,10 +35,9 @@ export const PendulumSimulation = forwardRef<PendulumSimulationHandle, PendulumS
   const initSimulation = useCallback(() => {
     if (!canvasRef.current) return;
 
-    // Clean up previous simulation
+    // Clean up previous simulation - don't remove the canvas since we provide it
     if (renderRef.current) {
       Matter.Render.stop(renderRef.current);
-      renderRef.current.canvas.remove();
     }
     if (runnerRef.current) {
       Matter.Runner.stop(runnerRef.current);
