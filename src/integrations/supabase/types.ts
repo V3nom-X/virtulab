@@ -14,16 +14,424 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      badges: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          points: number | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          points?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          points?: number | null
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          room_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          room_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          room_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "collaboration_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      collaboration_rooms: {
+        Row: {
+          created_at: string
+          experiment_id: string | null
+          host_id: string
+          id: string
+          is_active: boolean | null
+          max_participants: number | null
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          experiment_id?: string | null
+          host_id: string
+          id?: string
+          is_active?: boolean | null
+          max_participants?: number | null
+          name: string
+        }
+        Update: {
+          created_at?: string
+          experiment_id?: string | null
+          host_id?: string
+          id?: string
+          is_active?: boolean | null
+          max_participants?: number | null
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaboration_rooms_experiment_id_fkey"
+            columns: ["experiment_id"]
+            isOneToOne: false
+            referencedRelation: "experiments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_experiments: {
+        Row: {
+          components: Json | null
+          created_at: string
+          description: string | null
+          id: string
+          is_public: boolean | null
+          scripts: Json | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          components?: Json | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          scripts?: Json | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          components?: Json | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          scripts?: Json | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      experiments: {
+        Row: {
+          category: Database["public"]["Enums"]["experiment_category"]
+          created_at: string
+          created_by: string | null
+          description: string | null
+          difficulty: Database["public"]["Enums"]["difficulty_level"] | null
+          duration_minutes: number | null
+          id: string
+          is_featured: boolean | null
+          simulation_type: string | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["experiment_category"]
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          difficulty?: Database["public"]["Enums"]["difficulty_level"] | null
+          duration_minutes?: number | null
+          id?: string
+          is_featured?: boolean | null
+          simulation_type?: string | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["experiment_category"]
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          difficulty?: Database["public"]["Enums"]["difficulty_level"] | null
+          duration_minutes?: number | null
+          id?: string
+          is_featured?: boolean | null
+          simulation_type?: string | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      quiz_results: {
+        Row: {
+          completed_at: string
+          id: string
+          passed: boolean | null
+          quiz_id: string
+          score: number
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          id?: string
+          passed?: boolean | null
+          quiz_id: string
+          score: number
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          id?: string
+          passed?: boolean | null
+          quiz_id?: string
+          score?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_results_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quizzes: {
+        Row: {
+          created_at: string
+          experiment_id: string
+          id: string
+          passing_score: number | null
+          questions: Json
+        }
+        Insert: {
+          created_at?: string
+          experiment_id: string
+          id?: string
+          passing_score?: number | null
+          questions?: Json
+        }
+        Update: {
+          created_at?: string
+          experiment_id?: string
+          id?: string
+          passing_score?: number | null
+          questions?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quizzes_experiment_id_fkey"
+            columns: ["experiment_id"]
+            isOneToOne: false
+            referencedRelation: "experiments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      room_participants: {
+        Row: {
+          cursor_x: number | null
+          cursor_y: number | null
+          id: string
+          joined_at: string
+          room_id: string
+          user_id: string
+        }
+        Insert: {
+          cursor_x?: number | null
+          cursor_y?: number | null
+          id?: string
+          joined_at?: string
+          room_id: string
+          user_id: string
+        }
+        Update: {
+          cursor_x?: number | null
+          cursor_y?: number | null
+          id?: string
+          joined_at?: string
+          room_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_participants_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "collaboration_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_badges: {
+        Row: {
+          badge_id: string
+          earned_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          badge_id: string
+          earned_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          badge_id?: string
+          earned_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_progress: {
+        Row: {
+          completed: boolean | null
+          completed_at: string | null
+          experiment_id: string
+          id: string
+          last_accessed_at: string | null
+          score: number | null
+          time_spent_seconds: number | null
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          completed_at?: string | null
+          experiment_id: string
+          id?: string
+          last_accessed_at?: string | null
+          score?: number | null
+          time_spent_seconds?: number | null
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          completed_at?: string | null
+          experiment_id?: string
+          id?: string
+          last_accessed_at?: string | null
+          score?: number | null
+          time_spent_seconds?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_progress_experiment_id_fkey"
+            columns: ["experiment_id"]
+            isOneToOne: false
+            referencedRelation: "experiments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
+      difficulty_level: "beginner" | "intermediate" | "advanced"
+      experiment_category: "physics" | "chemistry" | "biology" | "earth_science"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +558,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+      difficulty_level: ["beginner", "intermediate", "advanced"],
+      experiment_category: ["physics", "chemistry", "biology", "earth_science"],
+    },
   },
 } as const
