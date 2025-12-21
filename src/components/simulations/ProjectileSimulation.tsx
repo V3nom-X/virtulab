@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import Matter from 'matter-js';
 
 interface ProjectileSimulationProps {
@@ -8,17 +8,20 @@ interface ProjectileSimulationProps {
   isPlaying: boolean;
   speed: number;
   onDataUpdate?: (data: { x: number; y: number; vx: number; vy: number; time: number }) => void;
-  onReset?: () => void;
 }
 
-export const ProjectileSimulation = ({
+export interface ProjectileSimulationHandle {
+  reset: () => void;
+}
+
+export const ProjectileSimulation = forwardRef<ProjectileSimulationHandle, ProjectileSimulationProps>(({
   velocity,
   angle,
   gravity,
   isPlaying,
   speed,
   onDataUpdate
-}: ProjectileSimulationProps) => {
+}, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<Matter.Engine | null>(null);
   const renderRef = useRef<Matter.Render | null>(null);
@@ -93,7 +96,7 @@ export const ProjectileSimulation = ({
       friction: 0.1,
       frictionAir: 0.001,
       render: {
-        fillStyle: 'hsl(0, 84%, 60%)', // Red
+        fillStyle: 'hsl(0, 84%, 60%)',
         strokeStyle: 'hsl(0, 84%, 50%)',
         lineWidth: 2
       }
@@ -179,6 +182,19 @@ export const ProjectileSimulation = ({
 
   }, [velocity, angle, gravity]);
 
+  const resetSimulation = useCallback(() => {
+    if (runnerRef.current) {
+      Matter.Runner.stop(runnerRef.current);
+    }
+    trailRef.current = [];
+    initSimulation();
+  }, [initSimulation]);
+
+  // Expose reset function via ref
+  useImperativeHandle(ref, () => ({
+    reset: resetSimulation
+  }), [resetSimulation]);
+
   useEffect(() => {
     initSimulation();
 
@@ -233,4 +249,6 @@ export const ProjectileSimulation = ({
       style={{ display: 'block' }}
     />
   );
-};
+});
+
+ProjectileSimulation.displayName = 'ProjectileSimulation';

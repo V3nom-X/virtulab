@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import Matter from 'matter-js';
 
 interface SpringSimulationProps {
@@ -11,7 +11,11 @@ interface SpringSimulationProps {
   onDataUpdate?: (data: { displacement: number; velocity: number; force: number; time: number }) => void;
 }
 
-export const SpringSimulation = ({
+export interface SpringSimulationHandle {
+  reset: () => void;
+}
+
+export const SpringSimulation = forwardRef<SpringSimulationHandle, SpringSimulationProps>(({
   mass,
   springConstant,
   damping,
@@ -19,7 +23,7 @@ export const SpringSimulation = ({
   isPlaying,
   speed,
   onDataUpdate
-}: SpringSimulationProps) => {
+}, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<Matter.Engine | null>(null);
   const renderRef = useRef<Matter.Render | null>(null);
@@ -50,7 +54,7 @@ export const SpringSimulation = ({
 
     // Create engine
     const engine = Matter.Engine.create();
-    engine.gravity.y = 0; // We'll simulate spring force manually
+    engine.gravity.y = 0;
     engineRef.current = engine;
 
     // Create renderer
@@ -167,6 +171,18 @@ export const SpringSimulation = ({
 
   }, [mass, springConstant, damping, displacement]);
 
+  const resetSimulation = useCallback(() => {
+    if (runnerRef.current) {
+      Matter.Runner.stop(runnerRef.current);
+    }
+    initSimulation();
+  }, [initSimulation]);
+
+  // Expose reset function via ref
+  useImperativeHandle(ref, () => ({
+    reset: resetSimulation
+  }), [resetSimulation]);
+
   useEffect(() => {
     initSimulation();
 
@@ -216,4 +232,6 @@ export const SpringSimulation = ({
       style={{ display: 'block' }}
     />
   );
-};
+});
+
+SpringSimulation.displayName = 'SpringSimulation';

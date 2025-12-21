@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useState, useCallback, useImperativeHandle, forwardRef } from 'react';
 import Matter from 'matter-js';
 
 interface PendulumSimulationProps {
@@ -11,7 +11,11 @@ interface PendulumSimulationProps {
   onDataUpdate?: (data: { time: number; angle: number; velocity: number; energy: number }) => void;
 }
 
-export const PendulumSimulation = ({
+export interface PendulumSimulationHandle {
+  reset: () => void;
+}
+
+export const PendulumSimulation = forwardRef<PendulumSimulationHandle, PendulumSimulationProps>(({
   mass,
   length,
   gravity,
@@ -19,7 +23,7 @@ export const PendulumSimulation = ({
   isPlaying,
   speed,
   onDataUpdate
-}: PendulumSimulationProps) => {
+}, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<Matter.Engine | null>(null);
   const renderRef = useRef<Matter.Render | null>(null);
@@ -50,7 +54,7 @@ export const PendulumSimulation = ({
 
     // Create engine
     const engine = Matter.Engine.create();
-    engine.gravity.y = gravity / 10; // Scale gravity
+    engine.gravity.y = gravity / 10;
     engineRef.current = engine;
 
     // Create renderer
@@ -70,7 +74,7 @@ export const PendulumSimulation = ({
     // Pivot point
     const pivotX = width / 2;
     const pivotY = height * 0.15;
-    const ropeLength = length * 120; // Scale length to pixels
+    const ropeLength = length * 120;
 
     // Calculate initial position
     const angleRad = (angle * Math.PI) / 180;
@@ -84,7 +88,7 @@ export const PendulumSimulation = ({
       frictionAir: 0.001,
       restitution: 0.9,
       render: {
-        fillStyle: 'hsl(168, 76%, 46%)', // Primary color
+        fillStyle: 'hsl(168, 76%, 46%)',
         strokeStyle: 'hsl(168, 76%, 36%)',
         lineWidth: 2
       }
@@ -128,6 +132,19 @@ export const PendulumSimulation = ({
     setTime(0);
   }, [mass, length, gravity, angle]);
 
+  const resetSimulation = useCallback(() => {
+    if (runnerRef.current) {
+      Matter.Runner.stop(runnerRef.current);
+    }
+    setTime(0);
+    initSimulation();
+  }, [initSimulation]);
+
+  // Expose reset function via ref
+  useImperativeHandle(ref, () => ({
+    reset: resetSimulation
+  }), [resetSimulation]);
+
   // Initialize simulation on mount and parameter changes
   useEffect(() => {
     initSimulation();
@@ -150,12 +167,11 @@ export const PendulumSimulation = ({
       runnerRef.current.delta = (1000 / 60) / speed;
       Matter.Runner.run(runnerRef.current, engineRef.current);
       
-      // Data update interval
       const interval = setInterval(() => {
-        if (bobRef.current && constraintRef.current) {
+        if (bobRef.current && constraintRef.current && canvasRef.current) {
           const bob = bobRef.current;
-          const pivotX = canvasRef.current!.clientWidth / 2;
-          const pivotY = canvasRef.current!.clientHeight * 0.15;
+          const pivotX = canvasRef.current.clientWidth / 2;
+          const pivotY = canvasRef.current.clientHeight * 0.15;
           
           const dx = bob.position.x - pivotX;
           const dy = bob.position.y - pivotY;
@@ -195,4 +211,6 @@ export const PendulumSimulation = ({
       style={{ display: 'block' }}
     />
   );
-};
+});
+
+PendulumSimulation.displayName = 'PendulumSimulation';
