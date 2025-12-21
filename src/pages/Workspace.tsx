@@ -1,13 +1,13 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PendulumSimulation } from "@/components/simulations/PendulumSimulation";
-import { ProjectileSimulation } from "@/components/simulations/ProjectileSimulation";
-import { SpringSimulation } from "@/components/simulations/SpringSimulation";
+import { PendulumSimulation, PendulumSimulationHandle } from "@/components/simulations/PendulumSimulation";
+import { ProjectileSimulation, ProjectileSimulationHandle } from "@/components/simulations/ProjectileSimulation";
+import { SpringSimulation, SpringSimulationHandle } from "@/components/simulations/SpringSimulation";
 import { ChemistryWorkspace } from "@/components/chemistry/ChemistryWorkspace";
 import { 
   Play, Pause, RotateCcw, Maximize2, Settings2, Download,
@@ -41,6 +41,11 @@ const Workspace = () => {
   const [springDamping, setSpringDamping] = useState([0.1]);
   const [springDisplacement, setSpringDisplacement] = useState([2]);
 
+  // Simulation refs for reset
+  const pendulumRef = useRef<PendulumSimulationHandle>(null);
+  const projectileRef = useRef<ProjectileSimulationHandle>(null);
+  const springRef = useRef<SpringSimulationHandle>(null);
+
   const simulations = [
     { id: 'pendulum', name: 'Pendulum', icon: Activity, category: 'Physics' },
     { id: 'projectile', name: 'Projectile', icon: Target, category: 'Physics' },
@@ -53,12 +58,11 @@ const Workspace = () => {
   const handleReset = () => {
     setIsPlaying(false);
     if (activeSimulation === 'pendulum') {
-      setPendulumAngle([45]);
+      pendulumRef.current?.reset();
     } else if (activeSimulation === 'projectile') {
-      setProjectileVelocity([20]);
-      setProjectileAngle([45]);
+      projectileRef.current?.reset();
     } else if (activeSimulation === 'spring') {
-      setSpringDisplacement([2]);
+      springRef.current?.reset();
     }
   };
 
@@ -102,6 +106,7 @@ const Workspace = () => {
             <div className="flex-1 relative bg-gradient-to-b from-muted/50 to-muted">
               {activeSimulation === 'pendulum' && (
                 <PendulumSimulation
+                  ref={pendulumRef}
                   mass={pendulumMass[0]}
                   length={pendulumLength[0]}
                   gravity={pendulumGravity[0]}
@@ -112,6 +117,7 @@ const Workspace = () => {
               )}
               {activeSimulation === 'projectile' && (
                 <ProjectileSimulation
+                  ref={projectileRef}
                   velocity={projectileVelocity[0]}
                   angle={projectileAngle[0]}
                   gravity={projectileGravity[0]}
@@ -121,6 +127,7 @@ const Workspace = () => {
               )}
               {activeSimulation === 'spring' && (
                 <SpringSimulation
+                  ref={springRef}
                   mass={springMass[0]}
                   springConstant={springConstant[0]}
                   damping={springDamping[0]}
