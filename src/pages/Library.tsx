@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PeriodicTable } from "@/components/chemistry/PeriodicTable";
 import { useExperiments } from "@/hooks/useExperiments";
 import { 
-  Search, Grid3X3, List, Clock, BarChart2, Play, Star,
+  Search, Grid3X3, List, Clock, BarChart2, Play,
   Atom, FlaskConical, Dna, Globe, Table2, Loader2
 } from "lucide-react";
 import {
@@ -30,10 +30,10 @@ const Library = () => {
   const [selectedDifficulty, setSelectedDifficulty] = useState("all");
   const [activeTab, setActiveTab] = useState("experiments");
 
-  const { experiments, isLoading } = useExperiments({
-    category: selectedCategory === "all" ? undefined : selectedCategory as any,
-    difficulty: selectedDifficulty === "all" ? undefined : selectedDifficulty as any,
-  });
+  const { data: experiments = [], isLoading } = useExperiments(
+    selectedCategory === "all" ? undefined : selectedCategory,
+    selectedDifficulty === "all" ? undefined : selectedDifficulty
+  );
 
   const filteredExperiments = experiments.filter((exp) => 
     exp.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -113,76 +113,78 @@ const Library = () => {
 
         <section className="py-8">
           <div className="container">
-            <TabsContent value="experiments" className="m-0">
-              {isLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                </div>
-              ) : (
-                <>
-                  <p className="text-sm text-muted-foreground mb-6">
-                    Showing {filteredExperiments.length} experiments
-                  </p>
-                  <div className={viewMode === "grid" ? "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" : "space-y-3"}>
-                    {filteredExperiments.map((exp, idx) => {
-                      const Icon = categoryIcons[exp.category] || Atom;
-                      return (
-                        <Link
-                          key={exp.id}
-                          to={`/workspace?experiment=${exp.id}&type=${exp.simulation_type || 'pendulum'}`}
-                          className="group block animate-fade-in"
-                          style={{ animationDelay: `${idx * 50}ms` }}
-                        >
-                          <div className={viewMode === "grid" ? "bg-card rounded-xl border overflow-hidden hover-lift" : "flex items-center gap-4 p-4 bg-card rounded-xl border hover:border-primary/30 transition-all"}>
-                            {viewMode === "grid" ? (
-                              <>
-                                <div className="relative h-40 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                                  <Icon className="w-16 h-16 text-primary/50" />
-                                  <Badge className="absolute top-3 left-3 bg-background/80 backdrop-blur-sm capitalize">
-                                    <Icon className="w-3 h-3 mr-1" />
-                                    {exp.category.replace('_', ' ')}
-                                  </Badge>
-                                </div>
-                                <div className="p-4">
-                                  <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">{exp.title}</h3>
-                                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                    <span className="flex items-center gap-1 capitalize"><BarChart2 className="w-3 h-3" />{exp.difficulty}</span>
-                                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{exp.duration_minutes} min</span>
-                                  </div>
-                                </div>
-                              </>
-                            ) : (
-                              <>
-                                <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                                  <Icon className="w-8 h-8 text-primary/50" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <Badge variant="secondary" className="text-xs capitalize mb-1"><Icon className="w-3 h-3 mr-1" />{exp.category.replace('_', ' ')}</Badge>
-                                  <h3 className="font-semibold group-hover:text-primary transition-colors">{exp.title}</h3>
-                                  <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1 capitalize">
-                                    <span>{exp.difficulty}</span>
-                                    <span>{exp.duration_minutes} min</span>
-                                  </div>
-                                </div>
-                                <Button variant="ghost" size="icon" className="shrink-0"><Play className="w-5 h-5" /></Button>
-                              </>
-                            )}
-                          </div>
-                        </Link>
-                      );
-                    })}
+            {activeTab === "experiments" && (
+              <>
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
                   </div>
-                </>
-              )}
-            </TabsContent>
+                ) : (
+                  <>
+                    <p className="text-sm text-muted-foreground mb-6">
+                      Showing {filteredExperiments.length} experiments
+                    </p>
+                    <div className={viewMode === "grid" ? "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" : "space-y-3"}>
+                      {filteredExperiments.map((exp, idx) => {
+                        const Icon = categoryIcons[exp.category] || Atom;
+                        return (
+                          <Link
+                            key={exp.id}
+                            to={`/workspace?experiment=${exp.id}&type=${exp.simulation_type || 'pendulum'}`}
+                            className="group block animate-fade-in"
+                            style={{ animationDelay: `${idx * 50}ms` }}
+                          >
+                            <div className={viewMode === "grid" ? "bg-card rounded-xl border overflow-hidden hover-lift" : "flex items-center gap-4 p-4 bg-card rounded-xl border hover:border-primary/30 transition-all"}>
+                              {viewMode === "grid" ? (
+                                <>
+                                  <div className="relative h-40 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                                    <Icon className="w-16 h-16 text-primary/50" />
+                                    <Badge className="absolute top-3 left-3 bg-background/80 backdrop-blur-sm capitalize">
+                                      <Icon className="w-3 h-3 mr-1" />
+                                      {exp.category.replace('_', ' ')}
+                                    </Badge>
+                                  </div>
+                                  <div className="p-4">
+                                    <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">{exp.title}</h3>
+                                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                      <span className="flex items-center gap-1 capitalize"><BarChart2 className="w-3 h-3" />{exp.difficulty}</span>
+                                      <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{exp.duration_minutes} min</span>
+                                    </div>
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                                    <Icon className="w-8 h-8 text-primary/50" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <Badge variant="secondary" className="text-xs capitalize mb-1"><Icon className="w-3 h-3 mr-1" />{exp.category.replace('_', ' ')}</Badge>
+                                    <h3 className="font-semibold group-hover:text-primary transition-colors">{exp.title}</h3>
+                                    <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1 capitalize">
+                                      <span>{exp.difficulty}</span>
+                                      <span>{exp.duration_minutes} min</span>
+                                    </div>
+                                  </div>
+                                  <Button variant="ghost" size="icon" className="shrink-0"><Play className="w-5 h-5" /></Button>
+                                </>
+                              )}
+                            </div>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </>
+            )}
 
-            <TabsContent value="periodic-table" className="m-0">
+            {activeTab === "periodic-table" && (
               <div className="bg-card border rounded-xl p-6">
                 <h2 className="text-xl font-semibold mb-4">Interactive Periodic Table</h2>
                 <p className="text-muted-foreground mb-6">Click on any element to view details. Filter by phase or category.</p>
                 <PeriodicTable />
               </div>
-            </TabsContent>
+            )}
           </div>
         </section>
       </div>
