@@ -197,16 +197,16 @@ export const getElementsByPhase = (phase: PhaseAtRTP): Element[] => {
 
 export const getCategoryColor = (category: ElementCategory): string => {
   const colors: Record<ElementCategory, string> = {
-    'alkali-metal': 'hsl(var(--chart-1))',
-    'alkaline-earth': 'hsl(var(--chart-2))',
-    'transition-metal': 'hsl(var(--chart-3))',
-    'post-transition-metal': 'hsl(var(--chart-4))',
-    'metalloid': 'hsl(var(--chart-5))',
-    'nonmetal': 'hsl(142, 71%, 45%)',
-    'halogen': 'hsl(291, 64%, 42%)',
-    'noble-gas': 'hsl(199, 89%, 48%)',
-    'lanthanide': 'hsl(45, 93%, 47%)',
-    'actinide': 'hsl(14, 100%, 57%)',
+    'alkali-metal': 'hsl(15, 80%, 55%)',           // Warm orange-red
+    'alkaline-earth': 'hsl(45, 85%, 50%)',         // Golden yellow
+    'transition-metal': 'hsl(210, 60%, 50%)',      // Steel blue
+    'post-transition-metal': 'hsl(180, 50%, 45%)', // Teal
+    'metalloid': 'hsl(270, 50%, 55%)',             // Purple
+    'nonmetal': 'hsl(142, 71%, 45%)',              // Green
+    'halogen': 'hsl(291, 64%, 42%)',               // Violet
+    'noble-gas': 'hsl(199, 89%, 48%)',             // Sky blue
+    'lanthanide': 'hsl(45, 93%, 47%)',             // Gold
+    'actinide': 'hsl(14, 100%, 57%)',              // Orange
   };
   return colors[category];
 };
