@@ -1,11 +1,39 @@
 import { useRef, useEffect, useState, useMemo } from 'react';
 import * as THREE from 'three';
-import { Search, RotateCcw, ZoomIn, ZoomOut, Move } from 'lucide-react';
+import { Search, RotateCcw, ZoomIn, ZoomOut, Move, Info, ChevronDown, ChevronUp, Scale } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+// Atomic weights for molecular weight calculation
+const atomicWeights: Record<string, number> = {
+  H: 1.008, C: 12.011, N: 14.007, O: 15.999, S: 32.065, P: 30.974,
+  Cl: 35.453, Na: 22.990, F: 18.998, Br: 79.904, I: 126.90
+};
+
+// Helper functions for molecule properties
+const calculateMolecularWeight = (atoms: Atom[]): number => {
+  return atoms.reduce((sum, atom) => sum + (atomicWeights[atom.symbol] || 0), 0);
+};
+
+const countAtomsByElement = (atoms: Atom[]): Record<string, number> => {
+  return atoms.reduce((acc, atom) => {
+    acc[atom.symbol] = (acc[atom.symbol] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+};
+
+const countBondsByOrder = (bonds: Bond[]): { single: number; double: number; triple: number } => {
+  return bonds.reduce((acc, bond) => {
+    if (bond.order === 1) acc.single++;
+    else if (bond.order === 2) acc.double++;
+    else if (bond.order === 3) acc.triple++;
+    return acc;
+  }, { single: 0, double: 0, triple: 0 });
+};
 interface Atom {
   symbol: string;
   position: [number, number, number];
@@ -1197,6 +1225,12 @@ export function MoleculeVisualization({ molecule, className = '', showControls =
     }
   };
 
+  const [showProperties, setShowProperties] = useState(false);
+  
+  const molecularWeight = data ? calculateMolecularWeight(data.atoms) : 0;
+  const atomCounts = data ? countAtomsByElement(data.atoms) : {};
+  const bondCounts = data ? countBondsByOrder(data.bonds) : { single: 0, double: 0, triple: 0 };
+
   return (
     <div className={`relative w-full h-full ${className}`}>
       {/* Molecule name and formula overlay */}
@@ -1210,9 +1244,52 @@ export function MoleculeVisualization({ molecule, className = '', showControls =
       {/* 3D Canvas */}
       <div ref={containerRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
       
+      {/* Properties Panel */}
+      {showProperties && data && (
+        <div className="absolute top-14 right-2 z-10 w-48 bg-background/95 backdrop-blur-sm border border-border rounded-lg shadow-lg p-3">
+          <div className="space-y-3">
+            <div>
+              <p className="text-xs text-muted-foreground">Molecular Weight</p>
+              <p className="text-sm font-semibold">{molecularWeight.toFixed(2)} g/mol</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Category</p>
+              <Badge variant="secondary" className="text-xs mt-0.5">{data.category || 'Unknown'}</Badge>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Atoms ({data.atoms.length} total)</p>
+              <div className="flex flex-wrap gap-1 mt-0.5">
+                {Object.entries(atomCounts).map(([element, count]) => (
+                  <Badge key={element} variant="outline" className="text-xs">
+                    {element}: {count}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Bonds ({data.bonds.length} total)</p>
+              <div className="flex flex-wrap gap-1 mt-0.5">
+                {bondCounts.single > 0 && <Badge variant="outline" className="text-xs">Single: {bondCounts.single}</Badge>}
+                {bondCounts.double > 0 && <Badge variant="outline" className="text-xs">Double: {bondCounts.double}</Badge>}
+                {bondCounts.triple > 0 && <Badge variant="outline" className="text-xs">Triple: {bondCounts.triple}</Badge>}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Control buttons */}
       {showControls && (
         <div className="absolute bottom-2 right-2 z-10 flex gap-1">
+          <Button 
+            variant={showProperties ? 'default' : 'secondary'} 
+            size="icon" 
+            className="h-8 w-8" 
+            onClick={() => setShowProperties(!showProperties)} 
+            title="Properties"
+          >
+            <Info className="h-4 w-4" />
+          </Button>
           <Button variant="secondary" size="icon" className="h-8 w-8" onClick={handleZoomIn} title="Zoom In">
             <ZoomIn className="h-4 w-4" />
           </Button>
@@ -1332,3 +1409,166 @@ export const availableMolecules = Object.keys(moleculeData);
 export const moleculeInfo = Object.fromEntries(
   Object.entries(moleculeData).map(([key, data]) => [key, { name: data.name, formula: data.formula, category: data.category }])
 );
+
+// Molecule Comparison Component
+interface MoleculeComparisonProps {
+  className?: string;
+}
+
+export function MoleculeComparison({ className = '' }: MoleculeComparisonProps) {
+  const [molecule1, setMolecule1] = useState<string>('H2O');
+  const [molecule2, setMolecule2] = useState<string>('CH4');
+
+  const data1 = moleculeData[molecule1];
+  const data2 = moleculeData[molecule2];
+
+  const mw1 = data1 ? calculateMolecularWeight(data1.atoms) : 0;
+  const mw2 = data2 ? calculateMolecularWeight(data2.atoms) : 0;
+  const atoms1 = data1 ? countAtomsByElement(data1.atoms) : {};
+  const atoms2 = data2 ? countAtomsByElement(data2.atoms) : {};
+  const bonds1 = data1 ? countBondsByOrder(data1.bonds) : { single: 0, double: 0, triple: 0 };
+  const bonds2 = data2 ? countBondsByOrder(data2.bonds) : { single: 0, double: 0, triple: 0 };
+
+  const molecules = Object.entries(moleculeData).map(([key, mol]) => ({
+    key,
+    name: mol.name || key,
+    formula: mol.formula || key
+  }));
+
+  return (
+    <div className={`flex flex-col gap-4 ${className}`}>
+      {/* Side by side viewers */}
+      <div className="grid grid-cols-2 gap-4">
+        {/* Molecule 1 */}
+        <div className="flex flex-col gap-2">
+          <Select value={molecule1} onValueChange={setMolecule1}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select molecule" />
+            </SelectTrigger>
+            <SelectContent>
+              <ScrollArea className="h-64">
+                {molecules.map(mol => (
+                  <SelectItem key={mol.key} value={mol.key}>
+                    {mol.name} ({mol.formula})
+                  </SelectItem>
+                ))}
+              </ScrollArea>
+            </SelectContent>
+          </Select>
+          <div className="h-64 bg-muted/30 rounded-lg border border-border overflow-hidden">
+            <MoleculeVisualization molecule={molecule1} showControls />
+          </div>
+        </div>
+
+        {/* Molecule 2 */}
+        <div className="flex flex-col gap-2">
+          <Select value={molecule2} onValueChange={setMolecule2}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select molecule" />
+            </SelectTrigger>
+            <SelectContent>
+              <ScrollArea className="h-64">
+                {molecules.map(mol => (
+                  <SelectItem key={mol.key} value={mol.key}>
+                    {mol.name} ({mol.formula})
+                  </SelectItem>
+                ))}
+              </ScrollArea>
+            </SelectContent>
+          </Select>
+          <div className="h-64 bg-muted/30 rounded-lg border border-border overflow-hidden">
+            <MoleculeVisualization molecule={molecule2} showControls />
+          </div>
+        </div>
+      </div>
+
+      {/* Comparison Table */}
+      <Card>
+        <CardHeader className="py-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Scale className="h-4 w-4" />
+            Property Comparison
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left py-2 font-medium text-muted-foreground">Property</th>
+                  <th className="text-center py-2 font-medium">{data1?.name || molecule1}</th>
+                  <th className="text-center py-2 font-medium">{data2?.name || molecule2}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-border/50">
+                  <td className="py-2 text-muted-foreground">Formula</td>
+                  <td className="py-2 text-center">{data1?.formula}</td>
+                  <td className="py-2 text-center">{data2?.formula}</td>
+                </tr>
+                <tr className="border-b border-border/50">
+                  <td className="py-2 text-muted-foreground">Molecular Weight</td>
+                  <td className="py-2 text-center">{mw1.toFixed(2)} g/mol</td>
+                  <td className="py-2 text-center">{mw2.toFixed(2)} g/mol</td>
+                </tr>
+                <tr className="border-b border-border/50">
+                  <td className="py-2 text-muted-foreground">Total Atoms</td>
+                  <td className="py-2 text-center">{data1?.atoms.length || 0}</td>
+                  <td className="py-2 text-center">{data2?.atoms.length || 0}</td>
+                </tr>
+                <tr className="border-b border-border/50">
+                  <td className="py-2 text-muted-foreground">Total Bonds</td>
+                  <td className="py-2 text-center">{data1?.bonds.length || 0}</td>
+                  <td className="py-2 text-center">{data2?.bonds.length || 0}</td>
+                </tr>
+                <tr className="border-b border-border/50">
+                  <td className="py-2 text-muted-foreground">Category</td>
+                  <td className="py-2 text-center">
+                    <Badge variant="secondary" className="text-xs">{data1?.category || 'Unknown'}</Badge>
+                  </td>
+                  <td className="py-2 text-center">
+                    <Badge variant="secondary" className="text-xs">{data2?.category || 'Unknown'}</Badge>
+                  </td>
+                </tr>
+                <tr className="border-b border-border/50">
+                  <td className="py-2 text-muted-foreground">Atom Composition</td>
+                  <td className="py-2 text-center">
+                    <div className="flex flex-wrap justify-center gap-1">
+                      {Object.entries(atoms1).map(([el, count]) => (
+                        <Badge key={el} variant="outline" className="text-xs">{el}:{count}</Badge>
+                      ))}
+                    </div>
+                  </td>
+                  <td className="py-2 text-center">
+                    <div className="flex flex-wrap justify-center gap-1">
+                      {Object.entries(atoms2).map(([el, count]) => (
+                        <Badge key={el} variant="outline" className="text-xs">{el}:{count}</Badge>
+                      ))}
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-2 text-muted-foreground">Bond Types</td>
+                  <td className="py-2 text-center">
+                    <div className="flex flex-wrap justify-center gap-1">
+                      {bonds1.single > 0 && <Badge variant="outline" className="text-xs">S:{bonds1.single}</Badge>}
+                      {bonds1.double > 0 && <Badge variant="outline" className="text-xs">D:{bonds1.double}</Badge>}
+                      {bonds1.triple > 0 && <Badge variant="outline" className="text-xs">T:{bonds1.triple}</Badge>}
+                    </div>
+                  </td>
+                  <td className="py-2 text-center">
+                    <div className="flex flex-wrap justify-center gap-1">
+                      {bonds2.single > 0 && <Badge variant="outline" className="text-xs">S:{bonds2.single}</Badge>}
+                      {bonds2.double > 0 && <Badge variant="outline" className="text-xs">D:{bonds2.double}</Badge>}
+                      {bonds2.triple > 0 && <Badge variant="outline" className="text-xs">T:{bonds2.triple}</Badge>}
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
