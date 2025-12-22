@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { availableMolecules, moleculeInfo } from '@/components/chemistry/MoleculeVisualization';
+import { commonMolecules } from '@/data/moleculeRegistry';
 
 interface FormulaBuilderProps {
   onMoleculeSelect?: (moleculeKey: string) => void;
@@ -40,9 +40,9 @@ const normalizeFormula = (formula: string): string => {
 
 export function FormulaBuilder({ onMoleculeSelect, className = '' }: FormulaBuilderProps) {
   const [inputFormula, setInputFormula] = useState('');
-  const [matchedMolecule, setMatchedMolecule] = useState<string | null>(null);
+  const [matchedMolecule, setMatchedMolecule] = useState<typeof commonMolecules[0] | null>(null);
   const [parsedElements, setParsedElements] = useState<Record<string, number> | null>(null);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<typeof commonMolecules>([]);
 
   const handleFormulaChange = (value: string) => {
     setInputFormula(value);
@@ -60,11 +60,10 @@ export function FormulaBuilder({ onMoleculeSelect, className = '' }: FormulaBuil
 
     // Find exact match
     const normalizedInput = normalizeFormula(value).toLowerCase();
-    const exactMatch = availableMolecules.find(key => {
-      const info = moleculeInfo[key];
-      const normalizedKey = key.toLowerCase();
-      const normalizedMolFormula = info?.formula ? normalizeFormula(info.formula).toLowerCase() : '';
-      const normalizedName = info?.name?.toLowerCase() || '';
+    const exactMatch = commonMolecules.find(mol => {
+      const normalizedKey = mol.key.toLowerCase();
+      const normalizedMolFormula = normalizeFormula(mol.formula).toLowerCase();
+      const normalizedName = mol.name.toLowerCase();
       
       return normalizedKey === normalizedInput || 
              normalizedMolFormula === normalizedInput ||
@@ -74,11 +73,10 @@ export function FormulaBuilder({ onMoleculeSelect, className = '' }: FormulaBuil
     setMatchedMolecule(exactMatch || null);
 
     // Find suggestions (partial matches)
-    const matchingSuggestions = availableMolecules.filter(key => {
-      const info = moleculeInfo[key];
-      const normalizedKey = key.toLowerCase();
-      const normalizedMolFormula = info?.formula ? normalizeFormula(info.formula).toLowerCase() : '';
-      const normalizedName = info?.name?.toLowerCase() || '';
+    const matchingSuggestions = commonMolecules.filter(mol => {
+      const normalizedKey = mol.key.toLowerCase();
+      const normalizedMolFormula = normalizeFormula(mol.formula).toLowerCase();
+      const normalizedName = mol.name.toLowerCase();
       
       return normalizedKey.includes(normalizedInput) || 
              normalizedMolFormula.includes(normalizedInput) ||
@@ -88,11 +86,10 @@ export function FormulaBuilder({ onMoleculeSelect, className = '' }: FormulaBuil
     setSuggestions(matchingSuggestions);
   };
 
-  const handleSelect = (moleculeKey: string) => {
-    setMatchedMolecule(moleculeKey);
-    const info = moleculeInfo[moleculeKey];
-    setInputFormula(info?.name || moleculeKey);
-    onMoleculeSelect?.(moleculeKey);
+  const handleSelect = (mol: typeof commonMolecules[0]) => {
+    setMatchedMolecule(mol);
+    setInputFormula(mol.name);
+    onMoleculeSelect?.(mol.key);
   };
 
   return (
@@ -122,10 +119,10 @@ export function FormulaBuilder({ onMoleculeSelect, className = '' }: FormulaBuil
               <>
                 <Check className="h-4 w-4 text-green-500" />
                 <span className="text-sm text-green-600 dark:text-green-400">
-                  Found: {moleculeInfo[matchedMolecule]?.name || matchedMolecule}
+                  Found: {matchedMolecule.name}
                 </span>
                 <Badge variant="secondary" className="text-xs">
-                  {moleculeInfo[matchedMolecule]?.formula}
+                  {matchedMolecule.formula}
                 </Badge>
               </>
             ) : (
@@ -158,15 +155,15 @@ export function FormulaBuilder({ onMoleculeSelect, className = '' }: FormulaBuil
             </p>
             <ScrollArea className="h-32">
               <div className="space-y-1">
-                {suggestions.map(key => (
+                {suggestions.map(mol => (
                   <button
-                    key={key}
-                    onClick={() => handleSelect(key)}
+                    key={mol.key}
+                    onClick={() => handleSelect(mol)}
                     className="w-full text-left px-2 py-1.5 rounded-md hover:bg-muted transition-colors text-sm flex items-center justify-between"
                   >
-                    <span>{moleculeInfo[key]?.name || key}</span>
+                    <span>{mol.name}</span>
                     <Badge variant="secondary" className="text-xs">
-                      {moleculeInfo[key]?.formula || key}
+                      {mol.formula}
                     </Badge>
                   </button>
                 ))}
@@ -180,7 +177,7 @@ export function FormulaBuilder({ onMoleculeSelect, className = '' }: FormulaBuil
           <Button
             size="sm"
             className="w-full"
-            onClick={() => onMoleculeSelect?.(matchedMolecule)}
+            onClick={() => onMoleculeSelect?.(matchedMolecule.key)}
           >
             View 3D Structure
           </Button>
