@@ -1,83 +1,229 @@
+import { useState, useCallback } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Footer } from "@/components/home/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  PenTool, 
   Save, 
   Share2, 
   Play, 
   Undo, 
   Redo,
-  Plus,
-  GripVertical,
-  Settings,
-  Trash2,
-  Copy
+  Code2,
+  Sliders,
+  BarChart3,
+  Atom,
+  Link2,
+  Loader2
 } from "lucide-react";
-
-const componentPalette = [
-  { id: "pendulum", name: "Pendulum", icon: "🔄" },
-  { id: "spring", name: "Spring", icon: "〰️" },
-  { id: "ramp", name: "Inclined Plane", icon: "📐" },
-  { id: "beaker", name: "Beaker", icon: "🧪" },
-  { id: "burner", name: "Bunsen Burner", icon: "🔥" },
-  { id: "cell", name: "Cell", icon: "🔬" },
-  { id: "circuit", name: "Circuit", icon: "⚡" },
-  { id: "magnet", name: "Magnet", icon: "🧲" },
-];
+import { toast } from "sonner";
+import { ComponentPalette } from "@/components/builder/ComponentPalette";
+import { DragDropCanvas, CanvasComponent } from "@/components/builder/DragDropCanvas";
+import { PropertiesPanel } from "@/components/builder/PropertiesPanel";
+import { ScriptEditor } from "@/components/builder/ScriptEditor";
+import { VariableControls, Variable } from "@/components/builder/VariableControls";
+import { DataOutput } from "@/components/builder/DataOutput";
+import { FormulaBuilder } from "@/components/builder/FormulaBuilder";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Builder = () => {
+  const { user } = useAuth();
+  const [experimentName, setExperimentName] = useState("Untitled Experiment");
+  const [components, setComponents] = useState<CanvasComponent[]>([]);
+  const [selectedComponent, setSelectedComponent] = useState<CanvasComponent | null>(null);
+  const [activeTab, setActiveTab] = useState("components");
+  const [isSaving, setIsSaving] = useState(false);
+  const [experimentId, setExperimentId] = useState<string | null>(null);
+  
+  // Script state
+  const [scriptCode, setScriptCode] = useState("");
+  
+  // Variables state
+  const [variables, setVariables] = useState<Variable[]>([
+    { id: 'gravity', name: 'Gravity', value: 9.8, min: 0, max: 20, step: 0.1, unit: 'm/s²' },
+    { id: 'friction', name: 'Friction', value: 0.3, min: 0, max: 1, step: 0.01 },
+  ]);
+  
+  // Data output state
+  const [dataPoints, setDataPoints] = useState<{ time: number; [key: string]: number }[]>([]);
+  const [isRecording, setIsRecording] = useState(false);
+
+  const dataSeries = [
+    { key: 'position', name: 'Position', color: 'hsl(var(--primary))', unit: 'm' },
+    { key: 'velocity', name: 'Velocity', color: 'hsl(142, 71%, 45%)', unit: 'm/s' },
+    { key: 'energy', name: 'Energy', color: 'hsl(45, 93%, 47%)', unit: 'J' },
+  ];
+
+  const handlePropertyChange = (id: string, key: string, value: any) => {
+    setComponents(prev => prev.map(c => 
+      c.id === id 
+        ? { ...c, properties: { ...c.properties, [key]: value } }
+        : c
+    ));
+    if (selectedComponent?.id === id) {
+      setSelectedComponent(prev => prev ? { ...prev, properties: { ...prev.properties, [key]: value } } : null);
+    }
+  };
+
+  const handleVariableChange = (id: string, value: number) => {
+    setVariables(prev => prev.map(v => v.id === id ? { ...v, value } : v));
+  };
+
+  const handleAddVariable = (variable: Variable) => {
+    setVariables(prev => [...prev, variable]);
+  };
+
+  const handleRemoveVariable = (id: string) => {
+    setVariables(prev => prev.filter(v => v.id !== id));
+  };
+
+  const handleMoleculeSelect = (moleculeKey: string) => {
+    const newComponent: CanvasComponent = {
+      id: `comp_${Date.now()}`,
+      type: 'molecule',
+      name: moleculeKey,
+      icon: '⚛️',
+      x: 100,
+      y: 100,
+      width: 150,
+      height: 80,
+      properties: { molecule: moleculeKey }
+    };
+    setComponents(prev => [...prev, newComponent]);
+    toast.success(`Added ${moleculeKey} molecule to canvas`);
+  };
+
+  // Save experiment to Supabase
+  const handleSave = async () => {
+    if (!user) {
+      toast.error("Please sign in to save experiments");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const experimentData = {
+        title: experimentName,
+        user_id: user.id,
+        components: components as any,
+        scripts: { code: scriptCode, variables } as any,
+        is_public: false,
+        updated_at: new Date().toISOString()
+      };
+
+      if (experimentId) {
+        await supabase
+          .from('custom_experiments')
+          .update(experimentData)
+          .eq('id', experimentId);
+        toast.success("Experiment saved!");
+      } else {
+        const { data, error } = await supabase
+          .from('custom_experiments')
+          .insert(experimentData)
+          .select()
+          .single();
+        
+        if (error) throw error;
+        setExperimentId(data.id);
+        toast.success("Experiment created!");
+      }
+    } catch (error) {
+      toast.error("Failed to save experiment");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Share experiment
+  const handleShare = async () => {
+    if (!experimentId) {
+      toast.error("Save the experiment first to share");
+      return;
+    }
+
+    await supabase
+      .from('custom_experiments')
+      .update({ is_public: true })
+      .eq('id', experimentId);
+
+    const shareUrl = `${window.location.origin}/builder?id=${experimentId}`;
+    await navigator.clipboard.writeText(shareUrl);
+    toast.success("Share link copied to clipboard!");
+  };
+
   return (
     <Layout>
       <div className="min-h-screen flex flex-col lg:flex-row">
-        {/* Left Component Palette */}
-        <div className="w-full lg:w-64 border-r bg-card flex flex-col">
-          <div className="p-4 border-b">
-            <h2 className="font-semibold flex items-center gap-2">
-              <PenTool className="w-4 h-4" />
-              Components
-            </h2>
-          </div>
-          <div className="flex-1 p-3 overflow-auto">
-            <div className="grid grid-cols-2 gap-2">
-              {componentPalette.map((comp) => (
-                <div
-                  key={comp.id}
-                  className="p-3 bg-muted/50 rounded-lg border border-transparent hover:border-primary/30 cursor-grab transition-all text-center group"
-                  draggable
-                >
-                  <div className="text-2xl mb-1">{comp.icon}</div>
-                  <div className="text-xs font-medium text-muted-foreground group-hover:text-foreground transition-colors">
-                    {comp.name}
-                  </div>
-                </div>
-              ))}
-            </div>
+        {/* Left Panel */}
+        <div className="w-full lg:w-72 border-r border-border bg-card flex flex-col">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
+            <TabsList className="grid grid-cols-4 m-2">
+              <TabsTrigger value="components" className="text-xs px-2">
+                <Atom className="h-4 w-4" />
+              </TabsTrigger>
+              <TabsTrigger value="variables" className="text-xs px-2">
+                <Sliders className="h-4 w-4" />
+              </TabsTrigger>
+              <TabsTrigger value="script" className="text-xs px-2">
+                <Code2 className="h-4 w-4" />
+              </TabsTrigger>
+              <TabsTrigger value="data" className="text-xs px-2">
+                <BarChart3 className="h-4 w-4" />
+              </TabsTrigger>
+            </TabsList>
 
-            <div className="mt-6 pt-6 border-t">
-              <h3 className="text-sm font-medium mb-3">Variables</h3>
-              <div className="space-y-2">
-                <Button variant="outline" className="w-full justify-start text-sm" size="sm">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Variable
-                </Button>
+            <TabsContent value="components" className="flex-1 m-0 overflow-hidden">
+              <ComponentPalette />
+            </TabsContent>
+
+            <TabsContent value="variables" className="flex-1 m-0 p-2 overflow-auto">
+              <VariableControls
+                variables={variables}
+                onVariableChange={handleVariableChange}
+                onAddVariable={handleAddVariable}
+                onRemoveVariable={handleRemoveVariable}
+                onReset={() => setVariables([])}
+              />
+              <div className="mt-4">
+                <FormulaBuilder onMoleculeSelect={handleMoleculeSelect} />
               </div>
-            </div>
-          </div>
+            </TabsContent>
+
+            <TabsContent value="script" className="flex-1 m-0 p-2 overflow-auto">
+              <ScriptEditor
+                initialCode={scriptCode}
+                onCodeChange={setScriptCode}
+                variables={Object.fromEntries(variables.map(v => [v.name.toLowerCase(), v.value]))}
+              />
+            </TabsContent>
+
+            <TabsContent value="data" className="flex-1 m-0 p-2 overflow-auto">
+              <DataOutput
+                data={dataPoints}
+                series={dataSeries}
+                isRecording={isRecording}
+                onToggleRecording={() => setIsRecording(!isRecording)}
+                onClearData={() => setDataPoints([])}
+              />
+            </TabsContent>
+          </Tabs>
         </div>
 
         {/* Main Canvas Area */}
         <div className="flex-1 flex flex-col">
           {/* Toolbar */}
-          <div className="h-14 border-b flex items-center justify-between px-4 bg-card">
+          <div className="h-14 border-b border-border flex items-center justify-between px-4 bg-card">
             <div className="flex items-center gap-3">
               <Input 
-                placeholder="Untitled Experiment" 
-                className="w-48 h-8 text-sm font-medium bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                value={experimentName}
+                onChange={(e) => setExperimentName(e.target.value)}
+                className="w-48 h-8 text-sm font-medium bg-transparent border-none focus-visible:ring-0"
               />
-              <Badge variant="secondary">Draft</Badge>
+              <Badge variant="secondary">{experimentId ? 'Saved' : 'Draft'}</Badge>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -87,73 +233,38 @@ const Builder = () => {
                 <Redo className="w-4 h-4" />
               </Button>
               <div className="w-px h-6 bg-border mx-1" />
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => setIsRecording(!isRecording)}>
                 <Play className="w-4 h-4 mr-1" />
-                Preview
+                {isRecording ? 'Stop' : 'Preview'}
               </Button>
-              <Button variant="outline" size="sm">
-                <Share2 className="w-4 h-4 mr-1" />
+              <Button variant="outline" size="sm" onClick={handleShare} disabled={!experimentId}>
+                <Link2 className="w-4 h-4 mr-1" />
                 Share
               </Button>
-              <Button size="sm">
-                <Save className="w-4 h-4 mr-1" />
+              <Button size="sm" onClick={handleSave} disabled={isSaving}>
+                {isSaving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
                 Save
               </Button>
             </div>
           </div>
 
           {/* Canvas */}
-          <div className="flex-1 relative bg-[radial-gradient(circle,hsl(var(--border))_1px,transparent_1px)] bg-[size:20px_20px] overflow-auto">
-            {/* Empty State */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center max-w-md">
-                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                  <PenTool className="w-8 h-8 text-primary" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Start Building</h3>
-                <p className="text-muted-foreground mb-6">
-                  Drag components from the left panel onto this canvas to create your custom experiment.
-                </p>
-                <div className="flex items-center justify-center gap-3">
-                  <Button variant="outline">Load Template</Button>
-                  <Button>Start from Scratch</Button>
-                </div>
-              </div>
-            </div>
-
-            {/* Example Placed Component */}
-            <div className="absolute top-20 left-1/3 bg-card rounded-xl border shadow-md p-4 w-48 cursor-move group">
-              <div className="flex items-center gap-2 mb-2">
-                <GripVertical className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                <span className="text-lg">🔄</span>
-                <span className="font-medium text-sm">Pendulum</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon" className="h-7 w-7">
-                  <Settings className="w-3 h-3" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7">
-                  <Copy className="w-3 h-3" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive">
-                  <Trash2 className="w-3 h-3" />
-                </Button>
-              </div>
-            </div>
-          </div>
+          <DragDropCanvas
+            components={components}
+            onComponentsChange={setComponents}
+            onComponentSelect={setSelectedComponent}
+            selectedId={selectedComponent?.id}
+            className="flex-1"
+          />
         </div>
 
         {/* Right Properties Panel */}
-        <div className="w-full lg:w-72 border-l bg-card">
-          <div className="p-4 border-b">
-            <h2 className="font-semibold">Properties</h2>
-          </div>
-          <div className="p-4">
-            <div className="text-center py-8 text-muted-foreground">
-              <Settings className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">Select a component to edit its properties</p>
-            </div>
-          </div>
+        <div className="w-full lg:w-72 border-l border-border bg-card">
+          <PropertiesPanel
+            component={selectedComponent}
+            onPropertyChange={handlePropertyChange}
+            onClose={() => setSelectedComponent(null)}
+          />
         </div>
       </div>
       <Footer />
