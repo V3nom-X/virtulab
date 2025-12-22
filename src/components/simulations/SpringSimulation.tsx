@@ -31,8 +31,13 @@ export const SpringSimulation = forwardRef<SpringSimulationHandle, SpringSimulat
   const massRef = useRef<Matter.Body | null>(null);
   const equilibriumYRef = useRef<number>(0);
   const startTimeRef = useRef<number>(0);
+  const springConstantRef = useRef(springConstant);
+  const isInitializedRef = useRef(false);
 
-  const initSimulation = useCallback(() => {
+  // Keep spring constant in sync
+  springConstantRef.current = springConstant;
+
+  const initSimulation = useCallback((props: { mass: number; springConstant: number; damping: number; displacement: number }) => {
     if (!canvasRef.current) return;
 
     // Clean up previous simulation - don't remove the canvas since we provide it
@@ -86,9 +91,9 @@ export const SpringSimulation = forwardRef<SpringSimulationHandle, SpringSimulat
     equilibriumYRef.current = equilibriumY;
 
     // Mass block
-    const initialY = equilibriumY + displacement * 50;
-    const massBody = Matter.Bodies.rectangle(width / 2, initialY, 60 + mass * 10, 60 + mass * 10, {
-      frictionAir: damping * 0.01,
+    const initialY = equilibriumY + props.displacement * 50;
+    const massBody = Matter.Bodies.rectangle(width / 2, initialY, 60 + props.mass * 10, 60 + props.mass * 10, {
+      frictionAir: props.damping * 0.01,
       render: {
         fillStyle: 'hsl(168, 76%, 46%)',
         strokeStyle: 'hsl(168, 76%, 36%)',
@@ -105,14 +110,14 @@ export const SpringSimulation = forwardRef<SpringSimulationHandle, SpringSimulat
     runnerRef.current = runner;
     startTimeRef.current = Date.now();
 
-    // Spring force - applied on each update
+    // Spring force - applied on each update using ref for current value
     Matter.Events.on(engine, 'beforeUpdate', () => {
       if (massRef.current) {
         const currentY = massRef.current.position.y;
         const displacementFromEquilibrium = currentY - equilibriumYRef.current;
         
-        // Hooke's Law: F = -kx
-        const springForce = -springConstant * displacementFromEquilibrium * 0.0001;
+        // Hooke's Law: F = -kx (using ref for current value)
+        const springForce = -springConstantRef.current * displacementFromEquilibrium * 0.0001;
         
         Matter.Body.applyForce(massRef.current, massRef.current.position, {
           x: 0,
@@ -129,7 +134,7 @@ export const SpringSimulation = forwardRef<SpringSimulationHandle, SpringSimulat
       if (massBody) {
         // Draw spring
         const springTop = anchorY + 10;
-        const springBottom = massBody.position.y - (30 + mass * 5);
+        const springBottom = massBody.position.y - (30 + props.mass * 5);
         const springHeight = springBottom - springTop;
         const coils = 12;
         const coilWidth = 30;
@@ -167,23 +172,25 @@ export const SpringSimulation = forwardRef<SpringSimulationHandle, SpringSimulat
 
     // Start render
     Matter.Render.run(render);
+    isInitializedRef.current = true;
 
-  }, [mass, springConstant, damping, displacement]);
+  }, []);
 
   const resetSimulation = useCallback(() => {
     if (runnerRef.current) {
       Matter.Runner.stop(runnerRef.current);
     }
-    initSimulation();
-  }, [initSimulation]);
+    initSimulation({ mass, springConstant, damping, displacement });
+  }, [mass, springConstant, damping, displacement, initSimulation]);
 
   // Expose reset function via ref
   useImperativeHandle(ref, () => ({
     reset: resetSimulation
   }), [resetSimulation]);
 
+  // Initialize only on mount
   useEffect(() => {
-    initSimulation();
+    initSimulation({ mass, springConstant, damping, displacement });
 
     return () => {
       if (renderRef.current) {
@@ -193,8 +200,17 @@ export const SpringSimulation = forwardRef<SpringSimulationHandle, SpringSimulat
         Matter.Runner.stop(runnerRef.current);
       }
     };
-  }, [initSimulation]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
+  // Handle damping changes (can update live)
+  useEffect(() => {
+    if (massRef.current && isInitializedRef.current) {
+      massRef.current.frictionAir = damping * 0.01;
+    }
+  }, [damping]);
+
+  // Handle play/pause
   useEffect(() => {
     if (!engineRef.current || !runnerRef.current) return;
 
@@ -207,7 +223,7 @@ export const SpringSimulation = forwardRef<SpringSimulationHandle, SpringSimulat
           const currentY = massRef.current.position.y;
           const currentDisplacement = (currentY - equilibriumYRef.current) / 50;
           const currentVelocity = massRef.current.velocity.y;
-          const springForce = -springConstant * currentDisplacement;
+          const springForce = -springConstantRef.current * currentDisplacement;
           
           onDataUpdate?.({
             displacement: currentDisplacement,
@@ -222,7 +238,7 @@ export const SpringSimulation = forwardRef<SpringSimulationHandle, SpringSimulat
     } else {
       Matter.Runner.stop(runnerRef.current);
     }
-  }, [isPlaying, speed, springConstant, onDataUpdate]);
+  }, [isPlaying, speed, onDataUpdate]);
 
   return (
     <canvas
