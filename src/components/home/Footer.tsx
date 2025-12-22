@@ -76,9 +76,21 @@ export function Footer() {
           <p className="text-sm text-muted-foreground">
             © {new Date().getFullYear()} VirtuLab. Completely free, no ads.
           </p>
-          <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-            Developed with <Heart className="w-4 h-4 text-destructive" /> by Benjamin Menya • Managed by NEX VENTURES
-          </p>
+          <div className="flex flex-col sm:flex-row items-center gap-1.5 text-sm text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              Developed by Benjamin Menya
+              <a
+                href="https://instagram.com/b._.noir"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                @b._.noir
+              </a>
+            </span>
+            <span className="hidden sm:inline">•</span>
+            <span>Managed by NEX VENTURES</span>
+          </div>
         </div>
       </div>
     </footer>

@@ -1,5 +1,10 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState, useMemo } from 'react';
 import * as THREE from 'three';
+import { Search, RotateCcw, ZoomIn, ZoomOut, Move } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 
 interface Atom {
   symbol: string;
@@ -19,11 +24,13 @@ interface MoleculeData {
   bonds: Bond[];
   name?: string;
   formula?: string;
+  category?: string;
 }
 
 interface MoleculeVisualizationProps {
   molecule: string;
   className?: string;
+  showControls?: boolean;
 }
 
 // Atom colors based on CPK coloring
@@ -46,6 +53,7 @@ const moleculeData: Record<string, MoleculeData> = {
   H2O: {
     name: 'Water',
     formula: 'H₂O',
+    category: 'Basic',
     atoms: [
       { symbol: 'O', position: [0, 0, 0], color: atomColors.O, radius: 0.6 },
       { symbol: 'H', position: [-0.8, 0.6, 0], color: atomColors.H, radius: 0.35 },
@@ -56,6 +64,7 @@ const moleculeData: Record<string, MoleculeData> = {
   CO2: {
     name: 'Carbon Dioxide',
     formula: 'CO₂',
+    category: 'Basic',
     atoms: [
       { symbol: 'C', position: [0, 0, 0], color: atomColors.C, radius: 0.5 },
       { symbol: 'O', position: [-1.2, 0, 0], color: atomColors.O, radius: 0.6 },
@@ -66,6 +75,7 @@ const moleculeData: Record<string, MoleculeData> = {
   NH3: {
     name: 'Ammonia',
     formula: 'NH₃',
+    category: 'Basic',
     atoms: [
       { symbol: 'N', position: [0, 0, 0], color: atomColors.N, radius: 0.55 },
       { symbol: 'H', position: [0, 0.9, 0.4], color: atomColors.H, radius: 0.35 },
@@ -77,6 +87,7 @@ const moleculeData: Record<string, MoleculeData> = {
   HCl: {
     name: 'Hydrogen Chloride',
     formula: 'HCl',
+    category: 'Acid',
     atoms: [
       { symbol: 'H', position: [-0.65, 0, 0], color: atomColors.H, radius: 0.35 },
       { symbol: 'Cl', position: [0.65, 0, 0], color: atomColors.Cl, radius: 0.8 },
@@ -86,6 +97,7 @@ const moleculeData: Record<string, MoleculeData> = {
   NaCl: {
     name: 'Sodium Chloride',
     formula: 'NaCl',
+    category: 'Basic',
     atoms: [
       { symbol: 'Na', position: [-0.6, 0, 0], color: atomColors.Na, radius: 0.9 },
       { symbol: 'Cl', position: [0.6, 0, 0], color: atomColors.Cl, radius: 0.8 },
@@ -96,6 +108,7 @@ const moleculeData: Record<string, MoleculeData> = {
   CH4: {
     name: 'Methane',
     formula: 'CH₄',
+    category: 'Hydrocarbon',
     atoms: [
       { symbol: 'C', position: [0, 0, 0], color: atomColors.C, radius: 0.5 },
       { symbol: 'H', position: [0.6, 0.6, 0.6], color: atomColors.H, radius: 0.35 },
@@ -108,6 +121,7 @@ const moleculeData: Record<string, MoleculeData> = {
   C2H6: {
     name: 'Ethane',
     formula: 'C₂H₆',
+    category: 'Hydrocarbon',
     atoms: [
       { symbol: 'C', position: [-0.77, 0, 0], color: atomColors.C, radius: 0.5 },
       { symbol: 'C', position: [0.77, 0, 0], color: atomColors.C, radius: 0.5 },
@@ -920,11 +934,61 @@ const moleculeData: Record<string, MoleculeData> = {
   },
 };
 
-export function MoleculeVisualization({ molecule, className = '' }: MoleculeVisualizationProps) {
+// Auto-assign categories to molecules that don't have one
+const categoryAssignments: Record<string, string> = {
+  // Hydrocarbons
+  C3H8: 'Hydrocarbon', C4H10: 'Hydrocarbon', C2H4: 'Hydrocarbon', C3H6: 'Hydrocarbon',
+  C2H2: 'Hydrocarbon', C6H6: 'Aromatic', C7H8: 'Aromatic',
+  // Alcohols
+  CH3OH: 'Alcohol', C2H5OH: 'Alcohol',
+  // Aldehydes & Ketones
+  CH2O: 'Aldehyde', C3H6O: 'Ketone',
+  // Acids
+  CH3COOH: 'Acid', H2SO4: 'Acid', HNO3: 'Acid',
+  // Sugars
+  C6H12O6: 'Sugar', C12H22O11: 'Sugar',
+  // Amino Acids
+  C2H5NO2: 'Amino Acid', C3H7NO2: 'Amino Acid', C5H11NO2: 'Amino Acid',
+  C6H13NO2: 'Amino Acid', C9H11NO2: 'Amino Acid', C3H7NO3: 'Amino Acid',
+  C4H9NO3: 'Amino Acid', C3H7NO2S: 'Amino Acid', C5H11NO2S: 'Amino Acid',
+  C4H7NO4: 'Amino Acid', C5H9NO4: 'Amino Acid', C6H14N2O2: 'Amino Acid',
+  C6H14N4O2: 'Amino Acid', C6H9N3O2: 'Amino Acid', C11H12N2O2: 'Amino Acid',
+  C5H9NO2: 'Amino Acid', C9H11NO3: 'Amino Acid', C4H8N2O3: 'Amino Acid',
+  C5H10N2O3: 'Amino Acid',
+  // DNA Bases
+  Adenine: 'DNA Base', Thymine: 'DNA Base',
+  // Pharmaceuticals  
+  C8H10N4O2: 'Pharmaceutical', C9H8O4: 'Pharmaceutical', C8H9NO2: 'Pharmaceutical',
+  // Vitamins
+  C6H8O6: 'Vitamin',
+  // Neurotransmitters
+  C8H11NO2: 'Neurotransmitter', C10H12N2O: 'Neurotransmitter', C9H13NO3: 'Neurotransmitter',
+  // Other organics
+  CH4N2O: 'Organic', C5H4N4O3: 'Organic', C3H6O3: 'Organic', C6H8O7: 'Organic',
+  C2H2O4: 'Organic', C4H6O6: 'Organic', C4H6O5: 'Organic', C4H6O4: 'Organic', C4H4O4: 'Organic',
+  C2H7NO: 'Organic', C5H14NO: 'Organic', C4H9NO2: 'Organic', C5H9N3: 'Organic',
+  // Gases
+  O2: 'Gas', N2: 'Gas',
+};
+
+Object.entries(moleculeData).forEach(([key, mol]) => {
+  if (!mol.category) {
+    mol.category = categoryAssignments[key] || 'Other';
+  }
+});
+
+export function MoleculeVisualization({ molecule, className = '', showControls = false }: MoleculeVisualizationProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const moleculeGroupRef = useRef<THREE.Group | null>(null);
   const animationRef = useRef<number>(0);
+  const isAutoRotating = useRef(true);
+  const isDragging = useRef(false);
+  const previousMousePosition = useRef({ x: 0, y: 0 });
+
+  const data = moleculeData[molecule];
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -938,6 +1002,7 @@ export function MoleculeVisualization({ molecule, className = '' }: MoleculeVisu
 
     const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 100);
     camera.position.z = 8;
+    cameraRef.current = camera;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
@@ -952,9 +1017,9 @@ export function MoleculeVisualization({ molecule, className = '' }: MoleculeVisu
     directionalLight.position.set(5, 5, 5);
     scene.add(directionalLight);
 
-    const data = moleculeData[molecule];
     if (data) {
       const moleculeGroup = new THREE.Group();
+      moleculeGroupRef.current = moleculeGroup;
 
       data.atoms.forEach((atom) => {
         const geometry = new THREE.SphereGeometry(atom.radius, 32, 32);
@@ -998,12 +1063,91 @@ export function MoleculeVisualization({ molecule, className = '' }: MoleculeVisu
 
       const animate = () => {
         animationRef.current = requestAnimationFrame(animate);
-        moleculeGroup.rotation.y += 0.008;
-        moleculeGroup.rotation.x += 0.002;
+        if (isAutoRotating.current && !isDragging.current) {
+          moleculeGroup.rotation.y += 0.008;
+          moleculeGroup.rotation.x += 0.002;
+        }
         renderer.render(scene, camera);
       };
       animate();
     }
+
+    // Mouse controls for rotate/pan
+    const onMouseDown = (e: MouseEvent) => {
+      isDragging.current = true;
+      isAutoRotating.current = false;
+      previousMousePosition.current = { x: e.clientX, y: e.clientY };
+    };
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isDragging.current || !moleculeGroupRef.current) return;
+      
+      const deltaMove = {
+        x: e.clientX - previousMousePosition.current.x,
+        y: e.clientY - previousMousePosition.current.y
+      };
+
+      if (e.shiftKey) {
+        // Pan when shift is held
+        moleculeGroupRef.current.position.x += deltaMove.x * 0.01;
+        moleculeGroupRef.current.position.y -= deltaMove.y * 0.01;
+      } else {
+        // Rotate normally
+        moleculeGroupRef.current.rotation.y += deltaMove.x * 0.01;
+        moleculeGroupRef.current.rotation.x += deltaMove.y * 0.01;
+      }
+
+      previousMousePosition.current = { x: e.clientX, y: e.clientY };
+    };
+
+    const onMouseUp = () => {
+      isDragging.current = false;
+    };
+
+    // Zoom with wheel
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      if (cameraRef.current) {
+        cameraRef.current.position.z += e.deltaY * 0.01;
+        cameraRef.current.position.z = Math.max(3, Math.min(20, cameraRef.current.position.z));
+      }
+    };
+
+    // Touch controls for mobile
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        isDragging.current = true;
+        isAutoRotating.current = false;
+        previousMousePosition.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!isDragging.current || !moleculeGroupRef.current || e.touches.length !== 1) return;
+      
+      const deltaMove = {
+        x: e.touches[0].clientX - previousMousePosition.current.x,
+        y: e.touches[0].clientY - previousMousePosition.current.y
+      };
+
+      moleculeGroupRef.current.rotation.y += deltaMove.x * 0.01;
+      moleculeGroupRef.current.rotation.x += deltaMove.y * 0.01;
+
+      previousMousePosition.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    };
+
+    const onTouchEnd = () => {
+      isDragging.current = false;
+    };
+
+    container.addEventListener('mousedown', onMouseDown);
+    container.addEventListener('mousemove', onMouseMove);
+    container.addEventListener('mouseup', onMouseUp);
+    container.addEventListener('mouseleave', onMouseUp);
+    container.addEventListener('wheel', onWheel, { passive: false });
+    container.addEventListener('touchstart', onTouchStart);
+    container.addEventListener('touchmove', onTouchMove);
+    container.addEventListener('touchend', onTouchEnd);
 
     const handleResize = () => {
       const newWidth = container.clientWidth;
@@ -1016,20 +1160,175 @@ export function MoleculeVisualization({ molecule, className = '' }: MoleculeVisu
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      container.removeEventListener('mousedown', onMouseDown);
+      container.removeEventListener('mousemove', onMouseMove);
+      container.removeEventListener('mouseup', onMouseUp);
+      container.removeEventListener('mouseleave', onMouseUp);
+      container.removeEventListener('wheel', onWheel);
+      container.removeEventListener('touchstart', onTouchStart);
+      container.removeEventListener('touchmove', onTouchMove);
+      container.removeEventListener('touchend', onTouchEnd);
       cancelAnimationFrame(animationRef.current);
       if (rendererRef.current) {
         container.removeChild(rendererRef.current.domElement);
         rendererRef.current.dispose();
       }
     };
-  }, [molecule]);
+  }, [molecule, data]);
+
+  const handleReset = () => {
+    if (moleculeGroupRef.current && cameraRef.current) {
+      moleculeGroupRef.current.rotation.set(0, 0, 0);
+      moleculeGroupRef.current.position.set(0, 0, 0);
+      cameraRef.current.position.z = 8;
+      isAutoRotating.current = true;
+    }
+  };
+
+  const handleZoomIn = () => {
+    if (cameraRef.current) {
+      cameraRef.current.position.z = Math.max(3, cameraRef.current.position.z - 1);
+    }
+  };
+
+  const handleZoomOut = () => {
+    if (cameraRef.current) {
+      cameraRef.current.position.z = Math.min(20, cameraRef.current.position.z + 1);
+    }
+  };
 
   return (
-    <div ref={containerRef} className={`w-full h-full ${className}`} />
+    <div className={`relative w-full h-full ${className}`}>
+      {/* Molecule name and formula overlay */}
+      {data && (
+        <div className="absolute top-2 left-2 right-2 z-10 text-center pointer-events-none">
+          <h3 className="text-lg font-bold text-foreground drop-shadow-lg">{data.name}</h3>
+          <p className="text-sm text-muted-foreground drop-shadow-md">{data.formula}</p>
+        </div>
+      )}
+      
+      {/* 3D Canvas */}
+      <div ref={containerRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
+      
+      {/* Control buttons */}
+      {showControls && (
+        <div className="absolute bottom-2 right-2 z-10 flex gap-1">
+          <Button variant="secondary" size="icon" className="h-8 w-8" onClick={handleZoomIn} title="Zoom In">
+            <ZoomIn className="h-4 w-4" />
+          </Button>
+          <Button variant="secondary" size="icon" className="h-8 w-8" onClick={handleZoomOut} title="Zoom Out">
+            <ZoomOut className="h-4 w-4" />
+          </Button>
+          <Button variant="secondary" size="icon" className="h-8 w-8" onClick={handleReset} title="Reset View">
+            <RotateCcw className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+      
+      {/* Control hints */}
+      <div className="absolute bottom-2 left-2 z-10 text-xs text-muted-foreground opacity-70">
+        <p>Drag: Rotate • Scroll: Zoom • Shift+Drag: Pan</p>
+      </div>
+    </div>
+  );
+}
+
+// Molecule Search & Filter Component
+interface MoleculeSearchProps {
+  onSelect: (moleculeKey: string) => void;
+  selectedMolecule?: string;
+}
+
+export function MoleculeSearch({ onSelect, selectedMolecule }: MoleculeSearchProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  const categories = useMemo(() => {
+    const cats = new Set<string>();
+    Object.values(moleculeData).forEach(mol => {
+      if (mol.category) cats.add(mol.category);
+    });
+    return Array.from(cats).sort();
+  }, []);
+
+  const filteredMolecules = useMemo(() => {
+    return Object.entries(moleculeData).filter(([key, mol]) => {
+      const matchesSearch = searchQuery === '' || 
+        (mol.name?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (mol.formula?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        key.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const matchesCategory = !selectedCategory || mol.category === selectedCategory;
+      
+      return matchesSearch && matchesCategory;
+    });
+  }, [searchQuery, selectedCategory]);
+
+  return (
+    <div className="flex flex-col gap-3 h-full">
+      {/* Search input */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search by name or formula..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+      
+      {/* Category filters */}
+      <div className="flex flex-wrap gap-1.5">
+        <Badge
+          variant={selectedCategory === null ? 'default' : 'outline'}
+          className="cursor-pointer text-xs"
+          onClick={() => setSelectedCategory(null)}
+        >
+          All
+        </Badge>
+        {categories.map(cat => (
+          <Badge
+            key={cat}
+            variant={selectedCategory === cat ? 'default' : 'outline'}
+            className="cursor-pointer text-xs"
+            onClick={() => setSelectedCategory(cat)}
+          >
+            {cat}
+          </Badge>
+        ))}
+      </div>
+      
+      {/* Results count */}
+      <p className="text-xs text-muted-foreground">
+        {filteredMolecules.length} molecule{filteredMolecules.length !== 1 ? 's' : ''} found
+      </p>
+      
+      {/* Molecule list */}
+      <ScrollArea className="flex-1">
+        <div className="space-y-1 pr-3">
+          {filteredMolecules.map(([key, mol]) => (
+            <button
+              key={key}
+              onClick={() => onSelect(key)}
+              className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
+                selectedMolecule === key 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'hover:bg-muted'
+              }`}
+            >
+              <p className="font-medium text-sm">{mol.name || key}</p>
+              <p className={`text-xs ${selectedMolecule === key ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
+                {mol.formula || key}
+              </p>
+            </button>
+          ))}
+        </div>
+      </ScrollArea>
+    </div>
   );
 }
 
 export const availableMolecules = Object.keys(moleculeData);
 export const moleculeInfo = Object.fromEntries(
-  Object.entries(moleculeData).map(([key, data]) => [key, { name: data.name, formula: data.formula }])
+  Object.entries(moleculeData).map(([key, data]) => [key, { name: data.name, formula: data.formula, category: data.category }])
 );
