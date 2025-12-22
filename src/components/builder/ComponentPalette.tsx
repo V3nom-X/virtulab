@@ -14,7 +14,7 @@ export interface PaletteComponent {
 }
 
 interface ComponentPaletteProps {
-  components: PaletteComponent[];
+  components?: PaletteComponent[];
   className?: string;
 }
 
