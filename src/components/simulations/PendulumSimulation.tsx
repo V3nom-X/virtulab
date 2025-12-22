@@ -30,9 +30,13 @@ export const PendulumSimulation = forwardRef<PendulumSimulationHandle, PendulumS
   const runnerRef = useRef<Matter.Runner | null>(null);
   const constraintRef = useRef<Matter.Constraint | null>(null);
   const bobRef = useRef<Matter.Body | null>(null);
-  const [time, setTime] = useState(0);
+  const timeRef = useRef(0);
+  const isInitializedRef = useRef(false);
+  
+  // Store initial values for reset
+  const initialPropsRef = useRef({ mass, length, gravity, angle });
 
-  const initSimulation = useCallback(() => {
+  const initSimulation = useCallback((props: { mass: number; length: number; gravity: number; angle: number }) => {
     if (!canvasRef.current) return;
 
     // Clean up previous simulation - don't remove the canvas since we provide it
@@ -53,7 +57,7 @@ export const PendulumSimulation = forwardRef<PendulumSimulationHandle, PendulumS
 
     // Create engine
     const engine = Matter.Engine.create();
-    engine.gravity.y = gravity / 10;
+    engine.gravity.y = props.gravity / 10;
     engineRef.current = engine;
 
     // Create renderer
@@ -73,16 +77,16 @@ export const PendulumSimulation = forwardRef<PendulumSimulationHandle, PendulumS
     // Pivot point
     const pivotX = width / 2;
     const pivotY = height * 0.15;
-    const ropeLength = length * 120;
+    const ropeLength = props.length * 120;
 
     // Calculate initial position
-    const angleRad = (angle * Math.PI) / 180;
+    const angleRad = (props.angle * Math.PI) / 180;
     const bobX = pivotX + ropeLength * Math.sin(angleRad);
     const bobY = pivotY + ropeLength * Math.cos(angleRad);
 
     // Create bob
-    const bob = Matter.Bodies.circle(bobX, bobY, 15 + mass * 5, {
-      density: mass * 0.001,
+    const bob = Matter.Bodies.circle(bobX, bobY, 15 + props.mass * 5, {
+      density: props.mass * 0.001,
       friction: 0,
       frictionAir: 0.001,
       restitution: 0.9,
@@ -128,25 +132,29 @@ export const PendulumSimulation = forwardRef<PendulumSimulationHandle, PendulumS
     // Start render
     Matter.Render.run(render);
     
-    setTime(0);
-  }, [mass, length, gravity, angle]);
+    timeRef.current = 0;
+    isInitializedRef.current = true;
+  }, []);
 
   const resetSimulation = useCallback(() => {
     if (runnerRef.current) {
       Matter.Runner.stop(runnerRef.current);
     }
-    setTime(0);
-    initSimulation();
-  }, [initSimulation]);
+    timeRef.current = 0;
+    // Use current props for reset
+    initialPropsRef.current = { mass, length, gravity, angle };
+    initSimulation({ mass, length, gravity, angle });
+  }, [mass, length, gravity, angle, initSimulation]);
 
   // Expose reset function via ref
   useImperativeHandle(ref, () => ({
     reset: resetSimulation
   }), [resetSimulation]);
 
-  // Initialize simulation on mount and parameter changes
+  // Initialize simulation only once on mount
   useEffect(() => {
-    initSimulation();
+    initSimulation({ mass, length, gravity, angle });
+    initialPropsRef.current = { mass, length, gravity, angle };
 
     return () => {
       if (renderRef.current) {
@@ -156,7 +164,15 @@ export const PendulumSimulation = forwardRef<PendulumSimulationHandle, PendulumS
         Matter.Runner.stop(runnerRef.current);
       }
     };
-  }, [initSimulation]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Handle gravity changes (can update live)
+  useEffect(() => {
+    if (engineRef.current && isInitializedRef.current) {
+      engineRef.current.gravity.y = gravity / 10;
+    }
+  }, [gravity]);
 
   // Handle play/pause
   useEffect(() => {
@@ -179,10 +195,10 @@ export const PendulumSimulation = forwardRef<PendulumSimulationHandle, PendulumS
           const kineticEnergy = 0.5 * mass * velocity ** 2;
           const potentialEnergy = mass * gravity * (length * 120 - dy);
           
-          setTime(t => t + 0.016 * speed);
+          timeRef.current += 0.016 * speed;
           
           onDataUpdate?.({
-            time: time,
+            time: timeRef.current,
             angle: currentAngle,
             velocity,
             energy: kineticEnergy + potentialEnergy
@@ -194,14 +210,7 @@ export const PendulumSimulation = forwardRef<PendulumSimulationHandle, PendulumS
     } else {
       Matter.Runner.stop(runnerRef.current);
     }
-  }, [isPlaying, speed, mass, gravity, length, time, onDataUpdate]);
-
-  // Handle gravity changes
-  useEffect(() => {
-    if (engineRef.current) {
-      engineRef.current.gravity.y = gravity / 10;
-    }
-  }, [gravity]);
+  }, [isPlaying, speed, mass, gravity, length, onDataUpdate]);
 
   return (
     <canvas

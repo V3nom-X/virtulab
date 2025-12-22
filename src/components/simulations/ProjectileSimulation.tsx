@@ -29,8 +29,9 @@ export const ProjectileSimulation = forwardRef<ProjectileSimulationHandle, Proje
   const projectileRef = useRef<Matter.Body | null>(null);
   const trailRef = useRef<{ x: number; y: number }[]>([]);
   const startTimeRef = useRef<number>(0);
+  const isInitializedRef = useRef(false);
 
-  const initSimulation = useCallback(() => {
+  const initSimulation = useCallback((props: { velocity: number; angle: number; gravity: number }) => {
     if (!canvasRef.current) return;
 
     // Clean up previous simulation - don't remove the canvas since we provide it
@@ -51,7 +52,7 @@ export const ProjectileSimulation = forwardRef<ProjectileSimulationHandle, Proje
 
     // Create engine
     const engine = Matter.Engine.create();
-    engine.gravity.y = gravity / 10;
+    engine.gravity.y = props.gravity / 10;
     engineRef.current = engine;
 
     // Create renderer
@@ -89,7 +90,7 @@ export const ProjectileSimulation = forwardRef<ProjectileSimulationHandle, Proje
     });
 
     // Projectile (starts at launcher)
-    const angleRad = (angle * Math.PI) / 180;
+    const angleRad = (props.angle * Math.PI) / 180;
     const projectile = Matter.Bodies.circle(60, height - 70, 12, {
       restitution: 0.6,
       friction: 0.1,
@@ -103,8 +104,8 @@ export const ProjectileSimulation = forwardRef<ProjectileSimulationHandle, Proje
     projectileRef.current = projectile;
 
     // Apply initial velocity
-    const vx = velocity * Math.cos(angleRad) * 0.5;
-    const vy = -velocity * Math.sin(angleRad) * 0.5;
+    const vx = props.velocity * Math.cos(angleRad) * 0.5;
+    const vy = -props.velocity * Math.sin(angleRad) * 0.5;
     Matter.Body.setVelocity(projectile, { x: vx, y: vy });
 
     // Add to world
@@ -178,24 +179,26 @@ export const ProjectileSimulation = forwardRef<ProjectileSimulationHandle, Proje
 
     // Start render
     Matter.Render.run(render);
+    isInitializedRef.current = true;
 
-  }, [velocity, angle, gravity]);
+  }, []);
 
   const resetSimulation = useCallback(() => {
     if (runnerRef.current) {
       Matter.Runner.stop(runnerRef.current);
     }
     trailRef.current = [];
-    initSimulation();
-  }, [initSimulation]);
+    initSimulation({ velocity, angle, gravity });
+  }, [velocity, angle, gravity, initSimulation]);
 
   // Expose reset function via ref
   useImperativeHandle(ref, () => ({
     reset: resetSimulation
   }), [resetSimulation]);
 
+  // Initialize only on mount
   useEffect(() => {
-    initSimulation();
+    initSimulation({ velocity, angle, gravity });
 
     return () => {
       if (renderRef.current) {
@@ -205,8 +208,10 @@ export const ProjectileSimulation = forwardRef<ProjectileSimulationHandle, Proje
         Matter.Runner.stop(runnerRef.current);
       }
     };
-  }, [initSimulation]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
+  // Handle play/pause
   useEffect(() => {
     if (!engineRef.current || !runnerRef.current) return;
 
@@ -235,8 +240,9 @@ export const ProjectileSimulation = forwardRef<ProjectileSimulationHandle, Proje
     }
   }, [isPlaying, speed, onDataUpdate]);
 
+  // Handle gravity changes (can update live)
   useEffect(() => {
-    if (engineRef.current) {
+    if (engineRef.current && isInitializedRef.current) {
       engineRef.current.gravity.y = gravity / 10;
     }
   }, [gravity]);
