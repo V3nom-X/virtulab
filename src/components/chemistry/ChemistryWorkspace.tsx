@@ -2,9 +2,10 @@ import { useState, useRef } from "react";
 import { Element, elements, getElementBySymbol } from "@/data/elements";
 import { DraggableElement } from "./DraggableElement";
 import { PeriodicTable } from "./PeriodicTable";
-import { MoleculeVisualization, availableMolecules } from "./MoleculeVisualization";
+import { MoleculeVisualization, MoleculeSearch, availableMolecules } from "./MoleculeVisualization";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { 
   Trash2, 
   RotateCcw, 
@@ -15,7 +16,8 @@ import {
   Snowflake,
   Zap,
   Atom,
-  X
+  X,
+  Search
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -62,16 +64,6 @@ const commonReactions: Reaction[] = [
     type: 'combustion',
     energyChange: 'exothermic',
     color: 'orange'
-  },
-  { 
-    reactants: ['C', 'C', 'H', 'H', 'H', 'H', 'H', 'H', 'O', 'O', 'O', 'O', 'O', 'O', 'O'], 
-    products: [
-      { symbol: 'CO₂', name: 'Carbon Dioxide', formula: 'CO2' },
-      { symbol: 'H₂O', name: 'Water', formula: 'H2O' }
-    ],
-    description: '2C₂H₆ + 7O₂ → 4CO₂ + 6H₂O (Ethane Combustion)',
-    type: 'combustion',
-    energyChange: 'exothermic'
   },
   // Synthesis reactions
   { 
@@ -121,27 +113,12 @@ const commonReactions: Reaction[] = [
     energyChange: 'exothermic',
     color: 'blue'
   },
-  { 
-    reactants: ['S', 'O', 'O', 'O'], 
-    products: [{ symbol: 'SO₃', name: 'Sulfur Trioxide', formula: 'SO3' }],
-    description: '2S + 3O₂ → 2SO₃',
-    type: 'combustion',
-    conditions: { catalyst: 'V₂O₅' },
-    energyChange: 'exothermic'
-  },
   // Acid formation
   { 
     reactants: ['H', 'Cl'], 
     products: [{ symbol: 'HCl', name: 'Hydrochloric Acid', formula: 'HCl' }],
     description: 'H₂ + Cl₂ → 2HCl',
     type: 'synthesis',
-    energyChange: 'exothermic'
-  },
-  { 
-    reactants: ['H', 'H', 'S', 'O', 'O', 'O', 'O'], 
-    products: [{ symbol: 'H₂SO₄', name: 'Sulfuric Acid', formula: 'H2SO4' }],
-    description: 'SO₃ + H₂O → H₂SO₄ (Contact Process)',
-    type: 'acid-base',
     energyChange: 'exothermic'
   },
   // Metal reactions
@@ -167,42 +144,6 @@ const commonReactions: Reaction[] = [
     description: '4Al + 3O₂ → 2Al₂O₃',
     type: 'oxidation',
     energyChange: 'exothermic'
-  },
-  // Single replacement
-  { 
-    reactants: ['Zn', 'Cu', 'S', 'O', 'O', 'O', 'O'], 
-    products: [
-      { symbol: 'ZnSO₄', name: 'Zinc Sulfate', formula: 'ZnSO4' },
-      { symbol: 'Cu', name: 'Copper', formula: 'Cu' }
-    ],
-    description: 'Zn + CuSO₄ → ZnSO₄ + Cu (Displacement)',
-    type: 'single-replacement',
-    energyChange: 'exothermic'
-  },
-  // Double replacement / Precipitation
-  { 
-    reactants: ['Na', 'Na', 'Cl', 'Cl', 'Ag', 'Ag', 'N', 'O', 'O', 'O', 'O', 'O', 'O'], 
-    products: [
-      { symbol: 'AgCl', name: 'Silver Chloride', formula: 'AgCl' },
-      { symbol: 'NaNO₃', name: 'Sodium Nitrate', formula: 'NaNO3' }
-    ],
-    description: 'NaCl + AgNO₃ → AgCl↓ + NaNO₃ (Precipitation)',
-    type: 'double-replacement',
-    energyChange: 'exothermic',
-    color: 'white-precipitate'
-  },
-  // Thermite reaction
-  { 
-    reactants: ['Al', 'Al', 'Fe', 'Fe', 'O', 'O', 'O'], 
-    products: [
-      { symbol: 'Fe', name: 'Iron', formula: 'Fe' },
-      { symbol: 'Al₂O₃', name: 'Aluminum Oxide', formula: 'Al2O3' }
-    ],
-    description: '2Al + Fe₂O₃ → 2Fe + Al₂O₃ (Thermite Reaction)',
-    type: 'single-replacement',
-    conditions: { minTemp: 1500 },
-    energyChange: 'exothermic',
-    color: 'molten-iron'
   },
   // Water reactions
   { 
@@ -240,6 +181,29 @@ const commonReactions: Reaction[] = [
   },
 ];
 
+// Helper function to count elements
+function countElements(symbols: string[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  symbols.forEach(s => {
+    counts[s] = (counts[s] || 0) + 1;
+  });
+  return counts;
+}
+
+// Check if placed elements contain the required reactants
+function matchesReaction(placedSymbols: string[], reactionSymbols: string[]): boolean {
+  const placedCounts = countElements(placedSymbols);
+  const reactionCounts = countElements(reactionSymbols);
+  
+  // Check if all required reactants are present with sufficient quantity
+  for (const [element, count] of Object.entries(reactionCounts)) {
+    if ((placedCounts[element] || 0) < count) {
+      return false;
+    }
+  }
+  return true;
+}
+
 export function ChemistryWorkspace() {
   const [placedElements, setPlacedElements] = useState<PlacedElement[]>([]);
   const [showPeriodicTable, setShowPeriodicTable] = useState(false);
@@ -273,17 +237,51 @@ export function ChemistryWorkspace() {
     );
   };
 
-  const checkReaction = () => {
-    setIsReacting(true);
-    const symbols = placedElements.map(e => e.element.symbol).sort();
+  // Handle drop from quick-add tiles
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const symbol = e.dataTransfer.getData('element');
+    if (!symbol) return;
     
+    const element = getElementBySymbol(symbol);
+    if (!element) return;
+    
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    
+    const newElement: PlacedElement = {
+      id: `${element.symbol}-${Date.now()}`,
+      element,
+      position: { 
+        x: e.clientX - rect.left - 25,
+        y: e.clientY - rect.top - 25
+      }
+    };
+    setPlacedElements(prev => [...prev, newElement]);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  };
+
+  const handleDragStart = (e: React.DragEvent, symbol: string) => {
+    e.dataTransfer.setData('element', symbol);
+    e.dataTransfer.effectAllowed = 'copy';
+  };
+
+  const checkReaction = () => {
+    if (placedElements.length < 2) {
+      toast.error('Add at least 2 elements to check for reactions');
+      return;
+    }
+    
+    setIsReacting(true);
+    const symbols = placedElements.map(e => e.element.symbol);
+    
+    // Find a matching reaction using the improved matching logic
     for (const reaction of commonReactions) {
-      const reactionSymbols = [...reaction.reactants].sort();
-      
-      // Check if we have the right elements
-      if (symbols.length === reactionSymbols.length && 
-          symbols.every((s, i) => s === reactionSymbols[i])) {
-        
+      if (matchesReaction(symbols, reaction.reactants)) {
         // Check temperature conditions
         if (reaction.conditions?.minTemp && temperature < reaction.conditions.minTemp) {
           toast.error(`Reaction requires minimum ${reaction.conditions.minTemp}°C. Current: ${temperature}°C`);
@@ -409,6 +407,7 @@ export function ChemistryWorkspace() {
         {/* Element Palette */}
         <div className="w-52 border-r bg-card p-3 space-y-3 overflow-auto">
           <div className="text-sm font-medium mb-2">Quick Add Elements</div>
+          <p className="text-xs text-muted-foreground mb-2">Drag or click to add</p>
           <div className="grid grid-cols-3 gap-2">
             {quickAddElements.map(({ symbol }) => {
               const element = getElementBySymbol(symbol);
@@ -416,8 +415,10 @@ export function ChemistryWorkspace() {
               return (
                 <button
                   key={symbol}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, symbol)}
                   onClick={() => addElement(element)}
-                  className="p-2 bg-muted/50 rounded-lg hover:bg-muted transition-colors text-center hover:scale-105 active:scale-95"
+                  className="p-2 bg-muted/50 rounded-lg hover:bg-muted transition-colors text-center hover:scale-105 active:scale-95 cursor-grab active:cursor-grabbing"
                 >
                   <div className="text-lg font-bold">{symbol}</div>
                   <div className="text-[9px] text-muted-foreground truncate">{element.name}</div>
@@ -449,7 +450,12 @@ export function ChemistryWorkspace() {
         </div>
 
         {/* Main Workspace */}
-        <div className="flex-1 relative bg-muted/20 overflow-hidden" ref={containerRef}>
+        <div 
+          className="flex-1 relative bg-muted/20 overflow-hidden" 
+          ref={containerRef}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+        >
           {/* Grid background */}
           <div 
             className="absolute inset-0 opacity-20"
@@ -486,7 +492,7 @@ export function ChemistryWorkspace() {
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center text-muted-foreground">
                 <FlaskConical className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                <p className="text-sm">Add elements from the palette</p>
+                <p className="text-sm">Drag elements from the palette or click to add</p>
                 <p className="text-xs">Combine elements and click "React" to see chemical reactions</p>
               </div>
             </div>
@@ -588,38 +594,37 @@ export function ChemistryWorkspace() {
         </div>
       )}
 
-      {/* Molecule Viewer Modal */}
+      {/* Molecule Viewer Modal with Search */}
       {showMoleculeViewer && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-8">
-          <div className="bg-card border rounded-2xl shadow-2xl w-[600px] h-[500px] flex flex-col">
+          <div className="bg-card border rounded-2xl shadow-2xl w-[900px] h-[600px] flex flex-col">
             <div className="border-b p-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold">3D Molecule Viewer</h2>
               <Button variant="ghost" size="sm" onClick={() => setShowMoleculeViewer(false)}>
                 <X className="w-4 h-4" />
               </Button>
             </div>
-            <div className="p-4 border-b">
-              <div className="flex gap-2 flex-wrap">
-                {availableMolecules.map((mol) => (
-                  <Button
-                    key={mol}
-                    variant={selectedMolecule === mol ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSelectedMolecule(mol)}
-                  >
-                    {mol}
-                  </Button>
-                ))}
+            <div className="flex-1 flex overflow-hidden">
+              {/* Search Panel */}
+              <div className="w-64 border-r p-4">
+                <MoleculeSearch 
+                  onSelect={setSelectedMolecule}
+                  selectedMolecule={selectedMolecule || undefined}
+                />
               </div>
-            </div>
-            <div className="flex-1 p-4">
-              {selectedMolecule ? (
-                <MoleculeVisualization molecule={selectedMolecule} />
-              ) : (
-                <div className="h-full flex items-center justify-center text-muted-foreground">
-                  Select a molecule to view
-                </div>
-              )}
+              {/* Viewer */}
+              <div className="flex-1 p-4">
+                {selectedMolecule ? (
+                  <MoleculeVisualization molecule={selectedMolecule} showControls />
+                ) : (
+                  <div className="h-full flex items-center justify-center text-muted-foreground">
+                    <div className="text-center">
+                      <Atom className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                      <p>Select a molecule to view its 3D structure</p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
