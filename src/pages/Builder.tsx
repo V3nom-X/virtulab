@@ -1,14 +1,18 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Footer } from "@/components/home/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Save, 
   Share2, 
   Play, 
+  Pause,
   Undo, 
   Redo,
   Code2,
@@ -16,27 +20,40 @@ import {
   BarChart3,
   Atom,
   Link2,
-  Loader2
+  Loader2,
+  LayoutTemplate,
+  Eye
 } from "lucide-react";
 import { toast } from "sonner";
-import { ComponentPalette } from "@/components/builder/ComponentPalette";
+import { ComponentPalette, PaletteComponent } from "@/components/builder/ComponentPalette";
 import { DragDropCanvas, CanvasComponent } from "@/components/builder/DragDropCanvas";
 import { PropertiesPanel } from "@/components/builder/PropertiesPanel";
 import { ScriptEditor } from "@/components/builder/ScriptEditor";
 import { VariableControls, Variable } from "@/components/builder/VariableControls";
 import { DataOutput } from "@/components/builder/DataOutput";
 import { FormulaBuilder } from "@/components/builder/FormulaBuilder";
+import { BuilderPreview, Connection } from "@/components/builder/BuilderPreview";
+import { builderTemplates, ExperimentTemplate } from "@/data/builderTemplates";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Builder = () => {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const sharedId = searchParams.get('id');
+  
   const [experimentName, setExperimentName] = useState("Untitled Experiment");
   const [components, setComponents] = useState<CanvasComponent[]>([]);
+  const [connections, setConnections] = useState<Connection[]>([]);
   const [selectedComponent, setSelectedComponent] = useState<CanvasComponent | null>(null);
   const [activeTab, setActiveTab] = useState("components");
   const [isSaving, setIsSaving] = useState(false);
   const [experimentId, setExperimentId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Preview state
+  const [isPreviewing, setIsPreviewing] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   
   // Script state
   const [scriptCode, setScriptCode] = useState("");
@@ -49,13 +66,48 @@ const Builder = () => {
   
   // Data output state
   const [dataPoints, setDataPoints] = useState<{ time: number; [key: string]: number }[]>([]);
-  const [isRecording, setIsRecording] = useState(false);
 
   const dataSeries = [
-    { key: 'position', name: 'Position', color: 'hsl(var(--primary))', unit: 'm' },
-    { key: 'velocity', name: 'Velocity', color: 'hsl(142, 71%, 45%)', unit: 'm/s' },
-    { key: 'energy', name: 'Energy', color: 'hsl(45, 93%, 47%)', unit: 'J' },
+    { key: 'x', name: 'X Position', color: 'hsl(var(--primary))', unit: 'm' },
+    { key: 'y', name: 'Y Position', color: 'hsl(142, 71%, 45%)', unit: 'm' },
+    { key: 'velocity', name: 'Velocity', color: 'hsl(45, 93%, 47%)', unit: 'm/s' },
   ];
+
+  // Load shared experiment
+  useEffect(() => {
+    if (sharedId) {
+      loadExperiment(sharedId);
+    }
+  }, [sharedId]);
+
+  const loadExperiment = async (id: string) => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('custom_experiments')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) throw error;
+      
+      if (data) {
+        setExperimentName(data.title);
+        setExperimentId(data.id);
+        setComponents((data.components as unknown as CanvasComponent[]) || []);
+        const scripts = data.scripts as { code?: string; variables?: Variable[] } | null;
+        if (scripts) {
+          setScriptCode(scripts.code || '');
+          setVariables(scripts.variables || []);
+        }
+        toast.success('Experiment loaded!');
+      }
+    } catch (error) {
+      toast.error('Failed to load experiment');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handlePropertyChange = (id: string, key: string, value: any) => {
     setComponents(prev => prev.map(c => 
@@ -95,6 +147,46 @@ const Builder = () => {
     setComponents(prev => [...prev, newComponent]);
     toast.success(`Added ${moleculeKey} molecule to canvas`);
   };
+
+  // Add component from palette click
+  const handleAddComponent = useCallback((comp: PaletteComponent) => {
+    const newComponent: CanvasComponent = {
+      id: `comp_${Date.now()}`,
+      type: comp.id,
+      name: comp.name,
+      icon: comp.icon,
+      x: 100 + Math.random() * 200,
+      y: 100 + Math.random() * 200,
+      width: 150,
+      height: 80,
+      properties: comp.defaultProps || {}
+    };
+    setComponents(prev => [...prev, newComponent]);
+    toast.success(`Added ${comp.name}`);
+  }, []);
+
+  // Load template
+  const handleLoadTemplate = (template: ExperimentTemplate) => {
+    setExperimentName(template.name);
+    setComponents(template.components);
+    setVariables(template.variables);
+    setScriptCode(template.scriptCode);
+    setDataPoints([]);
+    setIsPreviewing(false);
+    setIsRecording(false);
+    setExperimentId(null);
+    toast.success(`Loaded "${template.name}" template`);
+  };
+
+  // Handle preview data
+  const handlePreviewData = useCallback((data: { time: number; [key: string]: number }) => {
+    if (isRecording) {
+      setDataPoints(prev => {
+        const newData = [...prev, data];
+        return newData.length > 500 ? newData.slice(-500) : newData;
+      });
+    }
+  }, [isRecording]);
 
   // Save experiment to Supabase
   const handleSave = async () => {
@@ -155,6 +247,16 @@ const Builder = () => {
     toast.success("Share link copied to clipboard!");
   };
 
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="min-h-screen flex flex-col lg:flex-row">
@@ -177,7 +279,7 @@ const Builder = () => {
             </TabsList>
 
             <TabsContent value="components" className="flex-1 m-0 overflow-hidden">
-              <ComponentPalette />
+              <ComponentPalette onComponentClick={handleAddComponent} />
             </TabsContent>
 
             <TabsContent value="variables" className="flex-1 m-0 p-2 overflow-auto">
@@ -226,6 +328,41 @@ const Builder = () => {
               <Badge variant="secondary">{experimentId ? 'Saved' : 'Draft'}</Badge>
             </div>
             <div className="flex items-center gap-2">
+              {/* Templates Dialog */}
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <LayoutTemplate className="w-4 h-4 mr-1" />
+                    Templates
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Experiment Templates</DialogTitle>
+                  </DialogHeader>
+                  <ScrollArea className="h-[400px] pr-4">
+                    <div className="grid gap-3">
+                      {builderTemplates.map(template => (
+                        <button
+                          key={template.id}
+                          onClick={() => handleLoadTemplate(template)}
+                          className="text-left p-4 rounded-lg border border-border hover:border-primary/50 hover:bg-muted/50 transition-colors"
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge variant="secondary" className="text-xs">{template.category}</Badge>
+                            <span className="font-medium">{template.name}</span>
+                          </div>
+                          <p className="text-sm text-muted-foreground">{template.description}</p>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            {template.components.length} components • {template.variables.length} variables
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </DialogContent>
+              </Dialog>
+              
               <Button variant="ghost" size="icon" className="h-8 w-8">
                 <Undo className="w-4 h-4" />
               </Button>
@@ -233,10 +370,33 @@ const Builder = () => {
                 <Redo className="w-4 h-4" />
               </Button>
               <div className="w-px h-6 bg-border mx-1" />
-              <Button variant="outline" size="sm" onClick={() => setIsRecording(!isRecording)}>
-                <Play className="w-4 h-4 mr-1" />
-                {isRecording ? 'Stop' : 'Preview'}
+              
+              {/* Preview Button */}
+              <Button 
+                variant={isPreviewing ? "secondary" : "outline"} 
+                size="sm" 
+                onClick={() => {
+                  setIsPreviewing(!isPreviewing);
+                  if (!isPreviewing) {
+                    setDataPoints([]);
+                  }
+                }}
+              >
+                {isPreviewing ? <Pause className="w-4 h-4 mr-1" /> : <Eye className="w-4 h-4 mr-1" />}
+                {isPreviewing ? 'Stop' : 'Preview'}
               </Button>
+              
+              {isPreviewing && (
+                <Button 
+                  variant={isRecording ? "destructive" : "outline"} 
+                  size="sm" 
+                  onClick={() => setIsRecording(!isRecording)}
+                >
+                  <Play className="w-4 h-4 mr-1" />
+                  {isRecording ? 'Recording...' : 'Record'}
+                </Button>
+              )}
+              
               <Button variant="outline" size="sm" onClick={handleShare} disabled={!experimentId}>
                 <Link2 className="w-4 h-4 mr-1" />
                 Share
@@ -248,14 +408,27 @@ const Builder = () => {
             </div>
           </div>
 
-          {/* Canvas */}
-          <DragDropCanvas
-            components={components}
-            onComponentsChange={setComponents}
-            onComponentSelect={setSelectedComponent}
-            selectedId={selectedComponent?.id}
-            className="flex-1"
-          />
+          {/* Canvas or Preview */}
+          {isPreviewing ? (
+            <BuilderPreview
+              components={components}
+              variables={variables}
+              connections={connections}
+              isRunning={isPreviewing}
+              onDataPoint={handlePreviewData}
+              className="flex-1"
+            />
+          ) : (
+            <DragDropCanvas
+              components={components}
+              onComponentsChange={setComponents}
+              onComponentSelect={setSelectedComponent}
+              selectedId={selectedComponent?.id}
+              connections={connections}
+              onConnectionsChange={setConnections}
+              className="flex-1"
+            />
+          )}
         </div>
 
         {/* Right Properties Panel */}

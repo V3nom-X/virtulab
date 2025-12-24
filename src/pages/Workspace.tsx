@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -29,9 +29,10 @@ interface DataPoint {
 
 const Workspace = () => {
   const [searchParams] = useSearchParams();
-  const [activeSimulation, setActiveSimulation] = useState<string>(
-    searchParams.get('type') || 'pendulum'
-  );
+  const experimentType = searchParams.get('type') || 'pendulum';
+  const experimentId = searchParams.get('experiment');
+  
+  const [activeSimulation, setActiveSimulation] = useState<string>(experimentType);
   const [showGraphs, setShowGraphs] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState([1]);
@@ -84,6 +85,20 @@ const Workspace = () => {
     { id: 'emspectrum', name: 'EM Spectrum', icon: Radio, category: 'Physics' },
     { id: 'chemistry', name: 'Chemistry', icon: FlaskConical, category: 'Chemistry' },
   ];
+
+  // Reset graph data when experiment type or id changes
+  useEffect(() => {
+    setIsPlaying(false);
+    setGraphData([]);
+    setActiveSimulation(experimentType);
+    
+    // Reset all simulation refs
+    pendulumRef.current?.reset();
+    projectileRef.current?.reset();
+    springRef.current?.reset();
+    waveRef.current?.reset();
+    collisionRef.current?.reset();
+  }, [experimentType, experimentId]);
 
   const activeSim = simulations.find(s => s.id === activeSimulation);
 

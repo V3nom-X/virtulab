@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Search, ChevronDown, ChevronRight } from 'lucide-react';
+import { Search, ChevronDown, ChevronRight, Plus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 export interface PaletteComponent {
   id: string;
@@ -16,6 +17,7 @@ export interface PaletteComponent {
 interface ComponentPaletteProps {
   components?: PaletteComponent[];
   className?: string;
+  onComponentClick?: (component: PaletteComponent) => void;
 }
 
 const defaultComponents: PaletteComponent[] = [
@@ -60,7 +62,7 @@ const defaultComponents: PaletteComponent[] = [
   { id: 'ammeter', name: 'Ammeter', icon: 'A', category: 'Measurement', description: 'Current measurement', defaultProps: {} },
 ];
 
-export function ComponentPalette({ components = defaultComponents, className = '' }: ComponentPaletteProps) {
+export function ComponentPalette({ components = defaultComponents, className = '', onComponentClick }: ComponentPaletteProps) {
   const [search, setSearch] = useState('');
   const [expandedCategories, setExpandedCategories] = useState<string[]>(['Physics', 'Chemistry']);
 
@@ -92,6 +94,10 @@ export function ComponentPalette({ components = defaultComponents, className = '
   const handleDragStart = (e: React.DragEvent, comp: PaletteComponent) => {
     e.dataTransfer.setData('component', JSON.stringify(comp));
     e.dataTransfer.effectAllowed = 'copy';
+  };
+
+  const handleClick = (comp: PaletteComponent) => {
+    onComponentClick?.(comp);
   };
 
   return (
@@ -138,12 +144,17 @@ export function ComponentPalette({ components = defaultComponents, className = '
                       key={comp.id}
                       draggable
                       onDragStart={(e) => handleDragStart(e, comp)}
-                      className="p-2 bg-muted/50 rounded-lg border border-transparent hover:border-primary/30 cursor-grab active:cursor-grabbing transition-all text-center group"
+                      onClick={() => handleClick(comp)}
+                      className="relative p-2 bg-muted/50 rounded-lg border border-transparent hover:border-primary/30 cursor-grab active:cursor-grabbing transition-all text-center group"
                       title={comp.description}
                     >
                       <div className="text-xl mb-0.5">{comp.icon}</div>
                       <div className="text-[10px] font-medium text-muted-foreground group-hover:text-foreground transition-colors truncate">
                         {comp.name}
+                      </div>
+                      {/* Click to add indicator */}
+                      <div className="absolute inset-0 flex items-center justify-center bg-primary/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                        <Plus className="w-4 h-4 text-primary" />
                       </div>
                     </div>
                   ))}
@@ -159,6 +170,13 @@ export function ComponentPalette({ components = defaultComponents, className = '
           )}
         </div>
       </ScrollArea>
+      
+      {/* Help text */}
+      <div className="p-2 border-t border-border">
+        <p className="text-[10px] text-muted-foreground text-center">
+          Drag to canvas or click to add
+        </p>
+      </div>
     </div>
   );
 }
