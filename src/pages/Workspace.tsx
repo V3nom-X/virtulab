@@ -38,6 +38,9 @@ const Workspace = () => {
   const [speed, setSpeed] = useState([1]);
   const [graphData, setGraphData] = useState<DataPoint[]>([]);
   const maxDataPoints = 150;
+  
+  // Guard to prevent data updates during transitions
+  const acceptDataRef = useRef(true);
 
   // Pendulum state
   const [pendulumMass, setPendulumMass] = useState([1.5]);
@@ -88,6 +91,8 @@ const Workspace = () => {
 
   // Reset graph data when experiment type or id changes
   useEffect(() => {
+    // Temporarily stop accepting data updates during transition
+    acceptDataRef.current = false;
     setIsPlaying(false);
     setGraphData([]);
     setActiveSimulation(experimentType);
@@ -98,11 +103,21 @@ const Workspace = () => {
     springRef.current?.reset();
     waveRef.current?.reset();
     collisionRef.current?.reset();
+    
+    // Re-enable data updates after a short delay to ensure cleanup is complete
+    const timeoutId = setTimeout(() => {
+      acceptDataRef.current = true;
+    }, 100);
+    
+    return () => clearTimeout(timeoutId);
   }, [experimentType, experimentId]);
 
   const activeSim = simulations.find(s => s.id === activeSimulation);
 
   const handleDataUpdate = useCallback((data: DataPoint) => {
+    // Only accept data if the guard allows it
+    if (!acceptDataRef.current) return;
+    
     setGraphData(prev => {
       const newData = [...prev, data];
       return newData.length > maxDataPoints ? newData.slice(-maxDataPoints) : newData;

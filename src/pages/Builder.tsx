@@ -36,6 +36,12 @@ import { BuilderPreview, Connection } from "@/components/builder/BuilderPreview"
 import { builderTemplates, ExperimentTemplate } from "@/data/builderTemplates";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUndoRedo } from "@/hooks/useUndoRedo";
+
+interface BuilderState {
+  components: CanvasComponent[];
+  connections: Connection[];
+}
 
 const Builder = () => {
   const { user } = useAuth();
@@ -43,13 +49,22 @@ const Builder = () => {
   const sharedId = searchParams.get('id');
   
   const [experimentName, setExperimentName] = useState("Untitled Experiment");
-  const [components, setComponents] = useState<CanvasComponent[]>([]);
-  const [connections, setConnections] = useState<Connection[]>([]);
   const [selectedComponent, setSelectedComponent] = useState<CanvasComponent | null>(null);
   const [activeTab, setActiveTab] = useState("components");
   const [isSaving, setIsSaving] = useState(false);
   const [experimentId, setExperimentId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Undo/Redo state for components and connections
+  const {
+    state: builderState,
+    set: setBuilderState,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    reset: resetBuilderState,
+  } = useUndoRedo<BuilderState>({ components: [], connections: [] });
   
   // Preview state
   const [isPreviewing, setIsPreviewing] = useState(false);
@@ -66,6 +81,24 @@ const Builder = () => {
   
   // Data output state
   const [dataPoints, setDataPoints] = useState<{ time: number; [key: string]: number }[]>([]);
+
+  // Convenience accessors
+  const components = builderState.components;
+  const connections = builderState.connections;
+  
+  const setComponents = useCallback((newComponents: CanvasComponent[] | ((prev: CanvasComponent[]) => CanvasComponent[])) => {
+    setBuilderState(prev => ({
+      ...prev,
+      components: typeof newComponents === 'function' ? newComponents(prev.components) : newComponents
+    }));
+  }, [setBuilderState]);
+  
+  const setConnections = useCallback((newConnections: Connection[] | ((prev: Connection[]) => Connection[])) => {
+    setBuilderState(prev => ({
+      ...prev,
+      connections: typeof newConnections === 'function' ? newConnections(prev.connections) : newConnections
+    }));
+  }, [setBuilderState]);
 
   const dataSeries = [
     { key: 'x', name: 'X Position', color: 'hsl(var(--primary))', unit: 'm' },
@@ -94,7 +127,10 @@ const Builder = () => {
       if (data) {
         setExperimentName(data.title);
         setExperimentId(data.id);
-        setComponents((data.components as unknown as CanvasComponent[]) || []);
+        resetBuilderState({
+          components: (data.components as unknown as CanvasComponent[]) || [],
+          connections: []
+        });
         const scripts = data.scripts as { code?: string; variables?: Variable[] } | null;
         if (scripts) {
           setScriptCode(scripts.code || '');
@@ -168,7 +204,10 @@ const Builder = () => {
   // Load template
   const handleLoadTemplate = (template: ExperimentTemplate) => {
     setExperimentName(template.name);
-    setComponents(template.components);
+    resetBuilderState({
+      components: template.components,
+      connections: []
+    });
     setVariables(template.variables);
     setScriptCode(template.scriptCode);
     setDataPoints([]);
@@ -363,10 +402,24 @@ const Builder = () => {
                 </DialogContent>
               </Dialog>
               
-              <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8" 
+                onClick={undo} 
+                disabled={!canUndo}
+                title="Undo (Ctrl+Z)"
+              >
                 <Undo className="w-4 h-4" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8" 
+                onClick={redo} 
+                disabled={!canRedo}
+                title="Redo (Ctrl+Y)"
+              >
                 <Redo className="w-4 h-4" />
               </Button>
               <div className="w-px h-6 bg-border mx-1" />
