@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { 
   Save, 
   Share2, 
@@ -22,7 +24,8 @@ import {
   Link2,
   Loader2,
   LayoutTemplate,
-  Eye
+  Eye,
+  Box
 } from "lucide-react";
 import { toast } from "sonner";
 import { ComponentPalette, PaletteComponent } from "@/components/builder/ComponentPalette";
@@ -33,6 +36,7 @@ import { VariableControls, Variable } from "@/components/builder/VariableControl
 import { DataOutput } from "@/components/builder/DataOutput";
 import { FormulaBuilder } from "@/components/builder/FormulaBuilder";
 import { BuilderPreview, Connection } from "@/components/builder/BuilderPreview";
+import { Builder3DPreview } from "@/components/builder/Builder3DPreview";
 import { builderTemplates, ExperimentTemplate } from "@/data/builderTemplates";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -69,6 +73,7 @@ const Builder = () => {
   // Preview state
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [use3DPreview, setUse3DPreview] = useState(true);
   
   // Script state
   const [scriptCode, setScriptCode] = useState("");
@@ -440,14 +445,22 @@ const Builder = () => {
               </Button>
               
               {isPreviewing && (
-                <Button 
-                  variant={isRecording ? "destructive" : "outline"} 
-                  size="sm" 
-                  onClick={() => setIsRecording(!isRecording)}
-                >
-                  <Play className="w-4 h-4 mr-1" />
-                  {isRecording ? 'Recording...' : 'Record'}
-                </Button>
+                <>
+                  <div className="flex items-center gap-2">
+                    <Switch id="3d-mode" checked={use3DPreview} onCheckedChange={setUse3DPreview} />
+                    <Label htmlFor="3d-mode" className="text-xs flex items-center gap-1">
+                      <Box className="w-3 h-3" /> 3D
+                    </Label>
+                  </div>
+                  <Button 
+                    variant={isRecording ? "destructive" : "outline"} 
+                    size="sm" 
+                    onClick={() => setIsRecording(!isRecording)}
+                  >
+                    <Play className="w-4 h-4 mr-1" />
+                    {isRecording ? 'Recording...' : 'Record'}
+                  </Button>
+                </>
               )}
               
               <Button variant="outline" size="sm" onClick={handleShare} disabled={!experimentId}>
@@ -463,14 +476,25 @@ const Builder = () => {
 
           {/* Canvas or Preview */}
           {isPreviewing ? (
-            <BuilderPreview
-              components={components}
-              variables={variables}
-              connections={connections}
-              isRunning={isPreviewing}
-              onDataPoint={handlePreviewData}
-              className="flex-1"
-            />
+            use3DPreview ? (
+              <Builder3DPreview
+                components={components}
+                variables={variables}
+                connections={connections}
+                isRunning={isPreviewing}
+                onDataPoint={handlePreviewData}
+                className="flex-1"
+              />
+            ) : (
+              <BuilderPreview
+                components={components}
+                variables={variables}
+                connections={connections}
+                isRunning={isPreviewing}
+                onDataPoint={handlePreviewData}
+                className="flex-1"
+              />
+            )
           ) : (
             <DragDropCanvas
               components={components}

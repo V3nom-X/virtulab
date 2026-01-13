@@ -14,6 +14,7 @@ import Settings from "./pages/Settings";
 import Help from "./pages/Help";
 import Auth from "./pages/Auth";
 import Collaboration from "./pages/Collaboration";
+import Videos from "./pages/Videos";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/community" element={<Community />} />
             <Route path="/collaboration/:roomId" element={<Collaboration />} />
             <Route path="/analytics" element={<Analytics />} />
+            <Route path="/videos" element={<Videos />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/help" element={<Help />} />
             <Route path="*" element={<NotFound />} />

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { 
-  Search, Menu, X, Beaker, Home, Library, Wrench, Users, BarChart3, Settings, HelpCircle, ChevronDown, LogIn, LogOut
+  Search, Menu, X, Beaker, Home, Library, Wrench, Users, BarChart3, Settings, HelpCircle, ChevronDown, LogIn, LogOut, PlayCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,7 @@ const navLinks = [
   { path: "/library", label: "Library", icon: Library },
   { path: "/workspace", label: "Workspace", icon: Beaker },
   { path: "/builder", label: "Builder", icon: Wrench },
+  { path: "/videos", label: "Videos", icon: PlayCircle },
   { path: "/community", label: "Community", icon: Users },
   { path: "/analytics", label: "Analytics", icon: BarChart3 },
 ];
