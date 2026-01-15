@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { PendulumSimulation, PendulumSimulationHandle } from "@/components/simulations/PendulumSimulation";
 import { ProjectileSimulation, ProjectileSimulationHandle } from "@/components/simulations/ProjectileSimulation";
 import { SpringSimulation, SpringSimulationHandle } from "@/components/simulations/SpringSimulation";
@@ -15,13 +16,13 @@ import { EMSpectrumVisualization } from "@/components/simulations/EMSpectrumVisu
 import { ChemistryWorkspace } from "@/components/chemistry/ChemistryWorkspace";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { exportToCSV, generatePDFReport } from "@/utils/exportData";
+import { exportToCSV, exportToJSON, generatePDFReport } from "@/utils/exportData";
 import { toast } from "sonner";
+import { physicsPresets, getPresetByGravity } from "@/data/physicsPresets";
 import { 
-  Play, Pause, RotateCcw, Maximize2, Settings2, Download, FileText,
+  Play, Pause, RotateCcw, Maximize2, Settings2, Download, FileText, Braces,
   FlaskConical, Target, Activity, Gauge, Waves, Trash2, BarChart3, Zap, Radio
 } from "lucide-react";
-
 interface DataPoint {
   time: number;
   [key: string]: number;
@@ -47,11 +48,13 @@ const Workspace = () => {
   const [pendulumLength, setPendulumLength] = useState([1]);
   const [pendulumGravity, setPendulumGravity] = useState([9.8]);
   const [pendulumAngle, setPendulumAngle] = useState([45]);
+  const [pendulumPreset, setPendulumPreset] = useState('earth');
 
   // Projectile state
   const [projectileVelocity, setProjectileVelocity] = useState([20]);
   const [projectileAngle, setProjectileAngle] = useState([45]);
   const [projectileGravity, setProjectileGravity] = useState([9.8]);
+  const [projectilePreset, setProjectilePreset] = useState('earth');
 
   // Spring state
   const [springMass, setSpringMass] = useState([1]);
@@ -158,6 +161,31 @@ const Workspace = () => {
     toast.success('PDF report generated!');
   };
 
+  const handleExportJSON = () => {
+    if (graphData.length === 0) {
+      toast.error('No data to export. Run the simulation first.');
+      return;
+    }
+    exportToJSON(graphData, { simulationType: activeSimulation });
+    toast.success('JSON exported successfully!');
+  };
+
+  const handlePendulumPresetChange = (presetId: string) => {
+    setPendulumPreset(presetId);
+    const preset = physicsPresets.find(p => p.id === presetId);
+    if (preset && presetId !== 'custom') {
+      setPendulumGravity([preset.gravity]);
+    }
+  };
+
+  const handleProjectilePresetChange = (presetId: string) => {
+    setProjectilePreset(presetId);
+    const preset = physicsPresets.find(p => p.id === presetId);
+    if (preset && presetId !== 'custom') {
+      setProjectileGravity([preset.gravity]);
+    }
+  };
+
   const getGraphConfig = () => {
     switch (activeSimulation) {
       case 'pendulum':
@@ -226,6 +254,9 @@ const Workspace = () => {
             <Button variant="ghost" size="icon" onClick={handleExportCSV} title="Export CSV">
               <Download className="w-4 h-4" />
             </Button>
+            <Button variant="ghost" size="icon" onClick={handleExportJSON} title="Export JSON">
+              <Braces className="w-4 h-4" />
+            </Button>
             <Button variant="ghost" size="icon" onClick={handleExportPDF} title="Export PDF Report">
               <FileText className="w-4 h-4" />
             </Button>
@@ -270,7 +301,7 @@ const Workspace = () => {
                       <LineChart data={graphData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                         <XAxis dataKey="time" tick={{ fontSize: 10 }} tickFormatter={(v) => v.toFixed(1)} stroke="hsl(var(--muted-foreground))" />
-                        <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => v.toFixed(1)} stroke="hsl(var(--muted-foreground))" />
+                        <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => v.toFixed(1)} stroke="hsl(var(--muted-foreground))" domain={[(dataMin: number) => Math.min(0, dataMin), 'auto']} allowDataOverflow={false} />
                         <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }} />
                         <Legend wrapperStyle={{ fontSize: '11px' }} />
                         {graphConfig.lines.map((line) => (
@@ -311,9 +342,28 @@ const Workspace = () => {
 
               {activeSimulation === 'pendulum' && (
                 <>
+                  <div className="mb-4">
+                    <Label className="text-sm mb-2 block">Environment Preset</Label>
+                    <Select value={pendulumPreset} onValueChange={handlePendulumPresetChange}>
+                      <SelectTrigger className="bg-background">
+                        <SelectValue placeholder="Select environment" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover">
+                        {physicsPresets.map(preset => (
+                          <SelectItem key={preset.id} value={preset.id}>
+                            <span className="flex items-center gap-2">
+                              <span>{preset.icon}</span>
+                              <span>{preset.name}</span>
+                              <span className="text-muted-foreground text-xs">({preset.gravity} m/s²)</span>
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <div><div className="flex justify-between mb-2 text-sm"><span>Mass (kg)</span><span className="font-mono">{pendulumMass[0].toFixed(1)}</span></div><Slider value={pendulumMass} onValueChange={setPendulumMass} min={0.5} max={5} step={0.1} /></div>
                   <div><div className="flex justify-between mb-2 text-sm"><span>Length (m)</span><span className="font-mono">{pendulumLength[0].toFixed(2)}</span></div><Slider value={pendulumLength} onValueChange={setPendulumLength} min={0.2} max={3} step={0.1} /></div>
-                  <div><div className="flex justify-between mb-2 text-sm"><span>Gravity (m/s²)</span><span className="font-mono">{pendulumGravity[0].toFixed(1)}</span></div><Slider value={pendulumGravity} onValueChange={setPendulumGravity} min={1} max={20} step={0.1} /></div>
+                  <div><div className="flex justify-between mb-2 text-sm"><span>Gravity (m/s²)</span><span className="font-mono">{pendulumGravity[0].toFixed(1)}</span></div><Slider value={pendulumGravity} onValueChange={(v) => { setPendulumGravity(v); setPendulumPreset('custom'); }} min={1} max={20} step={0.1} /></div>
                   <div><div className="flex justify-between mb-2 text-sm"><span>Initial Angle (°)</span><span className="font-mono">{pendulumAngle[0]}</span></div><Slider value={pendulumAngle} onValueChange={setPendulumAngle} min={5} max={90} step={1} /></div>
                   <p className="text-xs text-muted-foreground">Note: Change mass/length/angle then reset to apply.</p>
                 </>
@@ -321,9 +371,28 @@ const Workspace = () => {
 
               {activeSimulation === 'projectile' && (
                 <>
+                  <div className="mb-4">
+                    <Label className="text-sm mb-2 block">Environment Preset</Label>
+                    <Select value={projectilePreset} onValueChange={handleProjectilePresetChange}>
+                      <SelectTrigger className="bg-background">
+                        <SelectValue placeholder="Select environment" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover">
+                        {physicsPresets.map(preset => (
+                          <SelectItem key={preset.id} value={preset.id}>
+                            <span className="flex items-center gap-2">
+                              <span>{preset.icon}</span>
+                              <span>{preset.name}</span>
+                              <span className="text-muted-foreground text-xs">({preset.gravity} m/s²)</span>
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <div><div className="flex justify-between mb-2 text-sm"><span>Velocity (m/s)</span><span className="font-mono">{projectileVelocity[0]}</span></div><Slider value={projectileVelocity} onValueChange={setProjectileVelocity} min={5} max={50} step={1} /></div>
                   <div><div className="flex justify-between mb-2 text-sm"><span>Launch Angle (°)</span><span className="font-mono">{projectileAngle[0]}</span></div><Slider value={projectileAngle} onValueChange={setProjectileAngle} min={5} max={85} step={1} /></div>
-                  <div><div className="flex justify-between mb-2 text-sm"><span>Gravity (m/s²)</span><span className="font-mono">{projectileGravity[0].toFixed(1)}</span></div><Slider value={projectileGravity} onValueChange={setProjectileGravity} min={1} max={20} step={0.1} /></div>
+                  <div><div className="flex justify-between mb-2 text-sm"><span>Gravity (m/s²)</span><span className="font-mono">{projectileGravity[0].toFixed(1)}</span></div><Slider value={projectileGravity} onValueChange={(v) => { setProjectileGravity(v); setProjectilePreset('custom'); }} min={1} max={20} step={0.1} /></div>
                   <p className="text-xs text-muted-foreground">Gravity updates live. Reset to change velocity/angle.</p>
                 </>
               )}

@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
@@ -41,6 +43,7 @@ import { builderTemplates, ExperimentTemplate } from "@/data/builderTemplates";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUndoRedo } from "@/hooks/useUndoRedo";
+import { physicsPresets } from "@/data/physicsPresets";
 
 interface BuilderState {
   components: CanvasComponent[];
@@ -327,6 +330,39 @@ const Builder = () => {
             </TabsContent>
 
             <TabsContent value="variables" className="flex-1 m-0 p-2 overflow-auto">
+              {/* Physics Presets Quick Select */}
+              <Card className="mb-4">
+                <CardHeader className="py-2 px-3">
+                  <CardTitle className="text-sm">Physics Presets</CardTitle>
+                </CardHeader>
+                <CardContent className="py-2 px-3">
+                  <Select
+                    onValueChange={(presetId) => {
+                      const preset = physicsPresets.find(p => p.id === presetId);
+                      if (preset && presetId !== 'custom') {
+                        handleVariableChange('gravity', preset.gravity);
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="bg-background">
+                      <SelectValue placeholder="Apply preset gravity" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover">
+                      {physicsPresets.filter(p => p.id !== 'custom').map(preset => (
+                        <SelectItem key={preset.id} value={preset.id}>
+                          <span className="flex items-center gap-2">
+                            <span>{preset.icon}</span>
+                            <span>{preset.name}</span>
+                            <span className="text-muted-foreground text-xs">({preset.gravity} m/s²)</span>
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-2">{physicsPresets.find(p => p.id === 'earth')?.description}</p>
+                </CardContent>
+              </Card>
+              
               <VariableControls
                 variables={variables}
                 onVariableChange={handleVariableChange}
