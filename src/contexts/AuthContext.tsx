@@ -21,6 +21,8 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: Error | null }>;
+  resetPassword: (email: string) => Promise<{ error: Error | null }>;
+  deleteAccount: () => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -143,6 +145,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error: error as Error | null };
   };
 
+  const resetPassword = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`
+    });
+    return { error: error as Error | null };
+  };
+
+  const deleteAccount = async () => {
+    if (!user) return { error: new Error('Not authenticated') };
+    
+    // Delete user data from related tables
+    await supabase.from('user_progress').delete().eq('user_id', user.id);
+    await supabase.from('user_badges').delete().eq('user_id', user.id);
+    await supabase.from('custom_experiments').delete().eq('user_id', user.id);
+    await supabase.from('favorite_channels').delete().eq('user_id', user.id);
+    await supabase.from('profiles').delete().eq('user_id', user.id);
+    
+    // Sign out after deletion
+    await signOut();
+    
+    return { error: null };
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -153,7 +178,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       signIn,
       signInWithGoogle,
       signOut,
-      updateProfile
+      updateProfile,
+      resetPassword,
+      deleteAccount
     }}>
       {children}
     </AuthContext.Provider>

@@ -8,6 +8,34 @@ interface ExportOptions {
   parameters?: Record<string, number | string>;
 }
 
+export function exportToJSON(data: DataPoint[], options: ExportOptions): void {
+  if (data.length === 0) {
+    console.warn('No data to export');
+    return;
+  }
+
+  const exportData = {
+    metadata: {
+      simulationType: options.simulationType,
+      exportedAt: new Date().toISOString(),
+      dataPoints: data.length,
+      duration: data.length > 0 ? data[data.length - 1].time : 0
+    },
+    parameters: options.parameters || {},
+    data: data
+  };
+
+  const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', `${options.simulationType}_data_${Date.now()}.json`);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
 export function exportToCSV(data: DataPoint[], options: ExportOptions): void {
   if (data.length === 0) {
     console.warn('No data to export');

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Beaker, Instagram, Github, Heart } from "lucide-react";
+import { Beaker, Instagram, Heart } from "lucide-react";
 
 export function Footer() {
   return (
@@ -19,22 +19,14 @@ export function Footer() {
             <p className="text-sm text-muted-foreground mb-4">
               Making science education accessible, interactive, and fun for everyone.
             </p>
-            <div className="flex items-center gap-3">
-              <a
-                href="https://instagram.com/b._.noir"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-              >
-                <Instagram className="w-5 h-5" />
-              </a>
-              <a
-                href="#"
-                className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-              >
-                <Github className="w-5 h-5" />
-              </a>
-            </div>
+            <a
+              href="https://instagram.com/b._.noir"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors inline-flex"
+            >
+              <Instagram className="w-5 h-5" />
+            </a>
           </div>
 
           {/* Quick Links */}
@@ -53,7 +45,7 @@ export function Footer() {
             <h4 className="font-semibold mb-4">Resources</h4>
             <ul className="space-y-2.5">
               <li><Link to="/help" className="text-sm text-muted-foreground hover:text-primary transition-colors">Help Center</Link></li>
-              <li><Link to="/help" className="text-sm text-muted-foreground hover:text-primary transition-colors">Video Tutorials</Link></li>
+              <li><Link to="/videos" className="text-sm text-muted-foreground hover:text-primary transition-colors">Educational Videos</Link></li>
               <li><Link to="/analytics" className="text-sm text-muted-foreground hover:text-primary transition-colors">Analytics</Link></li>
               <li><Link to="/settings" className="text-sm text-muted-foreground hover:text-primary transition-colors">Settings</Link></li>
             </ul>
@@ -64,9 +56,9 @@ export function Footer() {
             <h4 className="font-semibold mb-4">About</h4>
             <ul className="space-y-2.5">
               <li><Link to="/help" className="text-sm text-muted-foreground hover:text-primary transition-colors">About VirtuLab</Link></li>
-              <li><a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">Privacy Policy</a></li>
-              <li><a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">Terms of Service</a></li>
-              <li><a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">Accessibility</a></li>
+              <li><Link to="/help" className="text-sm text-muted-foreground hover:text-primary transition-colors">Privacy Policy</Link></li>
+              <li><Link to="/help" className="text-sm text-muted-foreground hover:text-primary transition-colors">Terms of Service</Link></li>
+              <li><Link to="/help" className="text-sm text-muted-foreground hover:text-primary transition-colors">Accessibility</Link></li>
             </ul>
           </div>
         </div>

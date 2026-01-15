@@ -48,13 +48,6 @@ const faqs = [
   },
 ];
 
-const tutorials = [
-  { title: "Getting Started with VirtuLab", duration: "5:32" },
-  { title: "Understanding the Workspace", duration: "8:15" },
-  { title: "Creating Custom Experiments", duration: "12:48" },
-  { title: "Collaboration Features", duration: "6:20" },
-];
-
 const Help = () => {
   return (
     <Layout>
@@ -64,7 +57,7 @@ const Help = () => {
           <div className="container">
             <h1 className="text-3xl md:text-4xl font-bold mb-3">Help & About</h1>
             <p className="text-muted-foreground">
-              Get help, watch tutorials, and learn more about VirtuLab
+              Get help and learn more about VirtuLab
             </p>
           </div>
         </section>
@@ -101,30 +94,6 @@ const Help = () => {
                     </AccordionItem>
                   ))}
                 </Accordion>
-              </div>
-
-              {/* Video Tutorials */}
-              <div className="bg-card rounded-xl border p-6 mt-6">
-                <div className="flex items-center gap-2 mb-6">
-                  <Play className="w-5 h-5" />
-                  <h2 className="font-semibold text-xl">Video Tutorials</h2>
-                </div>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {tutorials.map((tutorial, idx) => (
-                    <div
-                      key={idx}
-                      className="group p-4 rounded-lg bg-muted/50 hover:bg-muted cursor-pointer transition-colors"
-                    >
-                      <div className="aspect-video rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-3">
-                        <div className="w-12 h-12 rounded-full bg-primary/90 flex items-center justify-center group-hover:scale-110 transition-transform">
-                          <Play className="w-5 h-5 text-primary-foreground ml-0.5" />
-                        </div>
-                      </div>
-                      <h3 className="font-medium text-sm mb-1">{tutorial.title}</h3>
-                      <p className="text-xs text-muted-foreground">{tutorial.duration}</p>
-                    </div>
-                  ))}
-                </div>
               </div>
             </div>
 
@@ -167,18 +136,12 @@ const Help = () => {
                   <p><strong>Developer:</strong> Benjamin Menya</p>
                   <p><strong>Manager:</strong> NEX VENTURES</p>
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="gap-2" asChild>
-                    <a href="https://instagram.com/b._.noir" target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="w-4 h-4" />
-                      Instagram
-                    </a>
-                  </Button>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Github className="w-4 h-4" />
-                    GitHub
-                  </Button>
-                </div>
+                <Button variant="outline" size="sm" className="gap-2" asChild>
+                  <a href="https://instagram.com/b._.noir" target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="w-4 h-4" />
+                    Instagram
+                  </a>
+                </Button>
               </div>
             </div>
           </div>
