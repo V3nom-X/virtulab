@@ -92,7 +92,7 @@ const commonReactions: Reaction[] = [
   },
   { 
     reactants: ['Ca', 'O'], 
-    products: [{ symbol: 'CaO', name: 'Calcium Oxide (Quicklite)', formula: 'CaO' }],
+    products: [{ symbol: 'CaO', name: 'Calcium Oxide (Quicklime)', formula: 'CaO' }],
     description: '2Ca + O₂ → 2CaO',
     type: 'synthesis',
     energyChange: 'exothermic'
@@ -176,6 +176,165 @@ const commonReactions: Reaction[] = [
       { symbol: 'H₂O', name: 'Water', formula: 'H2O' }
     ],
     description: 'NaOH + HCl → NaCl + H₂O (Neutralization)',
+    type: 'acid-base',
+    energyChange: 'exothermic'
+  },
+  // NEW REACTIONS (14 more to reach 30)
+  // Precipitation reactions
+  { 
+    reactants: ['Ag', 'Na', 'Cl'], 
+    products: [
+      { symbol: 'AgCl', name: 'Silver Chloride', formula: 'AgCl' },
+      { symbol: 'NaNO₃', name: 'Sodium Nitrate', formula: 'NaNO3' }
+    ],
+    description: 'AgNO₃ + NaCl → AgCl↓ + NaNO₃ (White precipitate)',
+    type: 'double-replacement',
+    energyChange: 'exothermic',
+    color: 'white'
+  },
+  { 
+    reactants: ['Ba', 'Cl', 'Na', 'S', 'O'], 
+    products: [
+      { symbol: 'BaSO₄', name: 'Barium Sulfate', formula: 'BaSO4' },
+      { symbol: 'NaCl', name: 'Sodium Chloride', formula: 'NaCl' }
+    ],
+    description: 'BaCl₂ + Na₂SO₄ → BaSO₄↓ + 2NaCl (White precipitate)',
+    type: 'double-replacement',
+    energyChange: 'exothermic',
+    color: 'white'
+  },
+  // Decomposition reactions
+  { 
+    reactants: ['H', 'H', 'O', 'O'], 
+    products: [
+      { symbol: 'H₂O', name: 'Water', formula: 'H2O' },
+      { symbol: 'O₂', name: 'Oxygen Gas', formula: 'O2' }
+    ],
+    description: '2H₂O₂ → 2H₂O + O₂↑ (Hydrogen peroxide decomposition)',
+    type: 'decomposition',
+    conditions: { catalyst: 'MnO₂' },
+    energyChange: 'exothermic'
+  },
+  { 
+    reactants: ['Ca', 'C', 'O', 'O', 'O'], 
+    products: [
+      { symbol: 'CaO', name: 'Calcium Oxide', formula: 'CaO' },
+      { symbol: 'CO₂', name: 'Carbon Dioxide', formula: 'CO2' }
+    ],
+    description: 'CaCO₃ → CaO + CO₂↑ (Limestone decomposition)',
+    type: 'decomposition',
+    conditions: { minTemp: 800 },
+    energyChange: 'endothermic'
+  },
+  // Displacement reactions
+  { 
+    reactants: ['Zn', 'Cu', 'S', 'O'], 
+    products: [
+      { symbol: 'ZnSO₄', name: 'Zinc Sulfate', formula: 'ZnSO4' },
+      { symbol: 'Cu', name: 'Copper', formula: 'Cu' }
+    ],
+    description: 'Zn + CuSO₄ → ZnSO₄ + Cu (Zinc displaces copper)',
+    type: 'single-replacement',
+    energyChange: 'exothermic',
+    color: 'copper'
+  },
+  { 
+    reactants: ['Fe', 'Cu', 'S', 'O'], 
+    products: [
+      { symbol: 'FeSO₄', name: 'Iron(II) Sulfate', formula: 'FeSO4' },
+      { symbol: 'Cu', name: 'Copper', formula: 'Cu' }
+    ],
+    description: 'Fe + CuSO₄ → FeSO₄ + Cu (Iron displaces copper)',
+    type: 'single-replacement',
+    energyChange: 'exothermic',
+    color: 'copper'
+  },
+  // More acid-base reactions
+  { 
+    reactants: ['Ca', 'O', 'H', 'H', 'Cl'], 
+    products: [
+      { symbol: 'CaCl₂', name: 'Calcium Chloride', formula: 'CaCl2' },
+      { symbol: 'H₂O', name: 'Water', formula: 'H2O' }
+    ],
+    description: 'Ca(OH)₂ + 2HCl → CaCl₂ + 2H₂O',
+    type: 'acid-base',
+    energyChange: 'exothermic'
+  },
+  { 
+    reactants: ['N', 'H', 'H', 'H', 'Cl'], 
+    products: [{ symbol: 'NH₄Cl', name: 'Ammonium Chloride', formula: 'NH4Cl' }],
+    description: 'NH₃ + HCl → NH₄Cl (White smoke)',
+    type: 'acid-base',
+    energyChange: 'exothermic',
+    color: 'white-smoke'
+  },
+  // Thermite reaction
+  { 
+    reactants: ['Fe', 'Fe', 'O', 'O', 'O', 'Al', 'Al'], 
+    products: [
+      { symbol: 'Fe', name: 'Iron', formula: 'Fe' },
+      { symbol: 'Al₂O₃', name: 'Aluminum Oxide', formula: 'Al2O3' }
+    ],
+    description: 'Fe₂O₃ + 2Al → 2Fe + Al₂O₃ (Thermite reaction - extremely hot!)',
+    type: 'single-replacement',
+    conditions: { minTemp: 1500 },
+    energyChange: 'exothermic',
+    color: 'molten-iron'
+  },
+  // Ethanol combustion
+  { 
+    reactants: ['C', 'C', 'H', 'H', 'H', 'H', 'H', 'H', 'O', 'O', 'O'], 
+    products: [
+      { symbol: 'CO₂', name: 'Carbon Dioxide', formula: 'CO2' },
+      { symbol: 'H₂O', name: 'Water', formula: 'H2O' }
+    ],
+    description: 'C₂H₅OH + 3O₂ → 2CO₂ + 3H₂O (Ethanol combustion)',
+    type: 'combustion',
+    energyChange: 'exothermic',
+    color: 'blue-flame'
+  },
+  // Propane combustion
+  { 
+    reactants: ['C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'O', 'O', 'O', 'O', 'O'], 
+    products: [
+      { symbol: 'CO₂', name: 'Carbon Dioxide', formula: 'CO2' },
+      { symbol: 'H₂O', name: 'Water', formula: 'H2O' }
+    ],
+    description: 'C₃H₈ + 5O₂ → 3CO₂ + 4H₂O (Propane combustion)',
+    type: 'combustion',
+    energyChange: 'exothermic',
+    color: 'orange-flame'
+  },
+  // Water electrolysis (reverse)
+  { 
+    reactants: ['H', 'H', 'O', 'O'], 
+    products: [
+      { symbol: 'H₂O', name: 'Water', formula: 'H2O' }
+    ],
+    description: '2H₂ + O₂ → 2H₂O (Hydrogen-oxygen explosion)',
+    type: 'synthesis',
+    energyChange: 'exothermic',
+    color: 'explosive'
+  },
+  // Chlorine water reaction
+  { 
+    reactants: ['Cl', 'Cl', 'H', 'H', 'O'], 
+    products: [
+      { symbol: 'HCl', name: 'Hydrochloric Acid', formula: 'HCl' },
+      { symbol: 'HOCl', name: 'Hypochlorous Acid', formula: 'HOCl' }
+    ],
+    description: 'Cl₂ + H₂O → HCl + HOCl (Chlorine in water)',
+    type: 'acid-base',
+    energyChange: 'exothermic'
+  },
+  // Sulfuric acid neutralization
+  { 
+    reactants: ['Na', 'Na', 'O', 'H', 'S', 'O', 'O', 'O', 'O'], 
+    products: [
+      { symbol: 'Na₂SO₄', name: 'Sodium Sulfate', formula: 'Na2SO4' },
+      { symbol: 'H₂O', name: 'Water', formula: 'H2O' }
+    ],
+    description: '2NaOH + H₂SO₄ → Na₂SO₄ + 2H₂O',
     type: 'acid-base',
     energyChange: 'exothermic'
   },

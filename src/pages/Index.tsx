@@ -4,10 +4,12 @@ import { FeaturedExperiments } from "@/components/home/FeaturedExperiments";
 import { CategoryTiles } from "@/components/home/CategoryTiles";
 import { FeaturesSection } from "@/components/home/FeaturesSection";
 import { Footer } from "@/components/home/Footer";
+import ShaderBackground from "@/components/ui/ShaderBackground";
 
 const Index = () => {
   return (
     <Layout>
+      <ShaderBackground />
       <HeroSection />
       <FeaturedExperiments />
       <CategoryTiles />
