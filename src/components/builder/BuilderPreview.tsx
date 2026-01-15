@@ -256,11 +256,12 @@ export function BuilderPreview({
         let dataPoint: { time: number; [key: string]: number } = { time };
         
         bodiesMapRef.current.forEach((body, id) => {
-          if (!body.isStatic) {
+          if (body && !body.isStatic && body.position && body.velocity) {
+            const containerHeight = containerRef.current?.clientHeight || 400;
             dataPoint.x = Math.round(body.position.x);
-            dataPoint.y = Math.round(containerRef.current!.clientHeight - body.position.y);
+            dataPoint.y = Math.round(containerHeight - body.position.y);
             dataPoint.velocity = Math.round(Math.sqrt(body.velocity.x ** 2 + body.velocity.y ** 2) * 10) / 10;
-            dataPoint.angle = Math.round(body.angle * 180 / Math.PI);
+            dataPoint.angle = Math.round((body.angle || 0) * 180 / Math.PI);
           }
         });
         
