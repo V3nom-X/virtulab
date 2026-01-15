@@ -377,20 +377,31 @@ export function Builder3DPreview({
               break;
             }
             case 'projectile': {
-              const velocity = velocitiesRef.current.get(id);
-              if (velocity) {
-                // Apply gravity
-                velocity.y -= gravity * delta * 0.01;
-                
-                // Update position
-                object.position.x += velocity.x * delta;
-                object.position.y += velocity.y * delta;
-                
-                // Ground collision
-                if (object.position.y < -1.8) {
-                  object.position.y = -1.8;
-                  velocity.y = -velocity.y * 0.6; // Bounce with energy loss
-                }
+              let velocity = velocitiesRef.current.get(id);
+              if (!velocity) {
+                // Initialize velocity if not set
+                const props = object.userData.properties || {};
+                const vel = props.velocity || 5;
+                const angle = (props.angle || 45) * Math.PI / 180;
+                velocity = new THREE.Vector3(
+                  Math.cos(angle) * vel * 0.1,
+                  Math.sin(angle) * vel * 0.1,
+                  0
+                );
+                velocitiesRef.current.set(id, velocity);
+              }
+              
+              // Apply gravity
+              velocity.y -= gravity * delta * 0.01;
+              
+              // Update position
+              object.position.x += velocity.x * delta;
+              object.position.y += velocity.y * delta;
+              
+              // Ground collision
+              if (object.position.y < -1.8) {
+                object.position.y = -1.8;
+                velocity.y = -velocity.y * 0.6; // Bounce with energy loss
               }
               break;
             }
@@ -422,17 +433,19 @@ export function Builder3DPreview({
         });
 
         // Report data
-        if (onDataPoint) {
+        if (onDataPoint && objectsRef.current.size > 0) {
           const dataPoint: { time: number; [key: string]: number } = { 
             time: Number(elapsed.toFixed(2)) 
           };
           
           objectsRef.current.forEach((object, id) => {
-            dataPoint.x = Number(object.position.x.toFixed(2));
-            dataPoint.y = Number(object.position.y.toFixed(2));
-            const velocity = velocitiesRef.current.get(id);
-            if (velocity) {
-              dataPoint.velocity = Number(velocity.length().toFixed(2));
+            if (object && object.position) {
+              dataPoint.x = Number(object.position.x.toFixed(2));
+              dataPoint.y = Number(object.position.y.toFixed(2));
+              const velocity = velocitiesRef.current.get(id);
+              if (velocity) {
+                dataPoint.velocity = Number(velocity.length().toFixed(2));
+              }
             }
           });
           
