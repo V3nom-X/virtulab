@@ -41,6 +41,42 @@ export type Database = {
         }
         Relationships: []
       }
+      challenges: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          end_date: string
+          id: string
+          is_active: boolean | null
+          points: number | null
+          start_date: string
+          title: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description?: string | null
+          end_date: string
+          id?: string
+          is_active?: boolean | null
+          points?: number | null
+          start_date?: string
+          title: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          end_date?: string
+          id?: string
+          is_active?: boolean | null
+          points?: number | null
+          start_date?: string
+          title?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           content: string
@@ -147,6 +183,70 @@ export type Database = {
         }
         Relationships: []
       }
+      experiment_comments: {
+        Row: {
+          content: string
+          created_at: string | null
+          experiment_id: string
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          experiment_id: string
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          experiment_id?: string
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "experiment_comments_experiment_id_fkey"
+            columns: ["experiment_id"]
+            isOneToOne: false
+            referencedRelation: "custom_experiments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      experiment_likes: {
+        Row: {
+          created_at: string | null
+          experiment_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          experiment_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          experiment_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "experiment_likes_experiment_id_fkey"
+            columns: ["experiment_id"]
+            isOneToOne: false
+            referencedRelation: "custom_experiments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       experiments: {
         Row: {
           category: Database["public"]["Enums"]["experiment_category"]
@@ -189,6 +289,30 @@ export type Database = {
           thumbnail_url?: string | null
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      favorite_channels: {
+        Row: {
+          channel_id: string
+          channel_name: string
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          channel_id: string
+          channel_name: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          channel_id?: string
+          channel_name?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -355,6 +479,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_preferences: {
+        Row: {
+          color_blind_mode: boolean | null
+          community_updates_notifications: boolean | null
+          created_at: string | null
+          email_notifications: boolean | null
+          high_contrast: boolean | null
+          id: string
+          new_experiments_notifications: boolean | null
+          reduce_motion: boolean | null
+          theme: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          color_blind_mode?: boolean | null
+          community_updates_notifications?: boolean | null
+          created_at?: string | null
+          email_notifications?: boolean | null
+          high_contrast?: boolean | null
+          id?: string
+          new_experiments_notifications?: boolean | null
+          reduce_motion?: boolean | null
+          theme?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          color_blind_mode?: boolean | null
+          community_updates_notifications?: boolean | null
+          created_at?: string | null
+          email_notifications?: boolean | null
+          high_contrast?: boolean | null
+          id?: string
+          new_experiments_notifications?: boolean | null
+          reduce_motion?: boolean | null
+          theme?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       user_progress: {
         Row: {

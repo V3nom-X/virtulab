@@ -15,6 +15,8 @@ import Help from "./pages/Help";
 import Auth from "./pages/Auth";
 import Collaboration from "./pages/Collaboration";
 import Videos from "./pages/Videos";
+import Profile from "./pages/Profile";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +39,8 @@ const App = () => (
             <Route path="/collaboration/:roomId" element={<Collaboration />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/videos" element={<Videos />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/help" element={<Help />} />
             <Route path="*" element={<NotFound />} />

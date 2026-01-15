@@ -116,9 +116,9 @@ export function Navbar() {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem className="cursor-pointer">Profile</DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">Saved Experiments</DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">Settings</DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/profile')}>Profile</DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/analytics')}>My Progress</DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/settings')}>Settings</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
                   <LogOut className="w-4 h-4 mr-2" />Sign Out
