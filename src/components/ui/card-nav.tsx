@@ -2,7 +2,9 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { GoArrowUpRight } from 'react-icons/go';
+import { Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
 
 interface NavLink {
   label: string;
@@ -30,6 +32,7 @@ interface CardNavProps {
   onCtaClick?: () => void;
   ctaText?: string;
   rightContent?: React.ReactNode;
+  onSearch?: (query: string) => void;
 }
 
 export function CardNav({
@@ -44,12 +47,16 @@ export function CardNav({
   onCtaClick,
   ctaText = 'Get Started',
   rightContent,
+  onSearch,
 }: CardNavProps) {
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const navRef = useRef<HTMLElement>(null);
   const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
   const tlRef = useRef<gsap.core.Timeline | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   const calculateHeight = () => {
@@ -175,6 +182,28 @@ export function CardNav({
     navigate(href);
   };
 
+  const toggleSearch = () => {
+    setIsSearchOpen(!isSearchOpen);
+    if (!isSearchOpen) {
+      setTimeout(() => searchInputRef.current?.focus(), 100);
+    } else {
+      setSearchQuery('');
+    }
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim() && onSearch) {
+      onSearch(searchQuery);
+    }
+    // Navigate to library with search query
+    if (searchQuery.trim()) {
+      navigate(`/library?search=${encodeURIComponent(searchQuery)}`);
+      setIsSearchOpen(false);
+      setSearchQuery('');
+    }
+  };
+
   return (
     <div className={cn('card-nav-container', className)}>
       <nav
@@ -198,6 +227,49 @@ export function CardNav({
           <div className="logo-container">{logo}</div>
 
           <div className="card-nav-right">
+            {/* Animated Search */}
+            <div className="relative hidden sm:flex items-center">
+              <div
+                className={cn(
+                  'search-container overflow-hidden transition-all duration-300 ease-out',
+                  isSearchOpen ? 'w-64 opacity-100' : 'w-0 opacity-0'
+                )}
+              >
+                <form onSubmit={handleSearchSubmit} className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    ref={searchInputRef}
+                    type="search"
+                    placeholder="Search experiments..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 pr-8 h-9 bg-muted/50 border-0 focus-visible:ring-1"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </form>
+              </div>
+              <button
+                onClick={toggleSearch}
+                className={cn(
+                  'p-2 rounded-lg transition-colors',
+                  isSearchOpen
+                    ? 'text-primary'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                )}
+                aria-label="Toggle search"
+              >
+                {isSearchOpen ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
+              </button>
+            </div>
+
             {rightContent}
             {onCtaClick && (
               <button
