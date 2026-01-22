@@ -1,9 +1,10 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Beaker, LogIn, Search, Settings, HelpCircle } from "lucide-react";
+import { Beaker, HelpCircle, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardNav } from "@/components/ui/card-nav";
 import { NativeHoverCard } from "@/components/ui/native-hover-card";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 const navItems = [
   {
@@ -59,10 +60,18 @@ export function Navbar() {
   );
 
   const RightContent = (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1">
+      <ThemeToggle />
+      
       <Button variant="ghost" size="icon" className="text-muted-foreground hidden sm:flex" asChild>
         <Link to="/help">
           <HelpCircle className="w-5 h-5" />
+        </Link>
+      </Button>
+
+      <Button variant="ghost" size="icon" className="text-muted-foreground hidden sm:flex" asChild>
+        <Link to="/admin">
+          <Shield className="w-5 h-5" />
         </Link>
       </Button>
       
