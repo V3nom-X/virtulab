@@ -34,7 +34,7 @@ import { toast } from "sonner";
 import { ComponentPalette, PaletteComponent } from "@/components/builder/ComponentPalette";
 import { DragDropCanvas, CanvasComponent } from "@/components/builder/DragDropCanvas";
 import { PropertiesPanel } from "@/components/builder/PropertiesPanel";
-import { ScriptEditor } from "@/components/builder/ScriptEditor";
+import { MonacoScriptEditor } from '@/components/builder/MonacoScriptEditor';
 import { VariableControls, Variable } from "@/components/builder/VariableControls";
 import { DataOutput } from "@/components/builder/DataOutput";
 import { FormulaBuilder } from "@/components/builder/FormulaBuilder";
@@ -379,7 +379,7 @@ const Builder = () => {
             </TabsContent>
 
             <TabsContent value="script" className="flex-1 m-0 p-2 overflow-auto">
-              <ScriptEditor
+              <MonacoScriptEditor
                 initialCode={scriptCode}
                 onCodeChange={setScriptCode}
                 variables={Object.fromEntries(variables.map(v => [v.name.toLowerCase(), v.value]))}
