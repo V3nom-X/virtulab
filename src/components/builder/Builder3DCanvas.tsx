@@ -6,6 +6,7 @@ import { builder3DComponents, Builder3DComponent, searchComponents, getCategorie
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { TransformToolbar, TransformMode, useTransformControls } from './TransformGizmo';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -18,7 +19,7 @@ import {
   ZoomOut
 } from 'lucide-react';
 
-interface PlacedObject {
+export interface PlacedObject {
   id: string;
   componentId: string;
   mesh: THREE.Object3D;
@@ -56,6 +57,33 @@ export function Builder3DCanvas({
   const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
   const [draggedComponent, setDraggedComponent] = useState<Builder3DComponent | null>(null);
   const [showGrid, setShowGrid] = useState(true);
+  const [transformMode, setTransformMode] = useState<TransformMode>('translate');
+  
+  // Get selected object mesh
+  const selectedObject = placedObjects.find(o => o.id === selectedObjectId);
+  
+  // Use transform controls hook
+  useTransformControls(
+    sceneRef.current,
+    cameraRef.current,
+    rendererRef.current,
+    selectedObject?.mesh || null,
+    transformMode,
+    (obj, mode) => {
+      // Update placed object when transformed
+      setPlacedObjects(prev => prev.map(o => {
+        if (o.mesh === obj) {
+          return {
+            ...o,
+            position: obj.position.clone(),
+            rotation: obj.rotation.clone(),
+            scale: obj.scale.clone()
+          };
+        }
+        return o;
+      }));
+    }
+  );
 
   // Create geometry based on component config
   const createGeometry = useCallback((config: Builder3DComponent['primitiveConfig']) => {
@@ -488,6 +516,15 @@ export function Builder3DCanvas({
           onClick={handleCanvasClick}
           className="w-full h-full"
         />
+
+        {/* Transform Toolbar */}
+        {selectedObjectId && (
+          <TransformToolbar
+            mode={transformMode}
+            onModeChange={setTransformMode}
+            className="absolute top-4 left-1/2 -translate-x-1/2"
+          />
+        )}
 
         {/* Canvas Toolbar */}
         <div className="absolute top-4 right-4 flex items-center gap-2">
