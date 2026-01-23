@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { elements, Element, getCategoryColor, getPhaseIcon, ElementCategory } from "@/data/elements";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { X, Droplets, Wind, Layers } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { X, Droplets, Wind, Layers, Search } from "lucide-react";
 
 interface PeriodicTableProps {
   onElementSelect?: (element: Element) => void;
@@ -14,6 +15,18 @@ export function PeriodicTable({ onElementSelect, selectedElements = [] }: Period
   const [selectedElement, setSelectedElement] = useState<Element | null>(null);
   const [filterPhase, setFilterPhase] = useState<string | null>(null);
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Search elements by name, symbol, or atomic number
+  const searchedElement = useMemo(() => {
+    if (!searchQuery.trim()) return null;
+    const query = searchQuery.toLowerCase().trim();
+    return elements.find(e => 
+      e.symbol.toLowerCase() === query ||
+      e.name.toLowerCase() === query ||
+      e.atomicNumber.toString() === query
+    );
+  }, [searchQuery]);
 
   const getGridPosition = (element: Element) => {
     // Handle lanthanides and actinides separately
@@ -75,8 +88,39 @@ export function PeriodicTable({ onElementSelect, selectedElements = [] }: Period
     { key: 'actinide', label: 'Actinides' },
   ];
 
+  // Highlight searched element
+  const isSearchHighlighted = (element: Element) => {
+    if (!searchedElement) return false;
+    return element.atomicNumber === searchedElement.atomicNumber;
+  };
+
   return (
     <div className="space-y-4">
+      {/* Search Bar */}
+      <div className="flex flex-wrap gap-4 items-end">
+        <div className="flex-1 min-w-[200px] max-w-xs">
+          <label className="text-sm font-medium text-muted-foreground mb-1.5 block">Search Elements</label>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search by name, symbol, or number..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          {searchQuery && !searchedElement && (
+            <p className="text-xs text-destructive mt-1">No element found</p>
+          )}
+          {searchedElement && (
+            <p className="text-xs text-primary mt-1">
+              Found: {searchedElement.name} ({searchedElement.symbol})
+            </p>
+          )}
+        </div>
+      </div>
+
       {/* Filters */}
       <div className="flex flex-wrap gap-2 items-center">
         <span className="text-sm font-medium text-muted-foreground">Filter:</span>
@@ -104,14 +148,14 @@ export function PeriodicTable({ onElementSelect, selectedElements = [] }: Period
           <Wind className="w-3 h-3 mr-1" />
           Gas
         </Button>
-        {(filterPhase || filterCategory) && (
+        {(filterPhase || filterCategory || searchQuery) && (
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => { setFilterPhase(null); setFilterCategory(null); }}
+            onClick={() => { setFilterPhase(null); setFilterCategory(null); setSearchQuery(""); }}
           >
             <X className="w-3 h-3 mr-1" />
-            Clear
+            Clear All
           </Button>
         )}
       </div>
@@ -143,17 +187,19 @@ export function PeriodicTable({ onElementSelect, selectedElements = [] }: Period
             const isSelected = selectedElements.some(e => e.atomicNumber === element.atomicNumber);
             const filtered = isFiltered(element);
             
+            const isHighlighted = isSearchHighlighted(element);
+            
             return (
               <div
                 key={element.atomicNumber}
                 className={`relative cursor-pointer transition-all duration-200 rounded p-1 min-h-[50px] flex flex-col justify-center items-center border ${
                   isSelected ? 'ring-2 ring-primary shadow-lg' : ''
-                } ${filtered ? 'opacity-20' : 'hover:scale-110 hover:z-10'}`}
+                } ${isHighlighted ? 'ring-2 ring-yellow-400 shadow-lg shadow-yellow-400/30 scale-110 z-20' : ''} ${filtered && !isHighlighted ? 'opacity-20' : 'hover:scale-110 hover:z-10'}`}
                 style={{
                   gridRow: pos.row,
                   gridColumn: pos.col,
                   backgroundColor: getCategoryColor(element.category),
-                  borderColor: isSelected ? 'hsl(var(--primary))' : 'transparent',
+                  borderColor: isSelected ? 'hsl(var(--primary))' : isHighlighted ? 'hsl(45, 93%, 47%)' : 'transparent',
                 }}
                 onMouseEnter={() => setHoveredElement(element)}
                 onMouseLeave={() => setHoveredElement(null)}
