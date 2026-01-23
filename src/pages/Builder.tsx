@@ -27,7 +27,8 @@ import {
   Loader2,
   LayoutTemplate,
   Eye,
-  Box
+  Box,
+  Layers
 } from "lucide-react";
 import { toast } from "sonner";
 import { ComponentPalette, PaletteComponent } from "@/components/builder/ComponentPalette";
@@ -39,6 +40,7 @@ import { DataOutput } from "@/components/builder/DataOutput";
 import { FormulaBuilder } from "@/components/builder/FormulaBuilder";
 import { BuilderPreview, Connection } from "@/components/builder/BuilderPreview";
 import { Builder3DPreview } from "@/components/builder/Builder3DPreview";
+import { Builder3DCanvas } from "@/components/builder/Builder3DCanvas";
 import { builderTemplates, ExperimentTemplate } from "@/data/builderTemplates";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -77,6 +79,7 @@ const Builder = () => {
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [use3DPreview, setUse3DPreview] = useState(true);
+  const [canvasMode, setCanvasMode] = useState<"2d" | "3d">("2d");
   
   // Script state
   const [scriptCode, setScriptCode] = useState("");
@@ -465,6 +468,30 @@ const Builder = () => {
               </Button>
               <div className="w-px h-6 bg-border mx-1" />
               
+              {/* Canvas Mode Toggle (when not previewing) */}
+              {!isPreviewing && (
+                <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+                  <Button
+                    variant={canvasMode === "2d" ? "secondary" : "ghost"}
+                    size="sm"
+                    className="h-7 px-2"
+                    onClick={() => setCanvasMode("2d")}
+                  >
+                    <Layers className="w-3 h-3 mr-1" />
+                    2D
+                  </Button>
+                  <Button
+                    variant={canvasMode === "3d" ? "secondary" : "ghost"}
+                    size="sm"
+                    className="h-7 px-2"
+                    onClick={() => setCanvasMode("3d")}
+                  >
+                    <Box className="w-3 h-3 mr-1" />
+                    3D
+                  </Button>
+                </div>
+              )}
+              
               {/* Preview Button */}
               <Button 
                 variant={isPreviewing ? "secondary" : "outline"} 
@@ -531,6 +558,28 @@ const Builder = () => {
                 className="flex-1"
               />
             )
+          ) : canvasMode === "3d" ? (
+            <Builder3DCanvas
+              className="flex-1"
+              onObjectSelect={(obj) => {
+                if (obj) {
+                  // Convert 3D object to canvas component format for properties panel
+                  setSelectedComponent({
+                    id: obj.id,
+                    type: obj.componentId,
+                    name: obj.componentId,
+                    icon: '📦',
+                    x: obj.position.x,
+                    y: obj.position.z,
+                    width: 100,
+                    height: 100,
+                    properties: obj.properties
+                  });
+                } else {
+                  setSelectedComponent(null);
+                }
+              }}
+            />
           ) : (
             <DragDropCanvas
               components={components}

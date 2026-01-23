@@ -13,6 +13,9 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { UserRoleManagement } from "@/components/admin/UserRoleManagement";
+import { ExperimentModeration } from "@/components/admin/ExperimentModeration";
+import { EmailNotifications } from "@/components/admin/EmailNotifications";
 import { 
   Users, 
   Activity, 
@@ -28,7 +31,10 @@ import {
   Loader2,
   RefreshCw,
   Download,
-  Search
+  Search,
+  Mail,
+  UserCog,
+  FlaskConical
 } from "lucide-react";
 import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell } from "recharts";
@@ -369,6 +375,18 @@ const Admin = () => {
                 <Users className="w-4 h-4" />
                 Users
               </TabsTrigger>
+              <TabsTrigger value="roles" className="flex items-center gap-2">
+                <UserCog className="w-4 h-4" />
+                Roles
+              </TabsTrigger>
+              <TabsTrigger value="experiments" className="flex items-center gap-2">
+                <FlaskConical className="w-4 h-4" />
+                Experiments
+              </TabsTrigger>
+              <TabsTrigger value="email" className="flex items-center gap-2">
+                <Mail className="w-4 h-4" />
+                Email
+              </TabsTrigger>
               <TabsTrigger value="system" className="flex items-center gap-2">
                 <Database className="w-4 h-4" />
                 System
@@ -550,6 +568,21 @@ const Admin = () => {
                   </ScrollArea>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            {/* Roles Tab */}
+            <TabsContent value="roles" className="space-y-6">
+              <UserRoleManagement />
+            </TabsContent>
+
+            {/* Experiments Tab */}
+            <TabsContent value="experiments" className="space-y-6">
+              <ExperimentModeration />
+            </TabsContent>
+
+            {/* Email Tab */}
+            <TabsContent value="email" className="space-y-6">
+              <EmailNotifications />
             </TabsContent>
 
             {/* System Tab */}
