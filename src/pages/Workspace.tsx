@@ -7,6 +7,8 @@ import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { PendulumSimulation, PendulumSimulationHandle } from "@/components/simulations/PendulumSimulation";
 import { ProjectileSimulation, ProjectileSimulationHandle } from "@/components/simulations/ProjectileSimulation";
 import { SpringSimulation, SpringSimulationHandle } from "@/components/simulations/SpringSimulation";
@@ -14,19 +16,33 @@ import { WaveSimulation, WaveSimulationHandle } from "@/components/simulations/W
 import { CollisionSimulation, CollisionSimulationHandle } from "@/components/simulations/CollisionSimulation";
 import { EMSpectrumVisualization } from "@/components/simulations/EMSpectrumVisualization";
 import { ChemistryWorkspace } from "@/components/chemistry/ChemistryWorkspace";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { exportToCSV, exportToJSON, generatePDFReport } from "@/utils/exportData";
 import { toast } from "sonner";
-import { physicsPresets, getPresetByGravity } from "@/data/physicsPresets";
+import { physicsPresets } from "@/data/physicsPresets";
 import { 
-  Play, Pause, RotateCcw, Maximize2, Settings2, Download, FileText, Braces,
-  FlaskConical, Target, Activity, Gauge, Waves, Trash2, BarChart3, Zap, Radio
+  Play, Pause, RotateCcw, Download, FileText, Braces,
+  FlaskConical, Target, Activity, Gauge, Waves, Zap, Radio, Info, HelpCircle
 } from "lucide-react";
+
 interface DataPoint {
   time: number;
   [key: string]: number;
 }
+
+// Tooltip wrapper for parameter controls
+const ParamTooltip = ({ children, tip }: { children: React.ReactNode; tip: string }) => (
+  <Tooltip>
+    <TooltipTrigger asChild>
+      <div className="flex items-center gap-1 cursor-help">
+        {children}
+        <HelpCircle className="w-3 h-3 text-muted-foreground" />
+      </div>
+    </TooltipTrigger>
+    <TooltipContent side="left" className="max-w-[200px] text-xs">
+      {tip}
+    </TooltipContent>
+  </Tooltip>
+);
 
 const Workspace = () => {
   const [searchParams] = useSearchParams();
@@ -34,7 +50,6 @@ const Workspace = () => {
   const experimentId = searchParams.get('experiment');
   
   const [activeSimulation, setActiveSimulation] = useState<string>(experimentType);
-  const [showGraphs, setShowGraphs] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState([1]);
   const [graphData, setGraphData] = useState<DataPoint[]>([]);
@@ -186,87 +201,46 @@ const Workspace = () => {
     }
   };
 
-  const getGraphConfig = () => {
-    switch (activeSimulation) {
-      case 'pendulum':
-        return { lines: [
-          { dataKey: 'angle', name: 'Angle (°)', color: 'hsl(168, 76%, 46%)' },
-          { dataKey: 'velocity', name: 'Velocity', color: 'hsl(0, 84%, 60%)' },
-          { dataKey: 'energy', name: 'Energy', color: 'hsl(45, 93%, 47%)' },
-        ]};
-      case 'projectile':
-        return { lines: [
-          { dataKey: 'x', name: 'X Pos', color: 'hsl(168, 76%, 46%)' },
-          { dataKey: 'y', name: 'Y Pos', color: 'hsl(0, 84%, 60%)' },
-        ]};
-      case 'spring':
-        return { lines: [
-          { dataKey: 'displacement', name: 'Displacement', color: 'hsl(168, 76%, 46%)' },
-          { dataKey: 'velocity', name: 'Velocity', color: 'hsl(0, 84%, 60%)' },
-        ]};
-      case 'wave':
-        return { lines: [
-          { dataKey: 'displacement', name: 'Displacement', color: 'hsl(168, 76%, 46%)' },
-          { dataKey: 'velocity', name: 'Velocity', color: 'hsl(0, 84%, 60%)' },
-        ]};
-      case 'collision':
-        return { lines: [
-          { dataKey: 'momentum', name: 'Momentum', color: 'hsl(168, 76%, 46%)' },
-          { dataKey: 'kineticEnergy', name: 'KE', color: 'hsl(0, 84%, 60%)' },
-          { dataKey: 'v1', name: 'v₁', color: 'hsl(45, 93%, 47%)' },
-          { dataKey: 'v2', name: 'v₂', color: 'hsl(280, 65%, 60%)' },
-        ]};
-      default:
-        return { lines: [] };
-    }
-  };
-
-  const graphConfig = getGraphConfig();
   const hasPlayControls = !['chemistry', 'emspectrum'].includes(activeSimulation);
-  const hasGraph = !['chemistry', 'emspectrum'].includes(activeSimulation);
 
   return (
     <Layout>
       <div className="min-h-screen flex flex-col">
         {/* Top Toolbar */}
-        <div className="h-14 border-b flex items-center justify-between px-4 bg-card">
-          <div className="flex items-center gap-3">
-            <Badge variant="secondary">{activeSim?.category}</Badge>
-            <h1 className="font-semibold">{activeSim?.name}</h1>
+        <div className="h-14 border-b flex items-center justify-between px-2 sm:px-4 bg-card flex-shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Badge variant="secondary" className="hidden sm:inline-flex">{activeSim?.category}</Badge>
+            <h1 className="font-semibold text-sm sm:text-base truncate">{activeSim?.name}</h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto">
             <Tabs value={activeSimulation} onValueChange={handleSimulationChange}>
-              <TabsList className="h-9">
+              <TabsList className="h-8 sm:h-9">
                 {simulations.map(sim => (
-                  <TabsTrigger key={sim.id} value={sim.id} className="text-xs gap-1">
+                  <TabsTrigger key={sim.id} value={sim.id} className="text-xs gap-1 px-2 sm:px-3">
                     <sim.icon className="w-3 h-3" />
-                    <span className="hidden md:inline">{sim.name}</span>
+                    <span className="hidden lg:inline">{sim.name}</span>
                   </TabsTrigger>
                 ))}
               </TabsList>
             </Tabs>
-            <div className="w-px h-6 bg-border mx-2" />
-            {hasGraph && (
-              <Button variant={showGraphs ? "secondary" : "ghost"} size="icon" onClick={() => setShowGraphs(!showGraphs)}>
-                <BarChart3 className="w-4 h-4" />
-              </Button>
-            )}
-            <Button variant="ghost" size="icon" onClick={handleExportCSV} title="Export CSV">
+            <div className="w-px h-6 bg-border mx-1 sm:mx-2 hidden sm:block" />
+            <Button variant="ghost" size="icon" onClick={handleExportCSV} title="Export CSV" className="h-8 w-8">
               <Download className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={handleExportJSON} title="Export JSON">
+            <Button variant="ghost" size="icon" onClick={handleExportJSON} title="Export JSON" className="h-8 w-8 hidden sm:inline-flex">
               <Braces className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={handleExportPDF} title="Export PDF Report">
+            <Button variant="ghost" size="icon" onClick={handleExportPDF} title="Export PDF Report" className="h-8 w-8 hidden sm:inline-flex">
               <FileText className="w-4 h-4" />
             </Button>
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex">
-          <div className="flex-1 flex flex-col">
-            <div className={`${showGraphs && hasGraph ? 'flex-[2]' : 'flex-1'} relative bg-gradient-to-b from-muted/50 to-muted`}>
+        <div className="flex-1 flex flex-col lg:flex-row min-h-0">
+          {/* Simulation Area */}
+          <div className="flex-1 flex flex-col min-h-0">
+            <div className="flex-1 relative bg-gradient-to-b from-muted/50 to-muted min-h-[300px] sm:min-h-[400px]">
               {activeSimulation === 'pendulum' && (
                 <PendulumSimulation ref={pendulumRef} mass={pendulumMass[0]} length={pendulumLength[0]} gravity={pendulumGravity[0]} angle={pendulumAngle[0]} isPlaying={isPlaying} speed={speed[0]} onDataUpdate={handleDataUpdate} />
               )}
@@ -286,63 +260,38 @@ const Workspace = () => {
               {activeSimulation === 'chemistry' && <ChemistryWorkspace />}
             </div>
 
-            {/* Graph */}
-            {showGraphs && hasGraph && (
-              <div className="flex-1 border-t bg-card p-4">
-                <Card className="h-full">
-                  <CardHeader className="py-2 px-4 flex flex-row items-center justify-between">
-                    <CardTitle className="text-sm font-medium">Real-time Data</CardTitle>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setGraphData([])}>
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
-                  </CardHeader>
-                  <CardContent className="p-2 h-[calc(100%-3rem)]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={graphData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis dataKey="time" tick={{ fontSize: 10 }} tickFormatter={(v) => v.toFixed(1)} stroke="hsl(var(--muted-foreground))" />
-                        <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => v.toFixed(1)} stroke="hsl(var(--muted-foreground))" domain={[(dataMin: number) => Math.min(0, dataMin), 'auto']} allowDataOverflow={false} />
-                        <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }} />
-                        <Legend wrapperStyle={{ fontSize: '11px' }} />
-                        {graphConfig.lines.map((line) => (
-                          <Line key={line.dataKey} type="monotone" dataKey={line.dataKey} name={line.name} stroke={line.color} strokeWidth={2} dot={false} isAnimationActive={false} />
-                        ))}
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-
-            {/* Playback Controls */}
+            {/* Bottom Playback Controls */}
             {hasPlayControls && (
-              <div className="h-16 border-t bg-card px-4 flex items-center gap-6">
+              <div className="h-14 sm:h-16 border-t bg-card px-3 sm:px-4 flex items-center gap-3 sm:gap-6 flex-shrink-0">
                 <div className="flex items-center gap-2">
-                  <Button variant={isPlaying ? "secondary" : "default"} size="icon" onClick={() => setIsPlaying(!isPlaying)}>
+                  <Button variant={isPlaying ? "secondary" : "default"} size="icon" onClick={() => setIsPlaying(!isPlaying)} className="h-9 w-9 sm:h-10 sm:w-10">
                     {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
                   </Button>
-                  <Button variant="outline" size="icon" onClick={handleReset}>
+                  <Button variant="outline" size="icon" onClick={handleReset} className="h-9 w-9 sm:h-10 sm:w-10">
                     <RotateCcw className="w-4 h-4" />
                   </Button>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3">
                   <Gauge className="w-4 h-4 text-muted-foreground" />
-                  <div className="w-32"><Slider value={speed} onValueChange={setSpeed} min={0.25} max={4} step={0.25} /></div>
-                  <span className="text-sm font-mono w-12">{speed[0]}x</span>
+                  <div className="w-20 sm:w-32"><Slider value={speed} onValueChange={setSpeed} min={0.25} max={4} step={0.25} /></div>
+                  <span className="text-xs sm:text-sm font-mono w-10 sm:w-12">{speed[0]}x</span>
                 </div>
-                {graphData.length > 0 && <div className="ml-auto text-xs text-muted-foreground">{graphData.length} data points</div>}
+                {graphData.length > 0 && <div className="ml-auto text-xs text-muted-foreground hidden sm:block">{graphData.length} data points</div>}
               </div>
             )}
           </div>
 
-          {/* Right Sidebar */}
+          {/* Right Sidebar - Parameters Panel */}
           {hasPlayControls && (
-            <div className="w-72 border-l bg-card p-4 space-y-6 overflow-auto">
-              <h3 className="font-semibold">Parameters</h3>
+            <div className="w-full lg:w-72 xl:w-80 border-t lg:border-t-0 lg:border-l bg-card p-3 sm:p-4 space-y-4 sm:space-y-6 overflow-auto flex-shrink-0 max-h-[40vh] lg:max-h-none">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Info className="w-4 h-4" />
+                Parameters
+              </h3>
 
               {activeSimulation === 'pendulum' && (
-                <>
-                  <div className="mb-4">
+                <div className="space-y-4">
+                  <div>
                     <Label className="text-sm mb-2 block">Environment Preset</Label>
                     <Select value={pendulumPreset} onValueChange={handlePendulumPresetChange}>
                       <SelectTrigger className="bg-background">
@@ -361,17 +310,57 @@ const Workspace = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div><div className="flex justify-between mb-2 text-sm"><span>Mass (kg)</span><span className="font-mono">{pendulumMass[0].toFixed(1)}</span></div><Slider value={pendulumMass} onValueChange={setPendulumMass} min={0.5} max={5} step={0.1} /></div>
-                  <div><div className="flex justify-between mb-2 text-sm"><span>Length (m)</span><span className="font-mono">{pendulumLength[0].toFixed(2)}</span></div><Slider value={pendulumLength} onValueChange={setPendulumLength} min={0.2} max={3} step={0.1} /></div>
-                  <div><div className="flex justify-between mb-2 text-sm"><span>Gravity (m/s²)</span><span className="font-mono">{pendulumGravity[0].toFixed(1)}</span></div><Slider value={pendulumGravity} onValueChange={(v) => { setPendulumGravity(v); setPendulumPreset('custom'); }} min={1} max={20} step={0.1} /></div>
-                  <div><div className="flex justify-between mb-2 text-sm"><span>Initial Angle (°)</span><span className="font-mono">{pendulumAngle[0]}</span></div><Slider value={pendulumAngle} onValueChange={setPendulumAngle} min={5} max={90} step={1} /></div>
-                  <p className="text-xs text-muted-foreground">Note: Change mass/length/angle then reset to apply.</p>
-                </>
+                  <div>
+                    <div className="flex justify-between mb-2 text-sm">
+                      <ParamTooltip tip="Mass affects the momentum and kinetic energy of the pendulum, but not its period in ideal conditions.">
+                        <span>Mass (kg)</span>
+                      </ParamTooltip>
+                      <Input 
+                        type="number" 
+                        value={pendulumMass[0]} 
+                        onChange={(e) => setPendulumMass([parseFloat(e.target.value) || 0.5])}
+                        className="w-16 h-6 text-xs text-right"
+                        min={0.5}
+                        max={5}
+                        step={0.1}
+                      />
+                    </div>
+                    <Slider value={pendulumMass} onValueChange={setPendulumMass} min={0.5} max={5} step={0.1} />
+                  </div>
+                  <div>
+                    <div className="flex justify-between mb-2 text-sm">
+                      <ParamTooltip tip="Longer pendulums have longer periods (T ∝ √L). This is why grandfather clocks use long pendulums.">
+                        <span>Length (m)</span>
+                      </ParamTooltip>
+                      <span className="font-mono">{pendulumLength[0].toFixed(2)}</span>
+                    </div>
+                    <Slider value={pendulumLength} onValueChange={setPendulumLength} min={0.2} max={3} step={0.1} />
+                  </div>
+                  <div>
+                    <div className="flex justify-between mb-2 text-sm">
+                      <ParamTooltip tip="Gravitational acceleration determines how quickly the pendulum accelerates. Higher gravity = faster swings.">
+                        <span>Gravity (m/s²)</span>
+                      </ParamTooltip>
+                      <span className="font-mono">{pendulumGravity[0].toFixed(1)}</span>
+                    </div>
+                    <Slider value={pendulumGravity} onValueChange={(v) => { setPendulumGravity(v); setPendulumPreset('custom'); }} min={1} max={20} step={0.1} />
+                  </div>
+                  <div>
+                    <div className="flex justify-between mb-2 text-sm">
+                      <ParamTooltip tip="Initial angle from vertical. Small angle approximation (sin θ ≈ θ) works well under 15°.">
+                        <span>Initial Angle (°)</span>
+                      </ParamTooltip>
+                      <span className="font-mono">{pendulumAngle[0]}</span>
+                    </div>
+                    <Slider value={pendulumAngle} onValueChange={setPendulumAngle} min={5} max={90} step={1} />
+                  </div>
+                  <p className="text-xs text-muted-foreground">Change parameters then reset to apply.</p>
+                </div>
               )}
 
               {activeSimulation === 'projectile' && (
-                <>
-                  <div className="mb-4">
+                <div className="space-y-4">
+                  <div>
                     <Label className="text-sm mb-2 block">Environment Preset</Label>
                     <Select value={projectilePreset} onValueChange={handleProjectilePresetChange}>
                       <SelectTrigger className="bg-background">
@@ -390,42 +379,178 @@ const Workspace = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div><div className="flex justify-between mb-2 text-sm"><span>Velocity (m/s)</span><span className="font-mono">{projectileVelocity[0]}</span></div><Slider value={projectileVelocity} onValueChange={setProjectileVelocity} min={5} max={50} step={1} /></div>
-                  <div><div className="flex justify-between mb-2 text-sm"><span>Launch Angle (°)</span><span className="font-mono">{projectileAngle[0]}</span></div><Slider value={projectileAngle} onValueChange={setProjectileAngle} min={5} max={85} step={1} /></div>
-                  <div><div className="flex justify-between mb-2 text-sm"><span>Gravity (m/s²)</span><span className="font-mono">{projectileGravity[0].toFixed(1)}</span></div><Slider value={projectileGravity} onValueChange={(v) => { setProjectileGravity(v); setProjectilePreset('custom'); }} min={1} max={20} step={0.1} /></div>
+                  <div>
+                    <div className="flex justify-between mb-2 text-sm">
+                      <ParamTooltip tip="Initial velocity determines how far and high the projectile travels. Range is proportional to v².">
+                        <span>Velocity (m/s)</span>
+                      </ParamTooltip>
+                      <span className="font-mono">{projectileVelocity[0]}</span>
+                    </div>
+                    <Slider value={projectileVelocity} onValueChange={setProjectileVelocity} min={5} max={50} step={1} />
+                  </div>
+                  <div>
+                    <div className="flex justify-between mb-2 text-sm">
+                      <ParamTooltip tip="45° gives maximum range on flat ground. Steeper angles give more height, shallower angles give more horizontal distance.">
+                        <span>Launch Angle (°)</span>
+                      </ParamTooltip>
+                      <span className="font-mono">{projectileAngle[0]}</span>
+                    </div>
+                    <Slider value={projectileAngle} onValueChange={setProjectileAngle} min={5} max={85} step={1} />
+                  </div>
+                  <div>
+                    <div className="flex justify-between mb-2 text-sm">
+                      <ParamTooltip tip="Gravitational acceleration affects how quickly the projectile falls. Lower gravity means longer hang time.">
+                        <span>Gravity (m/s²)</span>
+                      </ParamTooltip>
+                      <span className="font-mono">{projectileGravity[0].toFixed(1)}</span>
+                    </div>
+                    <Slider value={projectileGravity} onValueChange={(v) => { setProjectileGravity(v); setProjectilePreset('custom'); }} min={1} max={20} step={0.1} />
+                  </div>
                   <p className="text-xs text-muted-foreground">Gravity updates live. Reset to change velocity/angle.</p>
-                </>
+                </div>
               )}
 
               {activeSimulation === 'spring' && (
-                <>
-                  <div><div className="flex justify-between mb-2 text-sm"><span>Mass (kg)</span><span className="font-mono">{springMass[0].toFixed(1)}</span></div><Slider value={springMass} onValueChange={setSpringMass} min={0.5} max={5} step={0.1} /></div>
-                  <div><div className="flex justify-between mb-2 text-sm"><span>Spring Constant (N/m)</span><span className="font-mono">{springConstant[0]}</span></div><Slider value={springConstant} onValueChange={setSpringConstant} min={10} max={200} step={5} /></div>
-                  <div><div className="flex justify-between mb-2 text-sm"><span>Damping</span><span className="font-mono">{springDamping[0].toFixed(2)}</span></div><Slider value={springDamping} onValueChange={setSpringDamping} min={0} max={1} step={0.05} /></div>
-                  <div><div className="flex justify-between mb-2 text-sm"><span>Initial Displacement (m)</span><span className="font-mono">{springDisplacement[0].toFixed(1)}</span></div><Slider value={springDisplacement} onValueChange={setSpringDisplacement} min={0.5} max={5} step={0.5} /></div>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between mb-2 text-sm">
+                      <ParamTooltip tip="Heavier masses oscillate slower (T ∝ √m). This is a key principle in mass-spring oscillators.">
+                        <span>Mass (kg)</span>
+                      </ParamTooltip>
+                      <span className="font-mono">{springMass[0].toFixed(1)}</span>
+                    </div>
+                    <Slider value={springMass} onValueChange={setSpringMass} min={0.5} max={5} step={0.1} />
+                  </div>
+                  <div>
+                    <div className="flex justify-between mb-2 text-sm">
+                      <ParamTooltip tip="Stiffness of the spring. Higher k means faster oscillations and stronger restoring force (F = -kx).">
+                        <span>Spring Constant (N/m)</span>
+                      </ParamTooltip>
+                      <span className="font-mono">{springConstant[0]}</span>
+                    </div>
+                    <Slider value={springConstant} onValueChange={setSpringConstant} min={10} max={200} step={5} />
+                  </div>
+                  <div>
+                    <div className="flex justify-between mb-2 text-sm">
+                      <ParamTooltip tip="Damping removes energy from the system, causing oscillations to decay over time. Zero = ideal spring.">
+                        <span>Damping</span>
+                      </ParamTooltip>
+                      <span className="font-mono">{springDamping[0].toFixed(2)}</span>
+                    </div>
+                    <Slider value={springDamping} onValueChange={setSpringDamping} min={0} max={1} step={0.05} />
+                  </div>
+                  <div>
+                    <div className="flex justify-between mb-2 text-sm">
+                      <ParamTooltip tip="How far the mass is pulled from equilibrium. Larger displacement = more potential energy stored.">
+                        <span>Initial Displacement (m)</span>
+                      </ParamTooltip>
+                      <span className="font-mono">{springDisplacement[0].toFixed(1)}</span>
+                    </div>
+                    <Slider value={springDisplacement} onValueChange={setSpringDisplacement} min={0.5} max={5} step={0.5} />
+                  </div>
                   <p className="text-xs text-muted-foreground">Spring constant and damping update live.</p>
-                </>
+                </div>
               )}
 
               {activeSimulation === 'wave' && (
-                <>
-                  <div><div className="flex justify-between mb-2 text-sm"><span>Wave Type</span></div><Select value={waveType} onValueChange={(v) => setWaveType(v as 'transverse' | 'longitudinal')}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="transverse">Transverse</SelectItem><SelectItem value="longitudinal">Longitudinal</SelectItem></SelectContent></Select></div>
-                  <div><div className="flex justify-between mb-2 text-sm"><span>Frequency (Hz)</span><span className="font-mono">{waveFrequency[0].toFixed(1)}</span></div><Slider value={waveFrequency} onValueChange={setWaveFrequency} min={0.1} max={5} step={0.1} /></div>
-                  <div><div className="flex justify-between mb-2 text-sm"><span>Amplitude (m)</span><span className="font-mono">{waveAmplitude[0].toFixed(1)}</span></div><Slider value={waveAmplitude} onValueChange={setWaveAmplitude} min={0.1} max={3} step={0.1} /></div>
-                  <div><div className="flex justify-between mb-2 text-sm"><span>Wavelength (m)</span><span className="font-mono">{waveWavelength[0].toFixed(1)}</span></div><Slider value={waveWavelength} onValueChange={setWaveWavelength} min={0.5} max={10} step={0.5} /></div>
-                  <div className="border-t pt-4"><h4 className="text-sm font-medium mb-2">Wave Properties</h4><div className="space-y-1 text-xs text-muted-foreground"><div className="flex justify-between"><span>Wave Speed</span><span className="font-mono">{(waveFrequency[0] * waveWavelength[0]).toFixed(2)} m/s</span></div><div className="flex justify-between"><span>Period</span><span className="font-mono">{(1 / waveFrequency[0]).toFixed(2)} s</span></div></div></div>
-                </>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between mb-2 text-sm"><span>Wave Type</span></div>
+                    <Select value={waveType} onValueChange={(v) => setWaveType(v as 'transverse' | 'longitudinal')}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="transverse">Transverse</SelectItem>
+                        <SelectItem value="longitudinal">Longitudinal</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <div className="flex justify-between mb-2 text-sm">
+                      <ParamTooltip tip="Number of complete oscillations per second. Higher frequency = higher pitch for sound waves.">
+                        <span>Frequency (Hz)</span>
+                      </ParamTooltip>
+                      <span className="font-mono">{waveFrequency[0].toFixed(1)}</span>
+                    </div>
+                    <Slider value={waveFrequency} onValueChange={setWaveFrequency} min={0.1} max={5} step={0.1} />
+                  </div>
+                  <div>
+                    <div className="flex justify-between mb-2 text-sm">
+                      <ParamTooltip tip="Maximum displacement from equilibrium. Related to wave energy (E ∝ A²).">
+                        <span>Amplitude (m)</span>
+                      </ParamTooltip>
+                      <span className="font-mono">{waveAmplitude[0].toFixed(1)}</span>
+                    </div>
+                    <Slider value={waveAmplitude} onValueChange={setWaveAmplitude} min={0.1} max={3} step={0.1} />
+                  </div>
+                  <div>
+                    <div className="flex justify-between mb-2 text-sm">
+                      <ParamTooltip tip="Distance between successive wave crests. Wave speed = frequency × wavelength.">
+                        <span>Wavelength (m)</span>
+                      </ParamTooltip>
+                      <span className="font-mono">{waveWavelength[0].toFixed(1)}</span>
+                    </div>
+                    <Slider value={waveWavelength} onValueChange={setWaveWavelength} min={0.5} max={10} step={0.5} />
+                  </div>
+                  <div className="border-t pt-4">
+                    <h4 className="text-sm font-medium mb-2">Wave Properties</h4>
+                    <div className="space-y-1 text-xs text-muted-foreground">
+                      <div className="flex justify-between"><span>Wave Speed</span><span className="font-mono">{(waveFrequency[0] * waveWavelength[0]).toFixed(2)} m/s</span></div>
+                      <div className="flex justify-between"><span>Period</span><span className="font-mono">{(1 / waveFrequency[0]).toFixed(2)} s</span></div>
+                    </div>
+                  </div>
+                </div>
               )}
 
               {activeSimulation === 'collision' && (
-                <>
-                  <div><div className="flex justify-between mb-2 text-sm"><span>Collision Type</span></div><Select value={collisionType} onValueChange={(v) => setCollisionType(v as 'elastic' | 'inelastic')}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="elastic">Elastic</SelectItem><SelectItem value="inelastic">Inelastic</SelectItem></SelectContent></Select></div>
-                  <div><div className="flex justify-between mb-2 text-sm"><span>Mass 1 (kg)</span><span className="font-mono">{collisionMass1[0].toFixed(1)}</span></div><Slider value={collisionMass1} onValueChange={setCollisionMass1} min={0.5} max={5} step={0.5} /></div>
-                  <div><div className="flex justify-between mb-2 text-sm"><span>Mass 2 (kg)</span><span className="font-mono">{collisionMass2[0].toFixed(1)}</span></div><Slider value={collisionMass2} onValueChange={setCollisionMass2} min={0.5} max={5} step={0.5} /></div>
-                  <div><div className="flex justify-between mb-2 text-sm"><span>Velocity 1 (m/s)</span><span className="font-mono">{collisionVelocity1[0]}</span></div><Slider value={collisionVelocity1} onValueChange={setCollisionVelocity1} min={0} max={10} step={1} /></div>
-                  <div><div className="flex justify-between mb-2 text-sm"><span>Velocity 2 (m/s)</span><span className="font-mono">{collisionVelocity2[0]}</span></div><Slider value={collisionVelocity2} onValueChange={setCollisionVelocity2} min={0} max={10} step={1} /></div>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between mb-2 text-sm"><span>Collision Type</span></div>
+                    <Select value={collisionType} onValueChange={(v) => setCollisionType(v as 'elastic' | 'inelastic')}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="elastic">Elastic</SelectItem>
+                        <SelectItem value="inelastic">Inelastic</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <div className="flex justify-between mb-2 text-sm">
+                      <ParamTooltip tip="Mass of the first object. Heavier objects carry more momentum at the same velocity.">
+                        <span>Mass 1 (kg)</span>
+                      </ParamTooltip>
+                      <span className="font-mono">{collisionMass1[0].toFixed(1)}</span>
+                    </div>
+                    <Slider value={collisionMass1} onValueChange={setCollisionMass1} min={0.5} max={5} step={0.5} />
+                  </div>
+                  <div>
+                    <div className="flex justify-between mb-2 text-sm">
+                      <ParamTooltip tip="Mass of the second object.">
+                        <span>Mass 2 (kg)</span>
+                      </ParamTooltip>
+                      <span className="font-mono">{collisionMass2[0].toFixed(1)}</span>
+                    </div>
+                    <Slider value={collisionMass2} onValueChange={setCollisionMass2} min={0.5} max={5} step={0.5} />
+                  </div>
+                  <div>
+                    <div className="flex justify-between mb-2 text-sm">
+                      <ParamTooltip tip="Initial velocity of object 1. Positive values move right.">
+                        <span>Velocity 1 (m/s)</span>
+                      </ParamTooltip>
+                      <span className="font-mono">{collisionVelocity1[0]}</span>
+                    </div>
+                    <Slider value={collisionVelocity1} onValueChange={setCollisionVelocity1} min={0} max={10} step={1} />
+                  </div>
+                  <div>
+                    <div className="flex justify-between mb-2 text-sm">
+                      <ParamTooltip tip="Initial velocity of object 2. Negative values move left (towards object 1).">
+                        <span>Velocity 2 (m/s)</span>
+                      </ParamTooltip>
+                      <span className="font-mono">{collisionVelocity2[0]}</span>
+                    </div>
+                    <Slider value={collisionVelocity2} onValueChange={setCollisionVelocity2} min={0} max={10} step={1} />
+                  </div>
                   <p className="text-xs text-muted-foreground">Reset to apply parameter changes.</p>
-                </>
+                </div>
               )}
             </div>
           )}

@@ -382,12 +382,15 @@ const Settings = () => {
             </div>
 
             {/* Notifications */}
-            <div className="bg-card rounded-xl border p-6">
+            <div className="bg-card rounded-xl border p-6 opacity-60">
               <div className="flex items-center gap-2 mb-6">
                 <Bell className="w-5 h-5" />
                 <h2 className="font-semibold">Notifications</h2>
+                <span className="ml-auto text-xs font-medium px-2 py-1 rounded-full bg-muted text-muted-foreground">
+                  Coming Soon
+                </span>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-4 pointer-events-none">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium text-sm">Email Notifications</p>
@@ -395,7 +398,7 @@ const Settings = () => {
                   </div>
                   <Switch 
                     checked={preferences.email_notifications}
-                    onCheckedChange={(checked) => savePreferences({ email_notifications: checked })}
+                    disabled
                   />
                 </div>
                 <Separator />
@@ -406,7 +409,7 @@ const Settings = () => {
                   </div>
                   <Switch 
                     checked={preferences.new_experiments_notifications}
-                    onCheckedChange={(checked) => savePreferences({ new_experiments_notifications: checked })}
+                    disabled
                   />
                 </div>
                 <Separator />
@@ -417,10 +420,13 @@ const Settings = () => {
                   </div>
                   <Switch 
                     checked={preferences.community_updates_notifications}
-                    onCheckedChange={(checked) => savePreferences({ community_updates_notifications: checked })}
+                    disabled
                   />
                 </div>
               </div>
+              <p className="text-xs text-muted-foreground mt-4 text-center">
+                Email notifications will be available in a future update
+              </p>
             </div>
 
             {/* Danger Zone */}
