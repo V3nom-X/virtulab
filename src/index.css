@@ -238,6 +238,72 @@
   .stagger-5 { animation-delay: 0.5s; }
 }
 
+/* Accessibility: Reduce Motion */
+.reduce-motion,
+.reduce-motion * {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Accessibility: High Contrast */
+.high-contrast {
+  --background: 0 0% 0%;
+  --foreground: 0 0% 100%;
+  --card: 0 0% 5%;
+  --card-foreground: 0 0% 100%;
+  --popover: 0 0% 5%;
+  --popover-foreground: 0 0% 100%;
+  --primary: 60 100% 50%;
+  --primary-foreground: 0 0% 0%;
+  --secondary: 0 0% 15%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 0 0% 15%;
+  --muted-foreground: 0 0% 75%;
+  --accent: 60 100% 50%;
+  --accent-foreground: 0 0% 0%;
+  --destructive: 0 100% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 0 0% 40%;
+  --input: 0 0% 40%;
+  --ring: 60 100% 50%;
+}
+
+.high-contrast.dark {
+  --background: 0 0% 0%;
+  --foreground: 0 0% 100%;
+  --card: 0 0% 8%;
+  --card-foreground: 0 0% 100%;
+  --popover: 0 0% 8%;
+  --popover-foreground: 0 0% 100%;
+  --border: 0 0% 50%;
+}
+
+/* Accessibility: Color Blind Mode (Deuteranopia-friendly) */
+.color-blind-mode {
+  --primary: 210 100% 50%;
+  --primary-foreground: 0 0% 100%;
+  --primary-hover: 210 100% 40%;
+  --primary-glow: 210 100% 50%;
+  --success: 210 80% 45%;
+  --success-foreground: 0 0% 100%;
+  --destructive: 30 100% 50%;
+  --destructive-foreground: 0 0% 0%;
+  --warning: 270 80% 60%;
+  --warning-foreground: 0 0% 100%;
+  --accent: 210 60% 90%;
+  --accent-foreground: 210 100% 30%;
+}
+
+.color-blind-mode.dark {
+  --primary: 210 100% 60%;
+  --primary-foreground: 0 0% 0%;
+  --success: 210 80% 55%;
+  --destructive: 30 100% 55%;
+  --warning: 270 80% 65%;
+}
+
 /* CardNav Component Styles */
 .card-nav-container {
   position: fixed;

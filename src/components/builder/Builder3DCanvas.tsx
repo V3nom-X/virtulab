@@ -433,16 +433,16 @@ export function Builder3DCanvas({
       <div 
         className={cn(
           "absolute left-0 top-0 bottom-0 z-10 bg-card border-r border-border transition-all duration-300 flex flex-col",
-          sidebarOpen ? "w-64" : "w-0 overflow-hidden"
+          sidebarOpen ? "w-56 sm:w-64" : "w-0 overflow-hidden"
         )}
       >
         {/* Sidebar Header */}
-        <div className="p-3 border-b border-border">
-          <h3 className="font-semibold text-foreground mb-2">Component Library</h3>
+        <div className="p-2 sm:p-3 border-b border-border">
+          <h3 className="font-semibold text-foreground mb-2 text-sm sm:text-base">Component Library</h3>
           <div className="relative">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Search components..."
+              placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-8 h-8 text-sm"
@@ -457,7 +457,7 @@ export function Builder3DCanvas({
               <div key={category} className="mb-2">
                 <button
                   onClick={() => toggleCategory(category)}
-                  className="w-full flex items-center justify-between px-2 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground rounded-md hover:bg-muted/50 transition-colors capitalize"
+                  className="w-full flex items-center justify-between px-2 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground rounded-md hover:bg-muted/50 transition-colors capitalize touch-manipulation"
                 >
                   {category}
                   <ChevronRight className={cn(
@@ -473,12 +473,57 @@ export function Builder3DCanvas({
                         key={component.id}
                         draggable
                         onDragStart={(e) => handleDragStart(e, component)}
-                        className="flex items-center gap-2 px-2 py-2 mx-1 rounded-md bg-muted/30 hover:bg-muted cursor-grab active:cursor-grabbing transition-colors border border-transparent hover:border-primary/30"
+                        onTouchStart={() => setDraggedComponent(component)}
+                        onTouchEnd={(e) => {
+                          // Handle touch drop on mobile
+                          const touch = e.changedTouches[0];
+                          const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+                          if (dropTarget?.closest('canvas') && draggedComponent) {
+                            // Simulate drop at touch location
+                            const canvas = canvasRef.current;
+                            if (canvas && sceneRef.current && cameraRef.current) {
+                              const rect = canvas.getBoundingClientRect();
+                              const mouse = new THREE.Vector2(
+                                ((touch.clientX - rect.left) / rect.width) * 2 - 1,
+                                -((touch.clientY - rect.top) / rect.height) * 2 + 1
+                              );
+                              const raycaster = new THREE.Raycaster();
+                              raycaster.setFromCamera(mouse, cameraRef.current);
+                              const ground = sceneRef.current.getObjectByName('ground');
+                              if (ground) {
+                                const intersects = raycaster.intersectObject(ground);
+                                if (intersects.length > 0) {
+                                  const pos = snapToGrid(intersects[0].point);
+                                  if (draggedComponent.primitiveConfig) {
+                                    pos.y = draggedComponent.primitiveConfig.scale[1] / 2;
+                                  }
+                                  const mesh = createMeshFromComponent(draggedComponent);
+                                  mesh.position.copy(pos);
+                                  sceneRef.current.add(mesh);
+                                  const placedObject: PlacedObject = {
+                                    id: `obj_${Date.now()}`,
+                                    componentId: draggedComponent.id,
+                                    mesh,
+                                    position: pos.clone(),
+                                    rotation: new THREE.Euler(),
+                                    scale: new THREE.Vector3(1, 1, 1),
+                                    properties: Object.fromEntries(
+                                      Object.entries(draggedComponent.properties).map(([key, prop]) => [key, prop.default])
+                                    ),
+                                  };
+                                  setPlacedObjects(prev => [...prev, placedObject]);
+                                }
+                              }
+                            }
+                          }
+                          setDraggedComponent(null);
+                        }}
+                        className="flex items-center gap-2 px-2 py-2 mx-1 rounded-md bg-muted/30 hover:bg-muted cursor-grab active:cursor-grabbing transition-colors border border-transparent hover:border-primary/30 touch-manipulation select-none"
                       >
                         <span className="text-lg">{component.icon}</span>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-foreground truncate">{component.name}</p>
-                          <p className="text-xs text-muted-foreground truncate">{component.description}</p>
+                          <p className="text-xs text-muted-foreground truncate hidden sm:block">{component.description}</p>
                         </div>
                       </div>
                     ))}
@@ -506,7 +551,7 @@ export function Builder3DCanvas({
         ref={containerRef}
         className={cn(
           "flex-1 relative transition-all duration-300",
-          sidebarOpen ? "ml-64" : "ml-0"
+          sidebarOpen ? "ml-56 sm:ml-64" : "ml-0"
         )}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
@@ -514,7 +559,7 @@ export function Builder3DCanvas({
         <canvas 
           ref={canvasRef} 
           onClick={handleCanvasClick}
-          className="w-full h-full"
+          className="w-full h-full touch-manipulation"
         />
 
         {/* Transform Toolbar */}
@@ -522,17 +567,18 @@ export function Builder3DCanvas({
           <TransformToolbar
             mode={transformMode}
             onModeChange={setTransformMode}
-            className="absolute top-4 left-1/2 -translate-x-1/2"
+            className="absolute top-4 left-1/2 -translate-x-1/2 scale-90 sm:scale-100"
           />
         )}
 
         {/* Canvas Toolbar */}
-        <div className="absolute top-4 right-4 flex items-center gap-2">
+        <div className="absolute top-4 right-2 sm:right-4 flex items-center gap-1 sm:gap-2">
           <Button
             variant="secondary"
             size="icon"
             onClick={() => setShowGrid(!showGrid)}
             title="Toggle Grid"
+            className="h-8 w-8 sm:h-10 sm:w-10"
           >
             <Grid3X3 className={cn("w-4 h-4", showGrid && "text-primary")} />
           </Button>
@@ -541,6 +587,7 @@ export function Builder3DCanvas({
             size="icon"
             onClick={handleResetCamera}
             title="Reset Camera"
+            className="h-8 w-8 sm:h-10 sm:w-10"
           >
             <RotateCcw className="w-4 h-4" />
           </Button>
@@ -550,18 +597,19 @@ export function Builder3DCanvas({
             onClick={handleDeleteSelected}
             disabled={!selectedObjectId}
             title="Delete Selected"
+            className="h-8 w-8 sm:h-10 sm:w-10"
           >
             <Trash2 className="w-4 h-4" />
           </Button>
         </div>
 
         {/* Object Count */}
-        <div className="absolute bottom-4 left-4 bg-card/80 backdrop-blur-sm px-3 py-1.5 rounded-lg text-sm text-muted-foreground">
-          {placedObjects.length} object{placedObjects.length !== 1 ? 's' : ''} placed
+        <div className="absolute bottom-4 left-2 sm:left-4 bg-card/80 backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm text-muted-foreground">
+          {placedObjects.length} object{placedObjects.length !== 1 ? 's' : ''}
         </div>
 
-        {/* Controls Guide */}
-        <div className="absolute bottom-4 right-4 bg-card/80 backdrop-blur-sm px-3 py-2 rounded-lg text-xs text-muted-foreground space-y-1">
+        {/* Controls Guide - Hidden on mobile */}
+        <div className="absolute bottom-4 right-2 sm:right-4 bg-card/80 backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-2 rounded-lg text-xs text-muted-foreground space-y-1 hidden sm:block">
           <div className="flex items-center gap-2">
             <Move className="w-3 h-3" />
             <span>Drag to rotate</span>
@@ -569,6 +617,10 @@ export function Builder3DCanvas({
           <div className="flex items-center gap-2">
             <ZoomIn className="w-3 h-3" />
             <span>Scroll to zoom</span>
+          </div>
+          <div className="flex items-center gap-2 text-primary">
+            <span>G/R/S</span>
+            <span>Transform modes</span>
           </div>
         </div>
 
