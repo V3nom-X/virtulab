@@ -303,7 +303,6 @@ const Workspace = () => {
                   ))}
                 </TabsList>
               </Tabs>
-            </ScrollArea>
           </div>
           <div className="flex items-center gap-1">
             {hasPlayControls && <Button variant={showDataPanel ? "secondary" : "ghost"} size="icon" onClick={() => setShowDataPanel(!showDataPanel)} title="Data Visualization" className="h-8 w-8"><BarChart3 className="w-4 h-4" /></Button>}
