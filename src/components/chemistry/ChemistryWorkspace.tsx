@@ -511,39 +511,40 @@ export function ChemistryWorkspace() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Toolbar */}
-      <div className="flex items-center justify-between p-4 border-b bg-card">
+      {/* Toolbar - Mobile responsive */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 p-2 sm:p-4 border-b bg-card">
         <div className="flex items-center gap-2">
-          <FlaskConical className="w-5 h-5 text-primary" />
-          <h2 className="font-semibold">Chemistry Lab</h2>
-          <Badge variant="outline" className="ml-2">
-            {commonReactions.length} Reactions Available
+          <FlaskConical className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+          <h2 className="font-semibold text-sm sm:text-base">Chemistry Lab</h2>
+          <Badge variant="outline" className="text-xs hidden sm:inline-flex">
+            {commonReactions.length} Reactions
           </Badge>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-1">
-            <Snowflake className="w-4 h-4 text-blue-500" />
+        <div className="flex items-center gap-1 sm:gap-2 flex-wrap w-full sm:w-auto">
+          <div className="flex items-center gap-1 sm:gap-2 bg-muted/50 rounded-lg px-2 py-1">
+            <Snowflake className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500" />
             <input
               type="range"
               min="-50"
               max="2000"
               value={temperature}
               onChange={(e) => setTemperature(Number(e.target.value))}
-              className="w-24"
+              className="w-16 sm:w-24"
             />
-            <Flame className="w-4 h-4 text-orange-500" />
-            <span className="text-sm font-mono w-16">{temperature}°C</span>
+            <Flame className="w-3 h-3 sm:w-4 sm:h-4 text-orange-500" />
+            <span className="text-xs sm:text-sm font-mono w-12 sm:w-16">{temperature}°C</span>
           </div>
           <Button 
             variant="default" 
             size="sm" 
             onClick={checkReaction}
             disabled={placedElements.length < 2 || isReacting}
+            className="h-7 sm:h-8 text-xs sm:text-sm"
           >
             {isReacting ? (
-              <Zap className="w-4 h-4 mr-1 animate-pulse" />
+              <Zap className="w-3 h-3 sm:w-4 sm:h-4 mr-1 animate-pulse" />
             ) : (
-              <Beaker className="w-4 h-4 mr-1" />
+              <Beaker className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
             )}
             React
           </Button>
@@ -551,23 +552,24 @@ export function ChemistryWorkspace() {
             variant="outline" 
             size="sm" 
             onClick={() => setShowMoleculeViewer(true)}
+            className="h-7 sm:h-8 text-xs sm:text-sm"
           >
-            <Atom className="w-4 h-4 mr-1" />
-            Molecules
+            <Atom className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
+            <span className="hidden sm:inline">Molecules</span>
           </Button>
-          <Button variant="outline" size="sm" onClick={clearWorkspace}>
-            <RotateCcw className="w-4 h-4 mr-1" />
-            Clear
+          <Button variant="outline" size="sm" onClick={clearWorkspace} className="h-7 sm:h-8 text-xs sm:text-sm">
+            <RotateCcw className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
+            <span className="hidden sm:inline">Clear</span>
           </Button>
         </div>
       </div>
 
-      <div className="flex-1 flex">
-        {/* Element Palette */}
-        <div className="w-52 border-r bg-card p-3 space-y-3 overflow-auto">
-          <div className="text-sm font-medium mb-2">Quick Add Elements</div>
-          <p className="text-xs text-muted-foreground mb-2">Drag or click to add</p>
-          <div className="grid grid-cols-3 gap-2">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+        {/* Element Palette - Horizontal on mobile, vertical sidebar on desktop */}
+        <div className="lg:w-52 border-b lg:border-b-0 lg:border-r bg-card p-2 sm:p-3 overflow-auto flex-shrink-0">
+          <div className="text-xs sm:text-sm font-medium mb-1 lg:mb-2">Quick Add Elements</div>
+          <p className="text-[10px] sm:text-xs text-muted-foreground mb-2 hidden sm:block">Drag or tap to add</p>
+          <div className="flex lg:grid lg:grid-cols-3 gap-1 sm:gap-2 overflow-x-auto lg:overflow-visible pb-1 lg:pb-0">
             {quickAddElements.map(({ symbol }) => {
               const element = getElementBySymbol(symbol);
               if (!element) return null;
@@ -577,35 +579,47 @@ export function ChemistryWorkspace() {
                   draggable
                   onDragStart={(e) => handleDragStart(e, symbol)}
                   onClick={() => addElement(element)}
-                  className="p-2 bg-muted/50 rounded-lg hover:bg-muted transition-colors text-center hover:scale-105 active:scale-95 cursor-grab active:cursor-grabbing"
+                  className="p-1.5 sm:p-2 bg-muted/50 rounded-lg hover:bg-muted transition-colors text-center hover:scale-105 active:scale-95 cursor-grab active:cursor-grabbing flex-shrink-0 min-w-[40px] sm:min-w-0"
                 >
-                  <div className="text-lg font-bold">{symbol}</div>
-                  <div className="text-[9px] text-muted-foreground truncate">{element.name}</div>
+                  <div className="text-sm sm:text-lg font-bold">{symbol}</div>
+                  <div className="text-[8px] sm:text-[9px] text-muted-foreground truncate hidden sm:block">{element.name}</div>
                 </button>
               );
             })}
           </div>
           
-          <Button 
-            variant="outline" 
-            className="w-full" 
-            size="sm"
-            onClick={() => setShowPeriodicTable(true)}
-          >
-            Full Periodic Table
-          </Button>
+          <div className="hidden lg:block mt-3">
+            <Button 
+              variant="outline" 
+              className="w-full" 
+              size="sm"
+              onClick={() => setShowPeriodicTable(true)}
+            >
+              Full Periodic Table
+            </Button>
 
-          <div className="border-t pt-3">
-            <div className="text-sm font-medium mb-2">Reaction Types</div>
-            <div className="space-y-1 text-xs">
-              {Object.entries(reactionTypeColors).map(([type, color]) => (
-                <div key={type} className="flex items-center gap-2">
-                  <div className={`w-3 h-3 rounded ${color.split(' ')[0]}`} />
-                  <span className="capitalize">{type.replace('-', ' ')}</span>
-                </div>
-              ))}
+            <div className="border-t pt-3 mt-3">
+              <div className="text-sm font-medium mb-2">Reaction Types</div>
+              <div className="space-y-1 text-xs">
+                {Object.entries(reactionTypeColors).map(([type, color]) => (
+                  <div key={type} className="flex items-center gap-2">
+                    <div className={`w-3 h-3 rounded ${color.split(' ')[0]}`} />
+                    <span className="capitalize">{type.replace('-', ' ')}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
+          
+          {/* Mobile: Show periodic table button inline */}
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setShowPeriodicTable(true)}
+            className="lg:hidden ml-2 h-8 text-xs flex-shrink-0"
+          >
+            Periodic Table
+          </Button>
         </div>
 
         {/* Main Workspace */}
@@ -699,8 +713,8 @@ export function ChemistryWorkspace() {
           )}
         </div>
 
-        {/* Placed Elements List */}
-        <div className="w-48 border-l bg-card p-3 space-y-2 overflow-auto">
+        {/* Placed Elements List - Hidden on mobile, shown in drawer or floating */}
+        <div className="hidden lg:block w-48 border-l bg-card p-3 space-y-2 overflow-auto">
           <div className="text-sm font-medium mb-2">Workspace ({placedElements.length})</div>
           {placedElements.length === 0 ? (
             <p className="text-xs text-muted-foreground">No elements added</p>
@@ -734,52 +748,61 @@ export function ChemistryWorkspace() {
             </>
           )}
         </div>
+        
+        {/* Mobile: Floating element count badge */}
+        {placedElements.length > 0 && (
+          <div className="lg:hidden absolute bottom-20 right-4 z-10">
+            <Badge variant="secondary" className="text-xs shadow-lg">
+              {placedElements.length} element{placedElements.length !== 1 ? 's' : ''}
+            </Badge>
+          </div>
+        )}
       </div>
 
-      {/* Periodic Table Modal */}
+      {/* Periodic Table Modal - Mobile responsive */}
       {showPeriodicTable && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-8">
-          <div className="bg-card border rounded-2xl shadow-2xl max-w-[1200px] max-h-[90vh] overflow-auto">
-            <div className="sticky top-0 bg-card border-b p-4 flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Select Element</h2>
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 lg:p-8">
+          <div className="bg-card border rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-[1200px] max-h-[95vh] sm:max-h-[90vh] overflow-auto">
+            <div className="sticky top-0 bg-card border-b p-3 sm:p-4 flex items-center justify-between z-10">
+              <h2 className="text-lg sm:text-xl font-semibold">Select Element</h2>
               <Button variant="ghost" size="sm" onClick={() => setShowPeriodicTable(false)}>
                 <X className="w-4 h-4" />
               </Button>
             </div>
-            <div className="p-4">
+            <div className="p-2 sm:p-4">
               <PeriodicTable onElementSelect={addElement} />
             </div>
           </div>
         </div>
       )}
 
-      {/* Molecule Viewer Modal with Search */}
+      {/* Molecule Viewer Modal - Mobile responsive */}
       {showMoleculeViewer && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-8">
-          <div className="bg-card border rounded-2xl shadow-2xl w-[900px] h-[600px] flex flex-col">
-            <div className="border-b p-4 flex items-center justify-between">
-              <h2 className="text-xl font-semibold">3D Molecule Viewer</h2>
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 lg:p-8">
+          <div className="bg-card border rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-[900px] h-[90vh] sm:h-[600px] flex flex-col">
+            <div className="border-b p-3 sm:p-4 flex items-center justify-between flex-shrink-0">
+              <h2 className="text-lg sm:text-xl font-semibold">3D Molecule Viewer</h2>
               <Button variant="ghost" size="sm" onClick={() => setShowMoleculeViewer(false)}>
                 <X className="w-4 h-4" />
               </Button>
             </div>
-            <div className="flex-1 flex overflow-hidden">
+            <div className="flex-1 flex flex-col sm:flex-row overflow-hidden min-h-0">
               {/* Search Panel */}
-              <div className="w-64 border-r p-4">
+              <div className="sm:w-64 border-b sm:border-b-0 sm:border-r p-3 sm:p-4 overflow-auto flex-shrink-0 max-h-[30vh] sm:max-h-none">
                 <MoleculeSearch 
                   onSelect={setSelectedMolecule}
                   selectedMolecule={selectedMolecule || undefined}
                 />
               </div>
               {/* Viewer */}
-              <div className="flex-1 p-4">
+              <div className="flex-1 p-2 sm:p-4 min-h-0">
                 {selectedMolecule ? (
                   <MoleculeVisualization molecule={selectedMolecule} showControls />
                 ) : (
                   <div className="h-full flex items-center justify-center text-muted-foreground">
                     <div className="text-center">
-                      <Atom className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                      <p>Select a molecule to view its 3D structure</p>
+                      <Atom className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 opacity-30" />
+                      <p className="text-sm">Select a molecule to view</p>
                     </div>
                   </div>
                 )}
