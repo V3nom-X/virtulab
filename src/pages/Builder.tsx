@@ -28,8 +28,11 @@ import {
   LayoutTemplate,
   Eye,
   Box,
-  Layers
+  Layers,
+  Menu,
+  Settings2
 } from "lucide-react";
+import { MobileBuilderSheet } from "@/components/builder/MobileBuilderSheet";
 import { toast } from "sonner";
 import { ComponentPalette, PaletteComponent } from "@/components/builder/ComponentPalette";
 import { DragDropCanvas, CanvasComponent } from "@/components/builder/DragDropCanvas";
@@ -313,7 +316,7 @@ const Builder = () => {
         {/* Mobile-responsive layout */}
         <div className="flex-1 flex flex-col lg:flex-row">
         {/* Left Panel - Hidden on mobile, shown via sheet */}
-        <div className="hidden lg:flex w-72 border-r border-border bg-card flex-col flex-shrink-0">
+        <aside className="hidden lg:flex w-72 border-r border-border bg-card flex-col flex-shrink-0">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
             <TabsList className="grid grid-cols-4 m-2">
               <TabsTrigger value="components" className="text-xs px-2">
@@ -398,46 +401,108 @@ const Builder = () => {
               />
             </TabsContent>
           </Tabs>
-        </div>
+        </aside>
 
         {/* Main Canvas Area */}
         <div className="flex-1 flex flex-col">
           {/* Toolbar */}
-          <div className="h-14 border-b border-border flex items-center justify-between px-4 bg-card">
-            <div className="flex items-center gap-3">
+          <div className="h-14 border-b border-border flex items-center justify-between px-2 sm:px-4 bg-card gap-2">
+            {/* Mobile Sheet Triggers */}
+            <div className="flex items-center gap-2 lg:hidden">
+              <MobileBuilderSheet title="Components" side="left">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
+                  <TabsList className="grid grid-cols-4 m-2">
+                    <TabsTrigger value="components" className="text-xs px-2"><Atom className="h-4 w-4" /></TabsTrigger>
+                    <TabsTrigger value="variables" className="text-xs px-2"><Sliders className="h-4 w-4" /></TabsTrigger>
+                    <TabsTrigger value="script" className="text-xs px-2"><Code2 className="h-4 w-4" /></TabsTrigger>
+                    <TabsTrigger value="data" className="text-xs px-2"><BarChart3 className="h-4 w-4" /></TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="components" className="flex-1 m-0 overflow-hidden">
+                    <ComponentPalette onComponentClick={handleAddComponent} />
+                  </TabsContent>
+                  <TabsContent value="variables" className="flex-1 m-0 p-2 overflow-auto">
+                    <VariableControls
+                      variables={variables}
+                      onVariableChange={handleVariableChange}
+                      onAddVariable={handleAddVariable}
+                      onRemoveVariable={handleRemoveVariable}
+                      onReset={() => setVariables([])}
+                    />
+                    <div className="mt-4">
+                      <FormulaBuilder onMoleculeSelect={handleMoleculeSelect} />
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="script" className="flex-1 m-0 p-2 overflow-auto">
+                    <MonacoScriptEditor
+                      initialCode={scriptCode}
+                      onCodeChange={setScriptCode}
+                      variables={Object.fromEntries(variables.map(v => [v.name.toLowerCase(), v.value]))}
+                    />
+                  </TabsContent>
+                  <TabsContent value="data" className="flex-1 m-0 p-2 overflow-auto">
+                    <DataOutput
+                      data={dataPoints}
+                      series={dataSeries}
+                      isRecording={isRecording}
+                      onToggleRecording={() => setIsRecording(!isRecording)}
+                      onClearData={() => setDataPoints([])}
+                    />
+                  </TabsContent>
+                </Tabs>
+              </MobileBuilderSheet>
+              <MobileBuilderSheet 
+                title="Properties" 
+                side="right"
+                trigger={
+                  <Button variant="outline" size="icon" className="h-9 w-9">
+                    <Settings2 className="h-4 w-4" />
+                  </Button>
+                }
+              >
+                <div className="p-2">
+                  <PropertiesPanel
+                    component={selectedComponent}
+                    onPropertyChange={handlePropertyChange}
+                    onClose={() => setSelectedComponent(null)}
+                  />
+                </div>
+              </MobileBuilderSheet>
+            </div>
+            
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 lg:flex-initial">
               <Input 
                 value={experimentName}
                 onChange={(e) => setExperimentName(e.target.value)}
-                className="w-48 h-8 text-sm font-medium bg-transparent border-none focus-visible:ring-0"
+                className="w-28 sm:w-48 h-8 text-sm font-medium bg-transparent border-none focus-visible:ring-0"
               />
-              <Badge variant="secondary">{experimentId ? 'Saved' : 'Draft'}</Badge>
+              <Badge variant="secondary" className="hidden sm:inline-flex">{experimentId ? 'Saved' : 'Draft'}</Badge>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               {/* Templates Dialog */}
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <LayoutTemplate className="w-4 h-4 mr-1" />
-                    Templates
+                  <Button variant="outline" size="sm" className="h-8">
+                    <LayoutTemplate className="w-4 h-4 sm:mr-1" />
+                    <span className="hidden sm:inline">Templates</span>
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-[95vw] sm:max-w-2xl">
                   <DialogHeader>
                     <DialogTitle>Experiment Templates</DialogTitle>
                   </DialogHeader>
-                  <ScrollArea className="h-[400px] pr-4">
+                  <ScrollArea className="h-[60vh] sm:h-[400px] pr-4">
                     <div className="grid gap-3">
                       {builderTemplates.map(template => (
                         <button
                           key={template.id}
                           onClick={() => handleLoadTemplate(template)}
-                          className="text-left p-4 rounded-lg border border-border hover:border-primary/50 hover:bg-muted/50 transition-colors"
+                          className="text-left p-3 sm:p-4 rounded-lg border border-border hover:border-primary/50 hover:bg-muted/50 transition-colors"
                         >
                           <div className="flex items-center gap-2 mb-1">
                             <Badge variant="secondary" className="text-xs">{template.category}</Badge>
-                            <span className="font-medium">{template.name}</span>
+                            <span className="font-medium text-sm sm:text-base">{template.name}</span>
                           </div>
-                          <p className="text-sm text-muted-foreground">{template.description}</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground">{template.description}</p>
                           <p className="text-xs text-muted-foreground mt-2">
                             {template.components.length} components • {template.variables.length} variables
                           </p>
@@ -451,7 +516,7 @@ const Builder = () => {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="h-8 w-8" 
+                className="h-8 w-8 hidden sm:inline-flex" 
                 onClick={undo} 
                 disabled={!canUndo}
                 title="Undo (Ctrl+Z)"
@@ -461,26 +526,26 @@ const Builder = () => {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="h-8 w-8" 
+                className="h-8 w-8 hidden sm:inline-flex" 
                 onClick={redo} 
                 disabled={!canRedo}
                 title="Redo (Ctrl+Y)"
               >
                 <Redo className="w-4 h-4" />
               </Button>
-              <div className="w-px h-6 bg-border mx-1" />
+              <div className="w-px h-6 bg-border mx-1 hidden sm:block" />
               
               {/* Canvas Mode Toggle (when not previewing) */}
               {!isPreviewing && (
-                <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+                <div className="hidden sm:flex items-center gap-1 bg-muted rounded-lg p-1">
                   <Button
                     variant={canvasMode === "2d" ? "secondary" : "ghost"}
                     size="sm"
                     className="h-7 px-2"
                     onClick={() => setCanvasMode("2d")}
                   >
-                    <Layers className="w-3 h-3 mr-1" />
-                    2D
+                    <Layers className="w-3 h-3 sm:mr-1" />
+                    <span className="hidden md:inline">2D</span>
                   </Button>
                   <Button
                     variant={canvasMode === "3d" ? "secondary" : "ghost"}
@@ -488,8 +553,8 @@ const Builder = () => {
                     className="h-7 px-2"
                     onClick={() => setCanvasMode("3d")}
                   >
-                    <Box className="w-3 h-3 mr-1" />
-                    3D
+                    <Box className="w-3 h-3 sm:mr-1" />
+                    <span className="hidden md:inline">3D</span>
                   </Button>
                 </div>
               )}
@@ -497,7 +562,8 @@ const Builder = () => {
               {/* Preview Button */}
               <Button 
                 variant={isPreviewing ? "secondary" : "outline"} 
-                size="sm" 
+                size="sm"
+                className="h-8"
                 onClick={() => {
                   setIsPreviewing(!isPreviewing);
                   if (!isPreviewing) {
@@ -505,13 +571,13 @@ const Builder = () => {
                   }
                 }}
               >
-                {isPreviewing ? <Pause className="w-4 h-4 mr-1" /> : <Eye className="w-4 h-4 mr-1" />}
-                {isPreviewing ? 'Stop' : 'Preview'}
+                {isPreviewing ? <Pause className="w-4 h-4 sm:mr-1" /> : <Eye className="w-4 h-4 sm:mr-1" />}
+                <span className="hidden sm:inline">{isPreviewing ? 'Stop' : 'Preview'}</span>
               </Button>
               
               {isPreviewing && (
                 <>
-                  <div className="flex items-center gap-2">
+                  <div className="hidden md:flex items-center gap-2">
                     <Switch id="3d-mode" checked={use3DPreview} onCheckedChange={setUse3DPreview} />
                     <Label htmlFor="3d-mode" className="text-xs flex items-center gap-1">
                       <Box className="w-3 h-3" /> 3D
@@ -519,22 +585,23 @@ const Builder = () => {
                   </div>
                   <Button 
                     variant={isRecording ? "destructive" : "outline"} 
-                    size="sm" 
+                    size="sm"
+                    className="h-8 hidden sm:inline-flex"
                     onClick={() => setIsRecording(!isRecording)}
                   >
                     <Play className="w-4 h-4 mr-1" />
-                    {isRecording ? 'Recording...' : 'Record'}
+                    {isRecording ? 'Rec...' : 'Record'}
                   </Button>
                 </>
               )}
               
-              <Button variant="outline" size="sm" onClick={handleShare} disabled={!experimentId}>
+              <Button variant="outline" size="sm" className="h-8 hidden md:inline-flex" onClick={handleShare} disabled={!experimentId}>
                 <Link2 className="w-4 h-4 mr-1" />
                 Share
               </Button>
-              <Button size="sm" onClick={handleSave} disabled={isSaving}>
-                {isSaving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
-                Save
+              <Button size="sm" className="h-8" onClick={handleSave} disabled={isSaving}>
+                {isSaving ? <Loader2 className="w-4 h-4 sm:mr-1 animate-spin" /> : <Save className="w-4 h-4 sm:mr-1" />}
+                <span className="hidden sm:inline">Save</span>
               </Button>
             </div>
           </div>

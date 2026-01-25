@@ -164,6 +164,28 @@ const Workspace = () => {
           { key: 'momentum', name: 'Total Momentum', color: 'hsl(var(--primary))', unit: 'kg·m/s' },
           { key: 'kineticEnergy', name: 'Kinetic Energy', color: 'hsl(142, 71%, 45%)', unit: 'J' },
         ];
+      case 'ohmslaw':
+        return [
+          { key: 'current', name: 'Current', color: 'hsl(var(--primary))', unit: 'A' },
+          { key: 'power', name: 'Power', color: 'hsl(142, 71%, 45%)', unit: 'W' },
+        ];
+      case 'inclinedplane':
+        return [
+          { key: 'position', name: 'Position', color: 'hsl(var(--primary))', unit: 'm' },
+          { key: 'velocity', name: 'Velocity', color: 'hsl(142, 71%, 45%)', unit: 'm/s' },
+          { key: 'acceleration', name: 'Acceleration', color: 'hsl(45, 93%, 47%)', unit: 'm/s²' },
+        ];
+      case 'lightoptics':
+        return [
+          { key: 'incidenceAngle', name: 'Incidence Angle', color: 'hsl(var(--primary))', unit: '°' },
+          { key: 'refractionAngle', name: 'Refraction Angle', color: 'hsl(142, 71%, 45%)', unit: '°' },
+        ];
+      case 'buoyancy':
+        return [
+          { key: 'buoyantForce', name: 'Buoyant Force', color: 'hsl(var(--primary))', unit: 'N' },
+          { key: 'weight', name: 'Weight', color: 'hsl(142, 71%, 45%)', unit: 'N' },
+          { key: 'netForce', name: 'Net Force', color: 'hsl(45, 93%, 47%)', unit: 'N' },
+        ];
       default:
         return [];
     }
@@ -201,6 +223,10 @@ const Workspace = () => {
     else if (activeSimulation === 'spring') springRef.current?.reset();
     else if (activeSimulation === 'wave') waveRef.current?.reset();
     else if (activeSimulation === 'collision') collisionRef.current?.reset();
+    else if (activeSimulation === 'ohmslaw') ohmsLawRef.current?.reset();
+    else if (activeSimulation === 'inclinedplane') inclinedPlaneRef.current?.reset();
+    else if (activeSimulation === 'lightoptics') lightOpticsRef.current?.reset();
+    else if (activeSimulation === 'buoyancy') buoyancyRef.current?.reset();
   };
 
   const handleSimulationChange = (v: string) => {
@@ -308,6 +334,143 @@ const Workspace = () => {
           <div><div className="flex justify-between mb-2 text-sm"><ParamTooltip tip="Mass of object 2."><span>Mass 2 (kg)</span></ParamTooltip><span className="font-mono">{collisionMass2[0].toFixed(1)}</span></div><Slider value={collisionMass2} onValueChange={setCollisionMass2} min={0.5} max={5} step={0.5} /></div>
           <div><div className="flex justify-between mb-2 text-sm"><ParamTooltip tip="Velocity of object 1."><span>Velocity 1 (m/s)</span></ParamTooltip><span className="font-mono">{collisionVelocity1[0]}</span></div><Slider value={collisionVelocity1} onValueChange={setCollisionVelocity1} min={0} max={10} step={1} /></div>
           <div><div className="flex justify-between mb-2 text-sm"><ParamTooltip tip="Velocity of object 2."><span>Velocity 2 (m/s)</span></ParamTooltip><span className="font-mono">{collisionVelocity2[0]}</span></div><Slider value={collisionVelocity2} onValueChange={setCollisionVelocity2} min={0} max={10} step={1} /></div>
+        </div>
+      )}
+      {activeSimulation === 'ohmslaw' && (
+        <div className="space-y-4">
+          <div>
+            <div className="flex justify-between mb-2 text-sm">
+              <ParamTooltip tip="Electric potential difference (V = IR)"><span>Voltage (V)</span></ParamTooltip>
+              <span className="font-mono">{ohmsVoltage[0]}</span>
+            </div>
+            <Slider value={ohmsVoltage} onValueChange={setOhmsVoltage} min={1} max={24} step={1} />
+          </div>
+          <div>
+            <div className="flex justify-between mb-2 text-sm">
+              <ParamTooltip tip="Opposition to current flow (Ohms)"><span>Resistance (Ω)</span></ParamTooltip>
+              <span className="font-mono">{ohmsResistance[0]}</span>
+            </div>
+            <Slider value={ohmsResistance} onValueChange={setOhmsResistance} min={10} max={1000} step={10} />
+          </div>
+          <div className="p-3 bg-muted rounded-lg text-sm space-y-1">
+            <div className="flex justify-between"><span>Current (I = V/R):</span><span className="font-mono">{(ohmsVoltage[0] / ohmsResistance[0]).toFixed(4)} A</span></div>
+            <div className="flex justify-between"><span>Power (P = V²/R):</span><span className="font-mono">{(ohmsVoltage[0] * ohmsVoltage[0] / ohmsResistance[0]).toFixed(3)} W</span></div>
+          </div>
+        </div>
+      )}
+      {activeSimulation === 'inclinedplane' && (
+        <div className="space-y-4">
+          <div>
+            <div className="flex justify-between mb-2 text-sm">
+              <ParamTooltip tip="Angle of the inclined plane from horizontal"><span>Angle (°)</span></ParamTooltip>
+              <span className="font-mono">{inclineAngle[0]}</span>
+            </div>
+            <Slider value={inclineAngle} onValueChange={setInclineAngle} min={5} max={60} step={1} />
+          </div>
+          <div>
+            <div className="flex justify-between mb-2 text-sm">
+              <ParamTooltip tip="Mass of the object on the plane"><span>Mass (kg)</span></ParamTooltip>
+              <span className="font-mono">{inclineMass[0].toFixed(1)}</span>
+            </div>
+            <Slider value={inclineMass} onValueChange={setInclineMass} min={0.5} max={10} step={0.5} />
+          </div>
+          <div>
+            <div className="flex justify-between mb-2 text-sm">
+              <ParamTooltip tip="Coefficient of kinetic friction (μ)"><span>Friction (μ)</span></ParamTooltip>
+              <span className="font-mono">{inclineFriction[0].toFixed(2)}</span>
+            </div>
+            <Slider value={inclineFriction} onValueChange={setInclineFriction} min={0} max={1} step={0.05} />
+          </div>
+          <div className="p-3 bg-muted rounded-lg text-sm space-y-1">
+            <div className="flex justify-between"><span>Acceleration:</span><span className="font-mono">{(9.8 * (Math.sin(inclineAngle[0] * Math.PI / 180) - inclineFriction[0] * Math.cos(inclineAngle[0] * Math.PI / 180))).toFixed(2)} m/s²</span></div>
+          </div>
+        </div>
+      )}
+      {activeSimulation === 'lightoptics' && (
+        <div className="space-y-4">
+          <div>
+            <div className="flex justify-between mb-2 text-sm">
+              <ParamTooltip tip="Angle of the incident light ray"><span>Incidence Angle (°)</span></ParamTooltip>
+              <span className="font-mono">{opticsAngle[0]}</span>
+            </div>
+            <Slider value={opticsAngle} onValueChange={setOpticsAngle} min={0} max={89} step={1} />
+          </div>
+          <div>
+            <Label className="text-sm mb-2 block">Surface Type</Label>
+            <Select value={opticsSurface} onValueChange={(v) => setOpticsSurface(v as 'mirror' | 'transparent')}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="mirror">Mirror (Reflection)</SelectItem>
+                <SelectItem value="transparent">Transparent (Refraction)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {opticsSurface === 'transparent' && (
+            <>
+              <div>
+                <Label className="text-sm mb-2 block">Medium 1 (Incident)</Label>
+                <Select value={opticsMedium1} onValueChange={(v) => setOpticsMedium1(v as 'air' | 'water' | 'glass')}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="air">Air (n=1.00)</SelectItem>
+                    <SelectItem value="water">Water (n=1.33)</SelectItem>
+                    <SelectItem value="glass">Glass (n=1.52)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-sm mb-2 block">Medium 2 (Refracted)</Label>
+                <Select value={opticsMedium2} onValueChange={(v) => setOpticsMedium2(v as 'air' | 'water' | 'glass')}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="air">Air (n=1.00)</SelectItem>
+                    <SelectItem value="water">Water (n=1.33)</SelectItem>
+                    <SelectItem value="glass">Glass (n=1.52)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+      {activeSimulation === 'buoyancy' && (
+        <div className="space-y-4">
+          <div>
+            <div className="flex justify-between mb-2 text-sm">
+              <ParamTooltip tip="Density of the submerged object"><span>Object Density (kg/m³)</span></ParamTooltip>
+              <span className="font-mono">{buoyancyObjectDensity[0]}</span>
+            </div>
+            <Slider value={buoyancyObjectDensity} onValueChange={setBuoyancyObjectDensity} min={100} max={5000} step={50} />
+          </div>
+          <div>
+            <Label className="text-sm mb-2 block">Fluid Type</Label>
+            <Select value={buoyancyFluidDensity[0].toString()} onValueChange={(v) => setBuoyancyFluidDensity([parseInt(v)])}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1000">Water (1000 kg/m³)</SelectItem>
+                <SelectItem value="800">Oil (800 kg/m³)</SelectItem>
+                <SelectItem value="13600">Mercury (13600 kg/m³)</SelectItem>
+                <SelectItem value="1025">Seawater (1025 kg/m³)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <div className="flex justify-between mb-2 text-sm">
+              <ParamTooltip tip="Volume of the object"><span>Object Volume (m³)</span></ParamTooltip>
+              <span className="font-mono">{buoyancyVolume[0].toFixed(2)}</span>
+            </div>
+            <Slider value={buoyancyVolume} onValueChange={setBuoyancyVolume} min={0.1} max={5} step={0.1} />
+          </div>
+          <div className="p-3 bg-muted rounded-lg text-sm space-y-1">
+            <div className="flex justify-between"><span>Buoyant Force:</span><span className="font-mono">{(buoyancyFluidDensity[0] * 9.8 * buoyancyVolume[0]).toFixed(1)} N</span></div>
+            <div className="flex justify-between"><span>Object Weight:</span><span className="font-mono">{(buoyancyObjectDensity[0] * 9.8 * buoyancyVolume[0]).toFixed(1)} N</span></div>
+            <div className="flex justify-between font-medium">
+              <span>Status:</span>
+              <span className={buoyancyObjectDensity[0] < buoyancyFluidDensity[0] ? 'text-success' : buoyancyObjectDensity[0] === buoyancyFluidDensity[0] ? 'text-warning' : 'text-destructive'}>
+                {buoyancyObjectDensity[0] < buoyancyFluidDensity[0] ? 'Floats' : buoyancyObjectDensity[0] === buoyancyFluidDensity[0] ? 'Neutral' : 'Sinks'}
+              </span>
+            </div>
+          </div>
         </div>
       )}
     </div>
