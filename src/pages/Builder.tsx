@@ -309,9 +309,11 @@ const Builder = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen flex flex-col lg:flex-row">
-        {/* Left Panel */}
-        <div className="w-full lg:w-72 border-r border-border bg-card flex flex-col">
+      <div className="min-h-screen flex flex-col">
+        {/* Mobile-responsive layout */}
+        <div className="flex-1 flex flex-col lg:flex-row">
+        {/* Left Panel - Hidden on mobile, shown via sheet */}
+        <div className="hidden lg:flex w-72 border-r border-border bg-card flex-col flex-shrink-0">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
             <TabsList className="grid grid-cols-4 m-2">
               <TabsTrigger value="components" className="text-xs px-2">
@@ -593,13 +595,14 @@ const Builder = () => {
           )}
         </div>
 
-        {/* Right Properties Panel */}
-        <div className="w-full lg:w-72 border-l border-border bg-card">
+        {/* Right Properties Panel - Hidden on mobile */}
+        <div className="hidden lg:block w-72 border-l border-border bg-card flex-shrink-0">
           <PropertiesPanel
             component={selectedComponent}
             onPropertyChange={handlePropertyChange}
             onClose={() => setSelectedComponent(null)}
           />
+        </div>
         </div>
       </div>
       <Footer />

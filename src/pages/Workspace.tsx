@@ -9,23 +9,27 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { PendulumSimulation, PendulumSimulationHandle } from "@/components/simulations/PendulumSimulation";
 import { ProjectileSimulation, ProjectileSimulationHandle } from "@/components/simulations/ProjectileSimulation";
 import { SpringSimulation, SpringSimulationHandle } from "@/components/simulations/SpringSimulation";
 import { WaveSimulation, WaveSimulationHandle } from "@/components/simulations/WaveSimulation";
 import { CollisionSimulation, CollisionSimulationHandle } from "@/components/simulations/CollisionSimulation";
 import { EMSpectrumVisualization } from "@/components/simulations/EMSpectrumVisualization";
+import { OhmsLawSimulation, OhmsLawSimulationHandle } from "@/components/simulations/OhmsLawSimulation";
+import { InclinedPlaneSimulation, InclinedPlaneSimulationHandle } from "@/components/simulations/InclinedPlaneSimulation";
+import { LightOpticsSimulation, LightOpticsSimulationHandle } from "@/components/simulations/LightOpticsSimulation";
+import { BuoyancySimulation, BuoyancySimulationHandle } from "@/components/simulations/BuoyancySimulation";
 import { ChemistryWorkspace } from "@/components/chemistry/ChemistryWorkspace";
 import { DataVisualizationPanel } from "@/components/workspace/DataVisualizationPanel";
 import { MobileParametersDrawer } from "@/components/workspace/MobileParametersDrawer";
+import { ExperimentEducation } from "@/components/workspace/ExperimentEducation";
 import { exportToCSV, exportToJSON, generatePDFReport } from "@/utils/exportData";
 import { toast } from "sonner";
 import { physicsPresets } from "@/data/physicsPresets";
 import { 
   Play, Pause, RotateCcw, Download, FileText, Braces,
   FlaskConical, Target, Activity, Gauge, Waves, Zap, Radio, Info, HelpCircle,
-  BarChart3
+  BarChart3, BookOpen, Cpu, Mountain, Sun, Droplets
 } from "lucide-react";
 
 interface DataPoint {
@@ -57,6 +61,7 @@ const Workspace = () => {
   const [speed, setSpeed] = useState([1]);
   const [graphData, setGraphData] = useState<DataPoint[]>([]);
   const [showDataPanel, setShowDataPanel] = useState(false);
+  const [showEducation, setShowEducation] = useState(false);
   const maxDataPoints = 500;
   
   const acceptDataRef = useRef(true);
@@ -88,11 +93,32 @@ const Workspace = () => {
   const [collisionVelocity2, setCollisionVelocity2] = useState([3]);
   const [collisionType, setCollisionType] = useState<'elastic' | 'inelastic'>('elastic');
 
+  // New simulation states
+  const [ohmsVoltage, setOhmsVoltage] = useState([12]);
+  const [ohmsResistance, setOhmsResistance] = useState([100]);
+
+  const [inclineAngle, setInclineAngle] = useState([30]);
+  const [inclineMass, setInclineMass] = useState([2]);
+  const [inclineFriction, setInclineFriction] = useState([0.2]);
+
+  const [opticsAngle, setOpticsAngle] = useState([45]);
+  const [opticsMedium1, setOpticsMedium1] = useState<'air' | 'water' | 'glass'>('air');
+  const [opticsMedium2, setOpticsMedium2] = useState<'air' | 'water' | 'glass'>('glass');
+  const [opticsSurface, setOpticsSurface] = useState<'mirror' | 'transparent'>('transparent');
+
+  const [buoyancyObjectDensity, setBuoyancyObjectDensity] = useState([500]);
+  const [buoyancyFluidDensity, setBuoyancyFluidDensity] = useState([1000]);
+  const [buoyancyVolume, setBuoyancyVolume] = useState([1]);
+
   const pendulumRef = useRef<PendulumSimulationHandle>(null);
   const projectileRef = useRef<ProjectileSimulationHandle>(null);
   const springRef = useRef<SpringSimulationHandle>(null);
   const waveRef = useRef<WaveSimulationHandle>(null);
   const collisionRef = useRef<CollisionSimulationHandle>(null);
+  const ohmsLawRef = useRef<OhmsLawSimulationHandle>(null);
+  const inclinedPlaneRef = useRef<InclinedPlaneSimulationHandle>(null);
+  const lightOpticsRef = useRef<LightOpticsSimulationHandle>(null);
+  const buoyancyRef = useRef<BuoyancySimulationHandle>(null);
 
   const simulations = [
     { id: 'pendulum', name: 'Pendulum', icon: Activity, category: 'Physics', shortName: 'Pend' },
@@ -100,6 +126,10 @@ const Workspace = () => {
     { id: 'spring', name: 'Spring', icon: Activity, category: 'Physics', shortName: 'Sprg' },
     { id: 'wave', name: 'Wave', icon: Waves, category: 'Physics', shortName: 'Wave' },
     { id: 'collision', name: 'Collision', icon: Zap, category: 'Physics', shortName: 'Coll' },
+    { id: 'ohmslaw', name: "Ohm's Law", icon: Cpu, category: 'Physics', shortName: 'Ohm' },
+    { id: 'inclinedplane', name: 'Inclined Plane', icon: Mountain, category: 'Physics', shortName: 'Incl' },
+    { id: 'lightoptics', name: 'Light Optics', icon: Sun, category: 'Physics', shortName: 'Opt' },
+    { id: 'buoyancy', name: 'Buoyancy', icon: Droplets, category: 'Physics', shortName: 'Buoy' },
     { id: 'emspectrum', name: 'EM Spectrum', icon: Radio, category: 'Physics', shortName: 'EM' },
     { id: 'chemistry', name: 'Chemistry', icon: FlaskConical, category: 'Chemistry', shortName: 'Chem' },
   ];
@@ -305,6 +335,7 @@ const Workspace = () => {
               </Tabs>
           </div>
           <div className="flex items-center gap-1">
+            <Button variant={showEducation ? "secondary" : "ghost"} size="icon" onClick={() => setShowEducation(!showEducation)} title="Learn" className="h-8 w-8"><BookOpen className="w-4 h-4" /></Button>
             {hasPlayControls && <Button variant={showDataPanel ? "secondary" : "ghost"} size="icon" onClick={() => setShowDataPanel(!showDataPanel)} title="Data Visualization" className="h-8 w-8"><BarChart3 className="w-4 h-4" /></Button>}
             <Button variant="ghost" size="icon" onClick={handleExportCSV} title="Export CSV" className="h-8 w-8"><Download className="w-4 h-4" /></Button>
             <Button variant="ghost" size="icon" onClick={handleExportJSON} title="Export JSON" className="h-8 w-8 hidden sm:inline-flex"><Braces className="w-4 h-4" /></Button>
@@ -320,6 +351,10 @@ const Workspace = () => {
               {activeSimulation === 'spring' && <SpringSimulation ref={springRef} mass={springMass[0]} springConstant={springConstant[0]} damping={springDamping[0]} displacement={springDisplacement[0]} isPlaying={isPlaying} speed={speed[0]} onDataUpdate={handleDataUpdate} />}
               {activeSimulation === 'wave' && <WaveSimulation ref={waveRef} frequency={waveFrequency[0]} amplitude={waveAmplitude[0]} wavelength={waveWavelength[0]} waveType={waveType} isPlaying={isPlaying} speed={speed[0]} onDataUpdate={handleDataUpdate} />}
               {activeSimulation === 'collision' && <CollisionSimulation ref={collisionRef} mass1={collisionMass1[0]} mass2={collisionMass2[0]} velocity1={collisionVelocity1[0]} velocity2={collisionVelocity2[0]} collisionType={collisionType} isPlaying={isPlaying} speed={speed[0]} onDataUpdate={handleDataUpdate} />}
+              {activeSimulation === 'ohmslaw' && <OhmsLawSimulation ref={ohmsLawRef} voltage={ohmsVoltage[0]} resistance={ohmsResistance[0]} isPlaying={isPlaying} speed={speed[0]} onDataUpdate={handleDataUpdate} />}
+              {activeSimulation === 'inclinedplane' && <InclinedPlaneSimulation ref={inclinedPlaneRef} angle={inclineAngle[0]} mass={inclineMass[0]} friction={inclineFriction[0]} isPlaying={isPlaying} speed={speed[0]} onDataUpdate={handleDataUpdate} />}
+              {activeSimulation === 'lightoptics' && <LightOpticsSimulation ref={lightOpticsRef} incidenceAngle={opticsAngle[0]} medium1={opticsMedium1} medium2={opticsMedium2} surfaceType={opticsSurface} isPlaying={isPlaying} speed={speed[0]} onDataUpdate={handleDataUpdate} />}
+              {activeSimulation === 'buoyancy' && <BuoyancySimulation ref={buoyancyRef} objectDensity={buoyancyObjectDensity[0]} fluidDensity={buoyancyFluidDensity[0]} objectVolume={buoyancyVolume[0]} isPlaying={isPlaying} speed={speed[0]} onDataUpdate={handleDataUpdate} />}
               {activeSimulation === 'emspectrum' && <EMSpectrumVisualization />}
               {activeSimulation === 'chemistry' && <ChemistryWorkspace />}
             </div>
@@ -347,6 +382,7 @@ const Workspace = () => {
           )}
         </div>
         <DataVisualizationPanel data={graphData} series={getDataSeries()} isOpen={showDataPanel} onClose={() => setShowDataPanel(false)} simulationType={activeSimulation} />
+        <ExperimentEducation experimentId={activeSimulation} isOpen={showEducation} onClose={() => setShowEducation(false)} />
       </div>
     </Layout>
   );
