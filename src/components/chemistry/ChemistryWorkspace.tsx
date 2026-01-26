@@ -3,6 +3,7 @@ import { Element, elements, getElementBySymbol } from "@/data/elements";
 import { DraggableElement } from "./DraggableElement";
 import { PeriodicTable } from "./PeriodicTable";
 import { MoleculeVisualization, MoleculeSearch, availableMolecules } from "./MoleculeVisualization";
+import { ChemistryEducationPanel } from "./ChemistryEducationPanel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -17,9 +18,12 @@ import {
   Zap,
   Atom,
   X,
-  Search
+  Search,
+  BookOpen,
+  GraduationCap
 } from "lucide-react";
 import { toast } from "sonner";
+import { ChemistryTutorial } from "@/data/chemistryEducation";
 
 interface PlacedElement {
   id: string;
@@ -371,7 +375,32 @@ export function ChemistryWorkspace() {
   const [showMoleculeViewer, setShowMoleculeViewer] = useState(false);
   const [selectedMolecule, setSelectedMolecule] = useState<string | null>(null);
   const [isReacting, setIsReacting] = useState(false);
+  const [showEducation, setShowEducation] = useState(false);
+  const [activeTutorial, setActiveTutorial] = useState<ChemistryTutorial | null>(null);
+  const [tutorialStep, setTutorialStep] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Handle starting a tutorial
+  const handleStartTutorial = (tutorial: ChemistryTutorial) => {
+    setActiveTutorial(tutorial);
+    setTutorialStep(0);
+    setPlacedElements([]);
+    setReactionResult(null);
+    setShowEducation(false);
+    toast.success(`Starting tutorial: ${tutorial.title}`);
+  };
+
+  // Handle advancing tutorial step
+  const advanceTutorialStep = () => {
+    if (activeTutorial && tutorialStep < activeTutorial.steps.length - 1) {
+      setTutorialStep(tutorialStep + 1);
+      toast.info(activeTutorial.steps[tutorialStep + 1].instruction);
+    } else {
+      toast.success('Tutorial complete! 🎉');
+      setActiveTutorial(null);
+      setTutorialStep(0);
+    }
+  };
 
   const addElement = (element: Element) => {
     const newElement: PlacedElement = {
@@ -556,6 +585,15 @@ export function ChemistryWorkspace() {
           >
             <Atom className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
             <span className="hidden sm:inline">Molecules</span>
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setShowEducation(true)}
+            className="h-7 sm:h-8 text-xs sm:text-sm"
+          >
+            <BookOpen className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
+            <span className="hidden sm:inline">Learn</span>
           </Button>
           <Button variant="outline" size="sm" onClick={clearWorkspace} className="h-7 sm:h-8 text-xs sm:text-sm">
             <RotateCcw className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
@@ -808,6 +846,75 @@ export function ChemistryWorkspace() {
                 )}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Education Modal */}
+      {showEducation && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 lg:p-8">
+          <div className="bg-card border rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-[600px] max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="border-b p-3 sm:p-4 flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <GraduationCap className="w-5 h-5 text-primary" />
+                <h2 className="text-lg sm:text-xl font-semibold">Chemistry Education</h2>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setShowEducation(false)}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="flex-1 overflow-auto p-4">
+              <ChemistryEducationPanel onStartTutorial={handleStartTutorial} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Active Tutorial Indicator */}
+      {activeTutorial && (
+        <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-80 bg-card border rounded-xl p-4 shadow-lg z-40 animate-fade-in">
+          <div className="flex items-center justify-between mb-2">
+            <Badge variant="default" className="flex items-center gap-1">
+              <GraduationCap className="w-3 h-3" />
+              Tutorial
+            </Badge>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-6 w-6 p-0"
+              onClick={() => setActiveTutorial(null)}
+            >
+              <X className="w-3 h-3" />
+            </Button>
+          </div>
+          <h4 className="font-medium text-sm mb-1">{activeTutorial.title}</h4>
+          <p className="text-xs text-muted-foreground mb-2">
+            Step {tutorialStep + 1} of {activeTutorial.steps.length}
+          </p>
+          <div className="bg-muted rounded-lg p-2 mb-3">
+            <p className="text-sm">{activeTutorial.steps[tutorialStep].instruction}</p>
+            {activeTutorial.steps[tutorialStep].hint && (
+              <p className="text-xs text-muted-foreground mt-1">
+                💡 {activeTutorial.steps[tutorialStep].hint}
+              </p>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              size="sm" 
+              variant="outline"
+              className="flex-1"
+              onClick={() => setActiveTutorial(null)}
+            >
+              Exit
+            </Button>
+            <Button 
+              size="sm" 
+              className="flex-1"
+              onClick={advanceTutorialStep}
+            >
+              {tutorialStep < activeTutorial.steps.length - 1 ? 'Next Step' : 'Complete'}
+            </Button>
           </div>
         </div>
       )}
