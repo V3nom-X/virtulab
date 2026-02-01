@@ -49,6 +49,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUndoRedo } from "@/hooks/useUndoRedo";
 import { physicsPresets } from "@/data/physicsPresets";
+import { ComingSoonOverlay } from "@/components/ui/ComingSoonOverlay";
 
 interface BuilderState {
   components: CanvasComponent[];
@@ -312,7 +313,12 @@ const Builder = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col relative">
+        {/* Coming Soon Overlay */}
+        <ComingSoonOverlay 
+          title="Experiment Builder" 
+          description="The custom experiment builder is coming soon! Build 2D and 3D physics simulations with drag-and-drop components."
+        />
         {/* Mobile-responsive layout */}
         <div className="flex-1 flex flex-col lg:flex-row">
         {/* Left Panel - Hidden on mobile, shown via sheet */}

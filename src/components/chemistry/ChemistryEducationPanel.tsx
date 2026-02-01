@@ -4,15 +4,17 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { QuizSystem } from '@/components/quiz/QuizSystem';
 import { 
   labSafetyGuidelines, 
   chemistryTutorials, 
   chemistryFacts,
   getRandomFact,
-  SafetyGuideline,
   ChemistryTutorial,
   ChemistryFact
 } from '@/data/chemistryEducation';
+import { getQuizByTutorialId, safetyQuiz } from '@/data/chemistryQuizzes';
 import { 
   ShieldAlert, 
   GraduationCap, 
@@ -22,8 +24,11 @@ import {
   Beaker,
   AlertTriangle,
   Info,
-  Sparkles
+  Sparkles,
+  Trophy,
+  ClipboardCheck
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface ChemistryEducationPanelProps {
   onStartTutorial?: (tutorial: ChemistryTutorial) => void;
@@ -34,6 +39,9 @@ export function ChemistryEducationPanel({ onStartTutorial, className }: Chemistr
   const [selectedTab, setSelectedTab] = useState('safety');
   const [currentFact, setCurrentFact] = useState<ChemistryFact>(getRandomFact());
   const [expandedSafety, setExpandedSafety] = useState<string | null>(null);
+  const [quizDialogOpen, setQuizDialogOpen] = useState(false);
+  const [activeQuiz, setActiveQuiz] = useState<{ tutorialId: string; title: string } | null>(null);
+  const [completedQuizzes, setCompletedQuizzes] = useState<Set<string>>(new Set());
 
   const severityColors = {
     critical: 'bg-destructive/20 text-destructive border-destructive/30',
@@ -46,6 +54,28 @@ export function ChemistryEducationPanel({ onStartTutorial, className }: Chemistr
     intermediate: 'bg-yellow-500/20 text-yellow-600',
     advanced: 'bg-red-500/20 text-red-600'
   };
+
+  const handleStartQuiz = (tutorialId: string, title: string) => {
+    setActiveQuiz({ tutorialId, title });
+    setQuizDialogOpen(true);
+  };
+
+  const handleQuizComplete = (score: number, total: number, passed: boolean) => {
+    if (passed && activeQuiz) {
+      setCompletedQuizzes(prev => new Set([...prev, activeQuiz.tutorialId]));
+      toast.success(`Congratulations! You passed the ${activeQuiz.title}!`);
+    }
+  };
+
+  const getActiveQuizQuestions = () => {
+    if (!activeQuiz) return null;
+    if (activeQuiz.tutorialId === 'lab-safety') {
+      return safetyQuiz;
+    }
+    return getQuizByTutorialId(activeQuiz.tutorialId);
+  };
+
+  const quizData = getActiveQuizQuestions();
 
   return (
     <div className={className}>
@@ -69,9 +99,23 @@ export function ChemistryEducationPanel({ onStartTutorial, className }: Chemistr
         <TabsContent value="safety" className="mt-0">
           <ScrollArea className="h-[400px] pr-4">
             <div className="space-y-3">
-              <div className="flex items-center gap-2 mb-4">
-                <AlertTriangle className="w-5 h-5 text-destructive" />
-                <h3 className="font-semibold">Lab Safety Guidelines</h3>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-destructive" />
+                  <h3 className="font-semibold">Lab Safety Guidelines</h3>
+                </div>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => handleStartQuiz('lab-safety', 'Lab Safety Quiz')}
+                  className="flex items-center gap-1"
+                >
+                  <ClipboardCheck className="w-4 h-4" />
+                  <span className="hidden sm:inline">Take Quiz</span>
+                  {completedQuizzes.has('lab-safety') && (
+                    <Trophy className="w-4 h-4 text-yellow-500 ml-1" />
+                  )}
+                </Button>
               </div>
               
               {labSafetyGuidelines.map((guideline) => (
@@ -134,48 +178,75 @@ export function ChemistryEducationPanel({ onStartTutorial, className }: Chemistr
                 <h3 className="font-semibold">Interactive Tutorials</h3>
               </div>
               
-              {chemistryTutorials.map((tutorial) => (
-                <Card key={tutorial.id} className="hover:shadow-md transition-shadow">
-                  <CardHeader className="py-3 px-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle className="text-sm">{tutorial.title}</CardTitle>
-                        <CardDescription className="text-xs mt-1">
-                          {tutorial.description}
-                        </CardDescription>
+              {chemistryTutorials.map((tutorial) => {
+                const hasQuiz = !!getQuizByTutorialId(tutorial.id);
+                const quizCompleted = completedQuizzes.has(tutorial.id);
+                
+                return (
+                  <Card key={tutorial.id} className="hover:shadow-md transition-shadow">
+                    <CardHeader className="py-3 px-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <CardTitle className="text-sm">{tutorial.title}</CardTitle>
+                            {quizCompleted && (
+                              <Trophy className="w-4 h-4 text-yellow-500" />
+                            )}
+                          </div>
+                          <CardDescription className="text-xs mt-1">
+                            {tutorial.description}
+                          </CardDescription>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2 mt-2">
-                      <Badge className={difficultyColors[tutorial.difficulty]}>
-                        {tutorial.difficulty}
-                      </Badge>
-                      <Badge variant="outline" className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {tutorial.duration} min
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0 px-4 pb-4">
-                    {tutorial.expectedReaction && (
-                      <div className="bg-muted rounded-lg p-2 mb-3">
-                        <span className="text-xs text-muted-foreground">Expected:</span>
-                        <p className="font-mono text-sm">{tutorial.expectedReaction}</p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Badge className={difficultyColors[tutorial.difficulty]}>
+                          {tutorial.difficulty}
+                        </Badge>
+                        <Badge variant="outline" className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {tutorial.duration} min
+                        </Badge>
+                        {hasQuiz && (
+                          <Badge variant="outline" className="flex items-center gap-1 bg-primary/10">
+                            <ClipboardCheck className="w-3 h-3" />
+                            Quiz
+                          </Badge>
+                        )}
                       </div>
-                    )}
-                    <div className="text-xs text-muted-foreground mb-2">
-                      {tutorial.steps.length} steps
-                    </div>
-                    <Button 
-                      size="sm" 
-                      className="w-full"
-                      onClick={() => onStartTutorial?.(tutorial)}
-                    >
-                      <GraduationCap className="w-4 h-4 mr-2" />
-                      Start Tutorial
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardHeader>
+                    <CardContent className="pt-0 px-4 pb-4">
+                      {tutorial.expectedReaction && (
+                        <div className="bg-muted rounded-lg p-2 mb-3">
+                          <span className="text-xs text-muted-foreground">Expected:</span>
+                          <p className="font-mono text-sm">{tutorial.expectedReaction}</p>
+                        </div>
+                      )}
+                      <div className="text-xs text-muted-foreground mb-2">
+                        {tutorial.steps.length} steps
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          className="flex-1"
+                          onClick={() => onStartTutorial?.(tutorial)}
+                        >
+                          <GraduationCap className="w-4 h-4 mr-2" />
+                          Start Tutorial
+                        </Button>
+                        {hasQuiz && (
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleStartQuiz(tutorial.id, `${tutorial.title} Quiz`)}
+                          >
+                            <ClipboardCheck className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </ScrollArea>
         </TabsContent>
@@ -235,6 +306,23 @@ export function ChemistryEducationPanel({ onStartTutorial, className }: Chemistr
           </ScrollArea>
         </TabsContent>
       </Tabs>
+
+      {/* Quiz Dialog */}
+      <Dialog open={quizDialogOpen} onOpenChange={setQuizDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{activeQuiz?.title || 'Quiz'}</DialogTitle>
+          </DialogHeader>
+          {quizData && (
+            <QuizSystem
+              title={quizData.title}
+              questions={quizData.questions}
+              passingScore={quizData.passingScore}
+              onComplete={handleQuizComplete}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
