@@ -92,14 +92,19 @@ const Admin = () => {
     if (!user) return;
     
     try {
-      // Check if user has admin role
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .single();
+      // Use server-side RPC function to verify admin status
+      // This prevents client-side manipulation of authorization
+      const { data: isAdminResult, error } = await supabase.rpc('is_admin');
 
-      if (roleData?.role === 'admin') {
+      if (error) {
+        console.error('Error checking admin status:', error);
+        setIsAdmin(false);
+        toast.error('Access denied. Admin privileges required.');
+        setIsLoading(false);
+        return;
+      }
+
+      if (isAdminResult === true) {
         setIsAdmin(true);
         await fetchAdminData();
       } else {
@@ -107,19 +112,8 @@ const Admin = () => {
         toast.error('Access denied. Admin privileges required.');
       }
     } catch (error) {
-      // If no role found, check if this is the first user (make them admin)
-      const { count } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
-      
-      if (count && count <= 1) {
-        // First user becomes admin
-        await supabase.from('user_roles').insert({ user_id: user.id, role: 'admin' });
-        setIsAdmin(true);
-        await fetchAdminData();
-      } else {
-        setIsAdmin(false);
-      }
+      console.error('Error checking admin access:', error);
+      setIsAdmin(false);
     } finally {
       setIsLoading(false);
     }

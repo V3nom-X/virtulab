@@ -101,8 +101,45 @@ export function MonacoScriptEditor({
   const editorRef = useRef<any>(null);
   const workerRef = useRef<Worker | null>(null);
 
+  // Allowlist of safe patterns for simulation scripts
+  const BLOCKED_PATTERNS = [
+    /\beval\s*\(/i,
+    /\bFunction\s*\(/i,
+    /\bsetTimeout\s*\(/i,
+    /\bsetInterval\s*\(/i,
+    /\bfetch\s*\(/i,
+    /\bXMLHttpRequest\b/i,
+    /\bimportScripts\s*\(/i,
+    /\bself\s*\./i,
+    /\bpostMessage\s*\(/i,
+    /\blocalStorage\b/i,
+    /\bsessionStorage\b/i,
+    /\bdocument\b/i,
+    /\bwindow\b/i,
+    /\bglobalThis\b/i,
+    /\bnew\s+Worker\s*\(/i,
+  ];
+
   const validateCode = useCallback((codeToValidate: string) => {
     try {
+      // Check for blocked patterns first
+      for (const pattern of BLOCKED_PATTERNS) {
+        if (pattern.test(codeToValidate)) {
+          const match = codeToValidate.match(pattern);
+          setError(`Blocked pattern detected: "${match?.[0]}". Only simulation-related code is allowed.`);
+          setIsValid(false);
+          return false;
+        }
+      }
+
+      // Code length limit to prevent DoS
+      if (codeToValidate.length > 10000) {
+        setError('Script exceeds maximum allowed length (10,000 characters).');
+        setIsValid(false);
+        return false;
+      }
+
+      // Basic syntax check (for syntax only, not execution)
       new Function('vars', codeToValidate);
       setError(null);
       setIsValid(true);
@@ -179,10 +216,10 @@ export function MonacoScriptEditor({
 
   const handleExecute = () => {
     if (validateCode(code)) {
-      // Execute in Web Worker for safety
+      // Execute in Web Worker for safety with additional sandboxing
       executeInWorker(code);
     } else {
-      toast.error('Script has syntax errors');
+      toast.error('Script has syntax errors or contains blocked patterns');
     }
   };
 
