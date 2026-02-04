@@ -97,9 +97,45 @@ export function ScriptEditor({
   const [error, setError] = useState<string | null>(null);
   const [isValid, setIsValid] = useState(true);
 
+  // Allowlist of safe patterns for simulation scripts
+  const BLOCKED_PATTERNS = [
+    /\beval\s*\(/i,
+    /\bFunction\s*\(/i,
+    /\bsetTimeout\s*\(/i,
+    /\bsetInterval\s*\(/i,
+    /\bfetch\s*\(/i,
+    /\bXMLHttpRequest\b/i,
+    /\bimportScripts\s*\(/i,
+    /\bself\s*\./i,
+    /\bpostMessage\s*\(/i,
+    /\blocalStorage\b/i,
+    /\bsessionStorage\b/i,
+    /\bdocument\b/i,
+    /\bwindow\b/i,
+    /\bglobalThis\b/i,
+    /\bnew\s+Worker\s*\(/i,
+  ];
+
   const validateCode = useCallback((codeToValidate: string) => {
     try {
-      // Basic syntax check using Function constructor
+      // Check for blocked patterns first
+      for (const pattern of BLOCKED_PATTERNS) {
+        if (pattern.test(codeToValidate)) {
+          const match = codeToValidate.match(pattern);
+          setError(`Blocked pattern detected: "${match?.[0]}". Only simulation-related code is allowed.`);
+          setIsValid(false);
+          return false;
+        }
+      }
+
+      // Code length limit to prevent DoS
+      if (codeToValidate.length > 10000) {
+        setError('Script exceeds maximum allowed length (10,000 characters).');
+        setIsValid(false);
+        return false;
+      }
+
+      // Basic syntax check using Function constructor (for syntax only)
       new Function('vars', codeToValidate);
       setError(null);
       setIsValid(true);
@@ -122,7 +158,7 @@ export function ScriptEditor({
       onExecute?.(code);
       toast.success('Script executed successfully');
     } else {
-      toast.error('Script has syntax errors');
+      toast.error('Script has syntax errors or contains blocked patterns');
     }
   };
 

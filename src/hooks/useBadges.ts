@@ -13,38 +13,33 @@ interface Badge {
 export function useBadges() {
   const { user } = useAuth();
 
+  // Use server-side RPC to award badges with proper validation
   const checkAndAwardBadge = async (badgeName: string) => {
     if (!user) return;
 
     try {
-      // Get badge by name
-      const { data: badge } = await supabase
-        .from('badges')
-        .select('*')
-        .eq('name', badgeName)
-        .single();
+      // Call the secure server-side function that validates requirements
+      const { data: awarded, error } = await supabase
+        .rpc('award_badge_secure', { _badge_name: badgeName });
 
-      if (!badge) return;
+      if (error) {
+        console.error('Error awarding badge:', error);
+        return;
+      }
 
-      // Check if already earned
-      const { data: existing } = await supabase
-        .from('user_badges')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('badge_id', badge.id)
-        .single();
+      if (awarded) {
+        // Get badge details for the toast notification
+        const { data: badge } = await supabase
+          .from('badges')
+          .select('name, description')
+          .eq('name', badgeName)
+          .single();
 
-      if (existing) return;
-
-      // Award badge
-      const { error } = await supabase
-        .from('user_badges')
-        .insert({ user_id: user.id, badge_id: badge.id });
-
-      if (!error) {
-        toast.success(`🏆 Badge Earned: ${badge.name}!`, {
-          description: badge.description || undefined
-        });
+        if (badge) {
+          toast.success(`🏆 Badge Earned: ${badge.name}!`, {
+            description: badge.description || undefined
+          });
+        }
       }
     } catch (error) {
       console.error('Error awarding badge:', error);
@@ -71,7 +66,7 @@ export function useBadges() {
         await checkAndAwardBadge('First Experiment');
       }
 
-      // Category-specific badges
+      // Category-specific badges - server validates the counts
       const categoryCounts: Record<string, number> = {};
       progress.forEach((p: any) => {
         const category = p.experiments?.category;
