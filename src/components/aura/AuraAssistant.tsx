@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { X, Send, Sparkles, Loader2 } from 'lucide-react';
+import { X, Send, Sparkles, Loader2, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
@@ -10,14 +10,18 @@ interface Message {
 }
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/aura-chat`;
+const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts`;
 
 export function AuraAssistant() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [speakingIdx, setSpeakingIdx] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -26,6 +30,42 @@ export function AuraAssistant() {
   useEffect(() => {
     if (isOpen && inputRef.current) inputRef.current.focus();
   }, [isOpen]);
+
+  const stopAudio = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    setSpeakingIdx(null);
+  }, []);
+
+  const playTTS = useCallback(async (text: string, idx: number) => {
+    stopAudio();
+    setSpeakingIdx(idx);
+    try {
+      const resp = await fetch(TTS_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ text: text.slice(0, 2000) }),
+      });
+      if (!resp.ok) {
+        setSpeakingIdx(null);
+        return;
+      }
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.onended = () => { setSpeakingIdx(null); URL.revokeObjectURL(url); };
+      audio.onerror = () => { setSpeakingIdx(null); URL.revokeObjectURL(url); };
+      await audio.play();
+    } catch {
+      setSpeakingIdx(null);
+    }
+  }, [stopAudio]);
 
   const streamChat = useCallback(async (allMessages: Message[]) => {
     setIsLoading(true);
@@ -89,7 +129,16 @@ export function AuraAssistant() {
       upsert("I'm having trouble connecting. Please check your internet connection and try again.");
     }
     setIsLoading(false);
-  }, []);
+
+    // Auto-play voice if enabled
+    if (voiceEnabled && assistantSoFar) {
+      setMessages(prev => {
+        const lastIdx = prev.length - 1;
+        if (lastIdx >= 0) playTTS(assistantSoFar, lastIdx);
+        return prev;
+      });
+    }
+  }, [voiceEnabled, playTTS]);
 
   const handleSend = async () => {
     const text = input.trim();
@@ -133,9 +182,20 @@ export function AuraAssistant() {
               <p className="text-[10px] text-muted-foreground">AI Science Tutor</p>
             </div>
           </div>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setIsOpen(false)}>
-            <X className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn("h-7 w-7", voiceEnabled && "text-primary")}
+              onClick={() => { setVoiceEnabled(!voiceEnabled); if (voiceEnabled) stopAudio(); }}
+              title={voiceEnabled ? "Disable voice" : "Enable voice"}
+            >
+              {voiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setIsOpen(false); stopAudio(); }}>
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Messages */}
@@ -165,6 +225,17 @@ export function AuraAssistant() {
                 {m.role === 'assistant' ? (
                   <div className="prose prose-sm dark:prose-invert max-w-none [&>p]:mb-1.5 [&>p:last-child]:mb-0">
                     <ReactMarkdown>{m.content}</ReactMarkdown>
+                    {/* Speaker button for assistant messages */}
+                    <button
+                      onClick={() => speakingIdx === i ? stopAudio() : playTTS(m.content, i)}
+                      className={cn(
+                        "mt-1 inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors",
+                        speakingIdx === i && "text-primary"
+                      )}
+                    >
+                      <Volume2 className={cn("w-3 h-3", speakingIdx === i && "animate-pulse")} />
+                      {speakingIdx === i ? 'Playing...' : 'Listen'}
+                    </button>
                   </div>
                 ) : m.content}
               </div>

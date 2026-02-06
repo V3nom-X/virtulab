@@ -149,6 +149,12 @@ const Workspace = () => {
   const inclinedPlaneRef = useRef<InclinedPlaneSimulationHandle>(null);
   const lightOpticsRef = useRef<LightOpticsSimulationHandle>(null);
   const buoyancyRef = useRef<BuoyancySimulationHandle>(null);
+  const acidBaseRef = useRef<AcidBaseSimulationHandle>(null);
+  const frictionRef = useRef<FrictionSimulationHandle>(null);
+  const leverRef = useRef<LeverSimulationHandle>(null);
+  const expansionRef = useRef<ExpansionSimulationHandle>(null);
+  const statesOfMatterRef = useRef<StatesOfMatterSimulationHandle>(null);
+  const diffusionOsmosisRef = useRef<DiffusionOsmosisSimulationHandle>(null);
 
   const simulations = [
     { id: 'pendulum', name: 'Pendulum', icon: Activity, category: 'Physics', shortName: 'Pend' },
@@ -160,8 +166,14 @@ const Workspace = () => {
     { id: 'inclinedplane', name: 'Inclined Plane', icon: Mountain, category: 'Physics', shortName: 'Incl' },
     { id: 'lightoptics', name: 'Light Optics', icon: Sun, category: 'Physics', shortName: 'Opt' },
     { id: 'buoyancy', name: 'Buoyancy', icon: Droplets, category: 'Physics', shortName: 'Buoy' },
+    { id: 'friction', name: 'Friction', icon: Activity, category: 'Physics', shortName: 'Fric' },
+    { id: 'lever', name: 'Lever', icon: Activity, category: 'Physics', shortName: 'Levr' },
+    { id: 'expansion', name: 'Expansion', icon: Activity, category: 'Physics', shortName: 'Exp' },
     { id: 'emspectrum', name: 'EM Spectrum', icon: Radio, category: 'Physics', shortName: 'EM' },
-    { id: 'chemistry', name: 'Chemistry', icon: FlaskConical, category: 'Chemistry', shortName: 'Chem' },
+    { id: 'acidbase', name: 'Acids & Bases', icon: FlaskConical, category: 'Chemistry', shortName: 'Acid' },
+    { id: 'statesofmatter', name: 'States of Matter', icon: FlaskConical, category: 'Chemistry', shortName: 'SoM' },
+    { id: 'chemistry', name: 'Chemistry Lab', icon: FlaskConical, category: 'Chemistry', shortName: 'Chem' },
+    { id: 'diffusionosmosis', name: 'Diffusion', icon: Droplets, category: 'Biology', shortName: 'Diff' },
   ];
 
   const getDataSeries = () => {
@@ -216,6 +228,36 @@ const Workspace = () => {
           { key: 'weight', name: 'Weight', color: 'hsl(142, 71%, 45%)', unit: 'N' },
           { key: 'netForce', name: 'Net Force', color: 'hsl(45, 93%, 47%)', unit: 'N' },
         ];
+      case 'acidbase':
+        return [
+          { key: 'pH', name: 'pH', color: 'hsl(var(--primary))', unit: '' },
+          { key: 'hConcentration', name: 'H⁺ Concentration', color: 'hsl(142, 71%, 45%)', unit: 'M' },
+        ];
+      case 'friction':
+        return [
+          { key: 'position', name: 'Position', color: 'hsl(var(--primary))', unit: 'm' },
+          { key: 'velocity', name: 'Velocity', color: 'hsl(142, 71%, 45%)', unit: 'm/s' },
+          { key: 'acceleration', name: 'Acceleration', color: 'hsl(45, 93%, 47%)', unit: 'm/s²' },
+        ];
+      case 'lever':
+        return [
+          { key: 'mechanicalAdvantage', name: 'Mech. Advantage', color: 'hsl(var(--primary))', unit: '' },
+          { key: 'effortRequired', name: 'Effort Required', color: 'hsl(142, 71%, 45%)', unit: 'N' },
+        ];
+      case 'expansion':
+        return [
+          { key: 'expansion', name: 'Expansion', color: 'hsl(var(--primary))', unit: 'mm' },
+          { key: 'temperature', name: 'Temperature', color: 'hsl(142, 71%, 45%)', unit: '°C' },
+        ];
+      case 'statesofmatter':
+        return [
+          { key: 'temperature', name: 'Temperature', color: 'hsl(var(--primary))', unit: '°C' },
+        ];
+      case 'diffusionosmosis':
+        return [
+          { key: 'leftConc', name: 'Left Concentration', color: 'hsl(var(--primary))', unit: 'M' },
+          { key: 'rightConc', name: 'Right Concentration', color: 'hsl(142, 71%, 45%)', unit: 'M' },
+        ];
       default:
         return [];
     }
@@ -257,6 +299,12 @@ const Workspace = () => {
     else if (activeSimulation === 'inclinedplane') inclinedPlaneRef.current?.reset();
     else if (activeSimulation === 'lightoptics') lightOpticsRef.current?.reset();
     else if (activeSimulation === 'buoyancy') buoyancyRef.current?.reset();
+    else if (activeSimulation === 'acidbase') acidBaseRef.current?.reset();
+    else if (activeSimulation === 'friction') frictionRef.current?.reset();
+    else if (activeSimulation === 'lever') leverRef.current?.reset();
+    else if (activeSimulation === 'expansion') expansionRef.current?.reset();
+    else if (activeSimulation === 'statesofmatter') statesOfMatterRef.current?.reset();
+    else if (activeSimulation === 'diffusionosmosis') diffusionOsmosisRef.current?.reset();
   };
 
   const handleSimulationChange = (v: string) => {
@@ -295,7 +343,7 @@ const Workspace = () => {
     if (preset && presetId !== 'custom') setProjectileGravity([preset.gravity]);
   };
 
-  const hasPlayControls = !['chemistry', 'emspectrum'].includes(activeSimulation);
+  const hasPlayControls = !['chemistry', 'emspectrum', 'acidbase'].includes(activeSimulation);
 
   const renderParameterControls = () => (
     <div className="space-y-4">
@@ -503,6 +551,110 @@ const Workspace = () => {
           </div>
         </div>
       )}
+      {activeSimulation === 'acidbase' && (
+        <div className="space-y-4">
+          <div>
+            <div className="flex justify-between mb-2 text-sm"><ParamTooltip tip="Acidity/alkalinity (0-14 scale)."><span>pH Value</span></ParamTooltip><span className="font-mono">{acidBasePH[0].toFixed(1)}</span></div>
+            <Slider value={acidBasePH} onValueChange={setAcidBasePH} min={0} max={14} step={0.1} />
+          </div>
+          <div>
+            <Label className="text-sm mb-2 block">Indicator</Label>
+            <Select value={acidBaseIndicator} onValueChange={(v) => setAcidBaseIndicator(v as any)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="universal">Universal</SelectItem>
+                <SelectItem value="litmus">Litmus</SelectItem>
+                <SelectItem value="phenolphthalein">Phenolphthalein</SelectItem>
+                <SelectItem value="methyl_orange">Methyl Orange</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="p-3 bg-muted rounded-lg text-sm space-y-1">
+            <div className="flex justify-between"><span>Nature:</span><span className="font-mono">{acidBasePH[0] < 7 ? 'Acidic' : acidBasePH[0] > 7 ? 'Basic' : 'Neutral'}</span></div>
+            <div className="flex justify-between"><span>H⁺ Concentration:</span><span className="font-mono">{Math.pow(10, -acidBasePH[0]).toExponential(2)} M</span></div>
+          </div>
+        </div>
+      )}
+      {activeSimulation === 'friction' && (
+        <div className="space-y-4">
+          <div>
+            <Label className="text-sm mb-2 block">Surface</Label>
+            <Select value={frictionSurface} onValueChange={(v) => setFrictionSurface(v as any)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="wood">Wood (μ=0.3)</SelectItem>
+                <SelectItem value="ice">Ice (μ=0.05)</SelectItem>
+                <SelectItem value="rubber">Rubber (μ=0.7)</SelectItem>
+                <SelectItem value="steel">Steel (μ=0.15)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div><div className="flex justify-between mb-2 text-sm"><ParamTooltip tip="Object mass."><span>Mass (kg)</span></ParamTooltip><span className="font-mono">{frictionMass[0].toFixed(1)}</span></div><Slider value={frictionMass} onValueChange={setFrictionMass} min={0.5} max={10} step={0.5} /></div>
+          <div><div className="flex justify-between mb-2 text-sm"><ParamTooltip tip="Force applied horizontally."><span>Applied Force (N)</span></ParamTooltip><span className="font-mono">{frictionAppliedForce[0]}</span></div><Slider value={frictionAppliedForce} onValueChange={setFrictionAppliedForce} min={0} max={100} step={1} /></div>
+          <div><div className="flex justify-between mb-2 text-sm"><ParamTooltip tip="Coefficient of friction (μ)."><span>Friction Coeff (μ)</span></ParamTooltip><span className="font-mono">{frictionCoeff[0].toFixed(2)}</span></div><Slider value={frictionCoeff} onValueChange={setFrictionCoeff} min={0} max={1} step={0.05} /></div>
+        </div>
+      )}
+      {activeSimulation === 'lever' && (
+        <div className="space-y-4">
+          <div><div className="flex justify-between mb-2 text-sm"><ParamTooltip tip="Load mass on lever."><span>Load Mass (kg)</span></ParamTooltip><span className="font-mono">{leverLoadMass[0].toFixed(1)}</span></div><Slider value={leverLoadMass} onValueChange={setLeverLoadMass} min={1} max={20} step={0.5} /></div>
+          <div><div className="flex justify-between mb-2 text-sm"><ParamTooltip tip="Effort force applied."><span>Effort Force (N)</span></ParamTooltip><span className="font-mono">{leverEffortForce[0]}</span></div><Slider value={leverEffortForce} onValueChange={setLeverEffortForce} min={1} max={100} step={1} /></div>
+          <div><div className="flex justify-between mb-2 text-sm"><ParamTooltip tip="Fulcrum position (0=left, 1=right)."><span>Fulcrum Position</span></ParamTooltip><span className="font-mono">{leverFulcrumPos[0].toFixed(2)}</span></div><Slider value={leverFulcrumPos} onValueChange={setLeverFulcrumPos} min={0.1} max={0.9} step={0.05} /></div>
+          <div className="p-3 bg-muted rounded-lg text-sm space-y-1">
+            <div className="flex justify-between"><span>Mech. Advantage:</span><span className="font-mono">{(leverFulcrumPos[0] / (1 - leverFulcrumPos[0])).toFixed(2)}</span></div>
+          </div>
+        </div>
+      )}
+      {activeSimulation === 'expansion' && (
+        <div className="space-y-4">
+          <div>
+            <Label className="text-sm mb-2 block">Material</Label>
+            <Select value={expansionMaterial} onValueChange={(v) => setExpansionMaterial(v as any)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="iron">Iron</SelectItem>
+                <SelectItem value="copper">Copper</SelectItem>
+                <SelectItem value="aluminum">Aluminum</SelectItem>
+                <SelectItem value="glass">Glass</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div><div className="flex justify-between mb-2 text-sm"><ParamTooltip tip="Target temperature in °C."><span>Temperature (°C)</span></ParamTooltip><span className="font-mono">{expansionTemp[0]}</span></div><Slider value={expansionTemp} onValueChange={setExpansionTemp} min={-50} max={500} step={5} /></div>
+        </div>
+      )}
+      {activeSimulation === 'statesofmatter' && (
+        <div className="space-y-4">
+          <div>
+            <Label className="text-sm mb-2 block">Substance</Label>
+            <Select value={statesSubstance} onValueChange={(v) => setStatesSubstance(v as any)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="water">Water</SelectItem>
+                <SelectItem value="iron">Iron</SelectItem>
+                <SelectItem value="oxygen">Oxygen</SelectItem>
+                <SelectItem value="wax">Wax</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div><div className="flex justify-between mb-2 text-sm"><ParamTooltip tip="Adjust temperature to see phase changes."><span>Temperature (°C)</span></ParamTooltip><span className="font-mono">{statesTemp[0]}</span></div><Slider value={statesTemp} onValueChange={setStatesTemp} min={-250} max={3000} step={5} /></div>
+        </div>
+      )}
+      {activeSimulation === 'diffusionosmosis' && (
+        <div className="space-y-4">
+          <div>
+            <Label className="text-sm mb-2 block">Mode</Label>
+            <Select value={diffusionMode} onValueChange={(v) => setDiffusionMode(v as any)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="diffusion">Diffusion</SelectItem>
+                <SelectItem value="osmosis">Osmosis</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div><div className="flex justify-between mb-2 text-sm"><ParamTooltip tip="Left side concentration."><span>Left Conc.</span></ParamTooltip><span className="font-mono">{diffusionConcLeft[0]}</span></div><Slider value={diffusionConcLeft} onValueChange={setDiffusionConcLeft} min={0} max={10} step={1} /></div>
+          <div><div className="flex justify-between mb-2 text-sm"><ParamTooltip tip="Right side concentration."><span>Right Conc.</span></ParamTooltip><span className="font-mono">{diffusionConcRight[0]}</span></div><Slider value={diffusionConcRight} onValueChange={setDiffusionConcRight} min={0} max={10} step={1} /></div>
+          <div><div className="flex justify-between mb-2 text-sm"><ParamTooltip tip="Membrane permeability (0-1)."><span>Permeability</span></ParamTooltip><span className="font-mono">{diffusionPermeability[0].toFixed(2)}</span></div><Slider value={diffusionPermeability} onValueChange={setDiffusionPermeability} min={0} max={1} step={0.05} /></div>
+        </div>
+      )}
     </div>
   );
 
@@ -550,6 +702,12 @@ const Workspace = () => {
               {activeSimulation === 'buoyancy' && <BuoyancySimulation ref={buoyancyRef} objectDensity={buoyancyObjectDensity[0]} fluidDensity={buoyancyFluidDensity[0]} objectVolume={buoyancyVolume[0]} isPlaying={isPlaying} speed={speed[0]} onDataUpdate={handleDataUpdate} />}
               {activeSimulation === 'emspectrum' && <EMSpectrumVisualization />}
               {activeSimulation === 'chemistry' && <ChemistryWorkspace />}
+              {activeSimulation === 'acidbase' && <AcidBaseSimulation ref={acidBaseRef} pH={acidBasePH[0]} indicator={acidBaseIndicator} isPlaying={isPlaying} speed={speed[0]} onDataUpdate={handleDataUpdate} />}
+              {activeSimulation === 'friction' && <FrictionSimulation ref={frictionRef} mass={frictionMass[0]} appliedForce={frictionAppliedForce[0]} frictionCoeff={frictionCoeff[0]} surface={frictionSurface} isPlaying={isPlaying} speed={speed[0]} onDataUpdate={handleDataUpdate} />}
+              {activeSimulation === 'lever' && <LeverSimulation ref={leverRef} loadMass={leverLoadMass[0]} effortForce={leverEffortForce[0]} fulcrumPosition={leverFulcrumPos[0]} isPlaying={isPlaying} speed={speed[0]} onDataUpdate={handleDataUpdate} />}
+              {activeSimulation === 'expansion' && <ExpansionSimulation ref={expansionRef} temperature={expansionTemp[0]} material={expansionMaterial} isPlaying={isPlaying} speed={speed[0]} onDataUpdate={handleDataUpdate} />}
+              {activeSimulation === 'statesofmatter' && <StatesOfMatterSimulation ref={statesOfMatterRef} temperature={statesTemp[0]} substance={statesSubstance} isPlaying={isPlaying} speed={speed[0]} onDataUpdate={handleDataUpdate} />}
+              {activeSimulation === 'diffusionosmosis' && <DiffusionOsmosisSimulation ref={diffusionOsmosisRef} mode={diffusionMode} concentrationLeft={diffusionConcLeft[0]} concentrationRight={diffusionConcRight[0]} membranePermeability={diffusionPermeability[0]} isPlaying={isPlaying} speed={speed[0]} onDataUpdate={handleDataUpdate} />}
             </div>
             {hasPlayControls && (
               <div className="h-12 sm:h-16 border-t bg-card px-2 sm:px-4 flex items-center gap-2 sm:gap-6 flex-shrink-0">

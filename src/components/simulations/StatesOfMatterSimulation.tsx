@@ -5,7 +5,7 @@ interface StatesOfMatterSimulationProps {
   substance: 'water' | 'iron' | 'oxygen' | 'wax';
   isPlaying: boolean;
   speed: number;
-  onDataUpdate?: (data: { time: number; temperature: number; state: string }) => void;
+  onDataUpdate?: (data: { time: number; temperature: number }) => void;
 }
 
 export interface StatesOfMatterSimulationHandle { reset: () => void; }
@@ -147,7 +147,7 @@ export const StatesOfMatterSimulation = forwardRef<StatesOfMatterSimulationHandl
     ctx.fillText(`MP: ${mp}°C | BP: ${bp}°C`, w / 2, h * 0.94);
 
     if (isPlaying) {
-      onDataUpdate?.({ time: +timeRef.current.toFixed(2), temperature: +temp.toFixed(1), state });
+      onDataUpdate?.({ time: +timeRef.current.toFixed(2), temperature: +temp.toFixed(1) });
     }
 
     ctx.lineWidth = 1;
