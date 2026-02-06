@@ -40,7 +40,7 @@ const navItems = [
   },
 ];
 
-export function Navbar() {
+export function Navbar({ sticky = false }: { sticky?: boolean }) {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
 
@@ -106,6 +106,7 @@ export function Navbar() {
       ctaText={user ? undefined : "Sign In"}
       onCtaClick={user ? undefined : () => navigate('/auth')}
       rightContent={RightContent}
+      sticky={sticky}
     />
   );
 }

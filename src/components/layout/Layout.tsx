@@ -3,13 +3,14 @@ import { Navbar } from "./Navbar";
 
 interface LayoutProps {
   children: ReactNode;
+  stickyNav?: boolean;
 }
 
-export function Layout({ children }: LayoutProps) {
+export function Layout({ children, stickyNav = false }: LayoutProps) {
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
-      <main className="pt-24">{children}</main>
+      <Navbar sticky={stickyNav} />
+      <main className={stickyNav ? "pt-24" : ""}>{children}</main>
     </div>
   );
 }

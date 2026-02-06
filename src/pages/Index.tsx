@@ -8,7 +8,7 @@ import ShaderBackground from "@/components/ui/ShaderBackground";
 
 const Index = () => {
   return (
-    <Layout>
+    <Layout stickyNav>
       <ShaderBackground />
       <HeroSection />
       <FeaturedExperiments />

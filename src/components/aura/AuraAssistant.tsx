@@ -36,7 +36,24 @@ export function AuraAssistant() {
       audioRef.current.pause();
       audioRef.current = null;
     }
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     setSpeakingIdx(null);
+  }, []);
+
+  const playNativeTTS = useCallback((text: string, idx: number) => {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text.slice(0, 2000));
+    utterance.rate = 1;
+    utterance.pitch = 1.1;
+    // Prefer a female English voice
+    const voices = window.speechSynthesis.getVoices();
+    const preferred = voices.find(v => v.name.includes('Samantha') || v.name.includes('Google UK English Female') || (v.lang.startsWith('en') && v.name.toLowerCase().includes('female')));
+    if (preferred) utterance.voice = preferred;
+    setSpeakingIdx(idx);
+    utterance.onend = () => setSpeakingIdx(null);
+    utterance.onerror = () => setSpeakingIdx(null);
+    window.speechSynthesis.speak(utterance);
   }, []);
 
   const playTTS = useCallback(async (text: string, idx: number) => {
@@ -52,7 +69,8 @@ export function AuraAssistant() {
         body: JSON.stringify({ text: text.slice(0, 2000) }),
       });
       if (!resp.ok) {
-        setSpeakingIdx(null);
+        // Fallback to browser-native TTS
+        playNativeTTS(text, idx);
         return;
       }
       const blob = await resp.blob();
@@ -63,9 +81,10 @@ export function AuraAssistant() {
       audio.onerror = () => { setSpeakingIdx(null); URL.revokeObjectURL(url); };
       await audio.play();
     } catch {
-      setSpeakingIdx(null);
+      // Fallback to browser-native TTS on any error
+      playNativeTTS(text, idx);
     }
-  }, [stopAudio]);
+  }, [stopAudio, playNativeTTS]);
 
   const streamChat = useCallback(async (allMessages: Message[]) => {
     setIsLoading(true);
