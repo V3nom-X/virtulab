@@ -21,6 +21,7 @@ import Profile from "./pages/Profile";
 import ResetPassword from "./pages/ResetPassword";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import { AuraAssistant } from "./components/aura/AuraAssistant";
 
 // Accessibility wrapper component
 function AccessibilityProvider({ children }: { children: React.ReactNode }) {
@@ -57,6 +58,7 @@ const App = () => (
                 <Route path="/help" element={<Help />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              <AuraAssistant />
             </BrowserRouter>
           </TooltipProvider>
         </AccessibilityProvider>

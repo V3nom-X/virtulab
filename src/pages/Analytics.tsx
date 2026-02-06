@@ -143,9 +143,14 @@ const Analytics = () => {
       }));
       setBadges(formattedBadges);
 
-      // Category progress
+      // Category progress - use actual experiment counts from DB
+      const { data: allExperiments } = await supabase
+        .from('experiments')
+        .select('id, category');
+
       const categories = ['physics', 'chemistry', 'biology', 'earth_science'];
       const categoryData = categories.map(cat => {
+        const totalInCategory = allExperiments?.filter(e => e.category === cat).length || 0;
         const catExperiments = progressData?.filter(p => 
           (p.experiments as any)?.category === cat
         ) || [];
@@ -153,7 +158,7 @@ const Analytics = () => {
         return {
           name: cat.charAt(0).toUpperCase() + cat.slice(1).replace('_', ' '),
           completed: catCompleted,
-          total: Math.max(catCompleted + 10, 20), // Estimate total
+          total: totalInCategory || 1,
         };
       });
       setCategoryProgress(categoryData);

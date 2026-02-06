@@ -1,10 +1,11 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Beaker, HelpCircle, Shield } from "lucide-react";
+import { HelpCircle, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardNav } from "@/components/ui/card-nav";
 import { NativeHoverCard } from "@/components/ui/native-hover-card";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import virtulabLogo from "@/assets/virtulab-logo.png";
 
 const navItems = [
   {
@@ -50,9 +51,7 @@ export function Navbar() {
 
   const Logo = (
     <Link to="/" className="flex items-center gap-2">
-      <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
-        <Beaker className="w-5 h-5 text-primary-foreground" />
-      </div>
+      <img src={virtulabLogo} alt="VirtuLab" className="w-9 h-9 rounded-xl object-cover" />
       <span className="text-xl font-bold text-foreground hidden sm:block">
         Virtu<span className="text-primary">Lab</span>
       </span>

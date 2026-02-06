@@ -142,7 +142,12 @@ const Admin = () => {
         .select('*', { count: 'exact', head: true })
         .gte('created_at', weekAgo.toISOString());
 
-      const { count: totalExperiments } = await supabase
+      // Count both built-in AND custom experiments
+      const { count: builtInExperiments } = await supabase
+        .from('experiments')
+        .select('*', { count: 'exact', head: true });
+      
+      const { count: customExperiments } = await supabase
         .from('custom_experiments')
         .select('*', { count: 'exact', head: true });
 
@@ -150,7 +155,7 @@ const Admin = () => {
         totalUsers: totalUsers || 0,
         activeToday: activeToday || 0,
         newThisWeek: newThisWeek || 0,
-        totalExperiments: totalExperiments || 0,
+        totalExperiments: (builtInExperiments || 0) + (customExperiments || 0),
       });
 
       // Fetch recent users
@@ -162,17 +167,33 @@ const Admin = () => {
 
       setRecentUsers(users || []);
 
-      // Generate activity data for chart
+      // Generate activity data from real user_progress data
       const activityDays: { date: string; users: number; experiments: number }[] = [];
       for (let i = 6; i >= 0; i--) {
         const date = new Date();
         date.setDate(date.getDate() - i);
-        const dateStr = date.toISOString().split('T')[0];
-        
+        const dayStart = new Date(date);
+        dayStart.setHours(0, 0, 0, 0);
+        const dayEnd = new Date(date);
+        dayEnd.setHours(23, 59, 59, 999);
+
+        const { count: dayUsers } = await supabase
+          .from('user_progress')
+          .select('user_id', { count: 'exact', head: true })
+          .gte('last_accessed_at', dayStart.toISOString())
+          .lte('last_accessed_at', dayEnd.toISOString());
+
+        const { count: dayExperiments } = await supabase
+          .from('user_progress')
+          .select('*', { count: 'exact', head: true })
+          .eq('completed', true)
+          .gte('completed_at', dayStart.toISOString())
+          .lte('completed_at', dayEnd.toISOString());
+
         activityDays.push({
           date: date.toLocaleDateString('en-US', { weekday: 'short' }),
-          users: Math.floor(Math.random() * 50) + 10,
-          experiments: Math.floor(Math.random() * 30) + 5,
+          users: dayUsers || 0,
+          experiments: dayExperiments || 0,
         });
       }
       setActivityData(activityDays);

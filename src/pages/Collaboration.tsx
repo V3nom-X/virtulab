@@ -22,6 +22,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { PendulumSimulation } from '@/components/simulations/PendulumSimulation';
+import { ComingSoonOverlay } from '@/components/overlays/ComingSoonOverlay';
 
 interface Participant {
   id: string;
@@ -265,7 +266,17 @@ const Collaboration = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen flex flex-col lg:flex-row">
+      <div className="min-h-screen flex flex-col lg:flex-row relative">
+        <ComingSoonOverlay 
+          title="Collaboration Coming Soon"
+          features={[
+            "Real-time co-experimentation with classmates",
+            "Shared experiment workspaces",
+            "Voice and video chat during experiments",
+            "Collaborative data collection and analysis",
+            "Teacher-led guided experiment sessions"
+          ]}
+        />
         {/* Main Collaboration Area */}
         <div className="flex-1 flex flex-col">
           {/* Top Bar */}

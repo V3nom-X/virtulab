@@ -698,6 +698,25 @@ export function ChemistryWorkspace() {
             />
           ))}
 
+          {/* Active elements summary */}
+          {placedElements.length > 0 && !reactionResult && (
+            <div className="absolute top-2 left-2 right-2 sm:right-auto bg-card/90 backdrop-blur-sm border rounded-lg px-3 py-2 shadow-sm">
+              <p className="text-xs font-medium mb-1">Active Elements ({placedElements.length})</p>
+              <div className="flex flex-wrap gap-1">
+                {Object.entries(
+                  placedElements.reduce((acc, pe) => {
+                    acc[pe.element.symbol] = (acc[pe.element.symbol] || 0) + 1;
+                    return acc;
+                  }, {} as Record<string, number>)
+                ).map(([symbol, count]) => (
+                  <Badge key={symbol} variant="outline" className="text-xs">
+                    {symbol} ×{count}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Empty state */}
           {placedElements.length === 0 && (
             <div className="absolute inset-0 flex items-center justify-center">
@@ -726,6 +745,28 @@ export function ChemistryWorkspace() {
                 )}
               </div>
               <p className="font-mono text-sm mb-2">{reactionResult.description}</p>
+              
+              {/* Classification */}
+              <div className="flex items-center gap-2 flex-wrap mb-2">
+                <span className="text-xs text-muted-foreground">Classification:</span>
+                {reactionResult.products.map((product, i) => {
+                  const isElement = product.formula.length <= 2 && !product.formula.includes('O') || product.formula === 'Fe' || product.formula === 'Cu';
+                  const isCompound = product.formula.includes('O') || product.formula.includes('Cl') || product.formula.length > 2;
+                  const isMixture = reactionResult.products.length > 1;
+                  const classification = isElement ? 'Element' : isCompound ? 'Compound' : 'Molecule';
+                  return (
+                    <Badge key={i} variant="secondary" className="text-xs">
+                      {product.symbol}: {classification}
+                    </Badge>
+                  );
+                })}
+                {reactionResult.products.length > 1 && (
+                  <Badge variant="secondary" className="text-xs bg-primary/10 text-primary">
+                    Mixture of Products
+                  </Badge>
+                )}
+              </div>
+
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-sm text-muted-foreground">Products:</span>
                 {reactionResult.products.map((product, i) => (
