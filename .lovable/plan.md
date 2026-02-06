@@ -1,196 +1,94 @@
 
 
-# VirtuLab Comprehensive Update Plan
+# VirtuLab: Workspace Wiring, AURA Voice, and Final Verification
 
-This is a large update covering 12 major feature areas. Below is a structured breakdown of everything that will be built.
-
----
-
-## 1. App Logo Update
-
-Replace the current Beaker icon in the Navbar and favicon with the uploaded VirtuLab logo image.
-
-- Copy the uploaded logo to `src/assets/virtulab-logo.png`
-- Update `Navbar.tsx` to use the logo image instead of the Beaker icon
-- Copy a resized version to `public/favicon.ico` or use it as a PNG favicon in `index.html`
+This plan covers wiring up the 6 new simulations in the workspace, adding voice to AURA, deploying edge functions, and auditing responsive design.
 
 ---
 
-## 2. New Experiments from Document
+## 1. Workspace.tsx - Wire New Simulations
 
-The uploaded document contains **6 new experiments** to add:
+The simulation components and state variables already exist. What's missing:
 
-| Experiment | Category |
-|---|---|
-| Acids, Bases, and Indicators | Chemistry |
-| Friction and Its Effects | Physics |
-| Load, Effort, and Fulcrum (Lever) | Physics |
-| Expansion and Contraction of Materials | Physics |
-| States of Matter and Changes of State | Chemistry |
-| Diffusion and Osmosis in Living Things | Biology |
+### 1a. Add Refs for New Simulations
+Add refs after buoyancyRef (line 151):
+- `acidBaseRef`, `frictionRef`, `leverRef`, `expansionRef`, `statesOfMatterRef`, `diffusionOsmosisRef`
 
-**Implementation:**
-- Add experiment data and educational content to new data files
-- Create simulation components for each experiment with interactive controls (sliders, selectors)
-- Register experiments in the database via SQL migration
-- Add educational content (tutorials, quizzes) for each
+### 1b. Add New Experiments to Tab List
+Extend the `simulations` array (line 153-165) with 6 new entries:
+- `acidbase` - Acids and Bases (FlaskConical, Chemistry)
+- `friction` - Friction (Activity, Physics)
+- `lever` - Lever (Activity, Physics)
+- `expansion` - Expansion (Activity, Physics)
+- `statesofmatter` - States of Matter (FlaskConical, Chemistry)
+- `diffusionosmosis` - Diffusion/Osmosis (Droplets, Biology)
 
----
+### 1c. Add Data Series for New Simulations
+Extend `getDataSeries()` with cases for each new simulation type (pH, forces, torque, length change, temperature, concentration).
 
-## 3. Biology and Earth Science Educational Content
+### 1d. Add Reset Handlers
+Extend `handleReset()` to call `.reset()` on the new refs.
 
-Create educational data files with tutorials and quizzes:
-- `src/data/biologyEducation.ts` - Tutorials covering cell biology, diffusion, osmosis, ecosystems
-- `src/data/earthScienceEducation.ts` - Tutorials on weather, rock cycle, erosion, plate tectonics
-- `src/data/biologyQuizzes.ts` and `src/data/earthScienceQuizzes.ts` - Assessment quizzes
-- Integrate these into the workspace "Learn" panel based on experiment category
+### 1e. Update `hasPlayControls`
+Add `acidbase` to the exclusion list (it's interactive without play/pause, similar to chemistry).
 
----
+### 1f. Add Parameter Controls
+Add 6 new blocks inside `renderParameterControls()` for each simulation's sliders and selectors (acid/base indicator, friction surface, lever fulcrum, expansion material, states substance, diffusion mode).
 
-## 4. Chemistry "React" Feature Enhancement
-
-Update `ChemistryWorkspace.tsx` to:
-- Show all combination types (compounds, mixtures, elements) not just molecules when reacting
-- Display active molecules/compounds in the workspace area with labels
-- Add a results panel showing reaction type, products, and classification
+### 1g. Render Simulation Components
+Add 6 new conditional renders in the canvas area (after line 552) passing the state variables and refs.
 
 ---
 
-## 5. AURA AI Assistant
+## 2. AURA Assistant - Voice TTS Playback
 
-**AURA (Artificial Understanding & Reasoning Assistant)** - A floating AI assistant.
+Update `src/components/aura/AuraAssistant.tsx`:
 
-**Phase 1 (Text-based, immediate):** Uses Lovable AI (no API key needed)
-- Create an edge function `supabase/functions/aura-chat/index.ts` using the Lovable AI gateway
-- Build `src/components/aura/AuraAssistant.tsx` - floating blob button (bottom-right corner)
-- On click, opens a chat popup with streaming text responses
-- System prompt: science tutor personality, female persona named AURA
-- Add to the root `App.tsx` so it appears on all pages
+- Add a speaker/volume icon button next to each assistant message
+- On click, call the `elevenlabs-tts` edge function with the message text
+- Stream the audio response and play it via `new Audio(URL.createObjectURL(blob))`
+- Add a "speaking" state with visual indicator (pulsing icon)
+- Add a global voice toggle in the chat header
+- Handle errors gracefully (if no API key configured, show a tooltip saying voice is unavailable)
 
-**Phase 2 (Voice, after ElevenLabs key is provided):**
-- Once you provide your ElevenLabs API key, voice features will be added
-- Text-to-speech for AURA's responses using a female voice
-- The text chat will work immediately without the key
+### Deploy Edge Function
+Deploy `elevenlabs-tts` to make it available for the voice feature.
 
 ---
 
-## 6. Collaboration Page "Coming Soon" Overlay
+## 3. Responsive Design Audit
 
-- Apply the existing `ComingSoonOverlay` component to the Collaboration page
-- List upcoming features: real-time co-experimentation, shared workspaces, voice chat
+Review and fix across all key pages:
 
----
-
-## 7. Analytics Page - Full Functionality
-
-Make all sections work with real data from the database:
-- **Stats cards**: Pull actual counts from `user_progress`, `quiz_results`, `user_badges`
-- **Badges**: Show all available badges with earned/unearned state (already partially working)
-- **Recent Activity**: Show last 10 experiments accessed with timestamps
-- **Progress by Category**: Calculate actual totals from `experiments` table per category instead of estimates
-- **Real-time updates**: Subscribe to `user_progress` changes via realtime
-- Fix the category total calculation to use actual experiment counts
+- **Workspace tabs**: The tab list already uses `overflow-x-auto` with `w-max`, which handles horizontal scroll. With 17 tabs now, ensure the scroll works smoothly on mobile.
+- **Admin page**: Verify stat cards stack on mobile, tab navigation is scrollable.
+- **Analytics page**: Ensure grid items stack on small screens.
+- **Navbar**: Already has mobile hamburger - verify it works.
+- **AURA chat**: Already uses `max-w-[calc(100vw-2.5rem)]` - good for mobile.
 
 ---
 
-## 8. Admin Dashboard Improvements
+## 4. Verification Tasks (No Code Changes Expected)
 
-### 8a. Role Management
-- The `UserRoleManagement` component already works - verify role changes persist correctly
-
-### 8b. Correct Statistics
-- Replace random `Math.random()` activity data (line 174) with real daily counts from `user_progress`
-- Query actual daily active users and experiments completed per day for the chart
-
-### 8c. Experiment Section
-- Update `ExperimentModeration` to also show built-in experiments from the `experiments` table (not just `custom_experiments`)
-- Display all experiments with category, difficulty, and status
-
-### 8d. Email Section
-- Keep the UI functional but without actual sending (per your preference to skip email broadcasting)
-- The template editor and settings will work as local state management
+- **Builder Coming Soon**: Already confirmed working with `ComingSoonOverlay` at lines 317-321.
+- **Admin Role Management**: `UserRoleManagement` component already handles role CRUD via Supabase - verify it persists.
+- **Quiz Functionality**: The quiz system in `ExperimentEducation` uses local state for scoring. No database persistence issues expected since quizzes are education-panel-only.
 
 ---
 
-## 9. Responsive Design
+## Technical Summary
 
-Audit and fix all pages for mobile/tablet/desktop:
-- **Navbar**: Ensure mobile hamburger menu works correctly
-- **Admin Dashboard**: Make tab navigation scrollable on mobile, stack stat cards
-- **Analytics**: Stack grid items on small screens
-- **Workspace**: Ensure simulation controls don't overflow on mobile
-- **Community/Library**: Responsive card grids
-- **Builder**: Already has `MobileBuilderSheet` - verify it works
-- Add responsive breakpoints (`sm:`, `md:`, `lg:`) where missing
+### Files to Create
+None - all components already exist.
 
----
+### Files to Modify
+- `src/pages/Workspace.tsx` - Add refs, tabs, controls, rendering for 6 new simulations
+- `src/components/aura/AuraAssistant.tsx` - Add TTS voice playback with speaker buttons
 
-## 10. Chemistry Quiz Testing
+### Edge Functions to Deploy
+- `elevenlabs-tts` - Already created, needs deployment
 
-- Verify quiz functionality in the Chemistry Education Panel
-- Ensure scoring, badge awarding, and progress tracking work end-to-end
-
----
-
-## 11. Builder "Coming Soon" Verification
-
-- Confirm the existing `ComingSoonOverlay` on Builder page displays correctly
-- No changes needed if already working
-
----
-
-## 12. Database Migration
-
-A SQL migration will be needed to:
-- Insert the 6 new experiments into the `experiments` table
-- Map them to `experiment_types` if needed
-
----
-
-## Technical Details
-
-### New Files to Create:
-- `src/assets/virtulab-logo.png` (copied from upload)
-- `src/data/biologyEducation.ts`
-- `src/data/earthScienceEducation.ts`
-- `src/data/biologyQuizzes.ts`
-- `src/data/earthScienceQuizzes.ts`
-- `src/components/aura/AuraAssistant.tsx`
-- `supabase/functions/aura-chat/index.ts`
-- `src/components/simulations/AcidBaseSimulation.tsx`
-- `src/components/simulations/FrictionSimulation.tsx`
-- `src/components/simulations/LeverSimulation.tsx`
-- `src/components/simulations/ExpansionSimulation.tsx`
-- `src/components/simulations/StatesOfMatterSimulation.tsx`
-- `src/components/simulations/DiffusionOsmosisSimulation.tsx`
-
-### Files to Modify:
-- `src/components/layout/Navbar.tsx` - Logo update
-- `index.html` - Favicon update
-- `src/App.tsx` - Add AURA assistant globally
-- `src/pages/Analytics.tsx` - Real data integration
-- `src/pages/Admin.tsx` - Real statistics, all experiments display
-- `src/pages/Collaboration.tsx` - Coming Soon overlay
-- `src/pages/Workspace.tsx` - New simulation routing and controls
-- `src/components/chemistry/ChemistryWorkspace.tsx` - Show all combination types
-- `src/components/admin/ExperimentModeration.tsx` - Show all experiments
-- `src/data/experimentEducation.ts` - Add content for new experiments
-- Various components for responsive fixes
-
-### Dependencies:
-- No new npm packages needed
-- ElevenLabs React SDK will be added later when you provide your API key
-
-### Order of Implementation:
-1. Logo and assets
-2. Database migration for new experiments
-3. New simulation components
-4. Educational content (biology, earth science)
-5. Chemistry react feature enhancement
-6. AURA AI assistant (text mode)
-7. Analytics page fixes
-8. Admin dashboard fixes
-9. Collaboration Coming Soon overlay
-10. Responsive design pass
-11. Testing and verification
+### Estimated Changes
+- Workspace.tsx: ~200 lines added (parameter controls, rendering, data series)
+- AuraAssistant.tsx: ~60 lines added (voice playback logic, UI buttons)
 
