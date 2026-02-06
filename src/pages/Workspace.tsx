@@ -28,6 +28,7 @@ import { StatesOfMatterSimulation, StatesOfMatterSimulationHandle } from "@/comp
 import { DiffusionOsmosisSimulation, DiffusionOsmosisSimulationHandle } from "@/components/simulations/DiffusionOsmosisSimulation";
 import { MobileParametersDrawer } from "@/components/workspace/MobileParametersDrawer";
 import { ExperimentEducation } from "@/components/workspace/ExperimentEducation";
+import { DataVisualizationPanel } from "@/components/workspace/DataVisualizationPanel";
 import { exportToCSV, exportToJSON, generatePDFReport } from "@/utils/exportData";
 import { toast } from "sonner";
 import { physicsPresets } from "@/data/physicsPresets";
