@@ -6,8 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
 import { 
   FlaskConical, 
   Search, 
@@ -15,9 +13,6 @@ import {
   Eye, 
   EyeOff, 
   Trash2, 
-  Flag,
-  CheckCircle,
-  XCircle,
   MoreHorizontal
 } from "lucide-react";
 import {
@@ -26,62 +21,90 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
-interface CustomExperiment {
+interface DisplayExperiment {
   id: string;
   title: string;
   description: string | null;
-  is_public: boolean;
-  user_id: string;
+  category: string;
+  is_public?: boolean;
+  user_id?: string;
   created_at: string;
-  updated_at: string;
+  source: 'built-in' | 'custom';
+  difficulty?: string | null;
+  simulation_type?: string | null;
   user_name?: string;
 }
 
 export function ExperimentModeration() {
-  const [experiments, setExperiments] = useState<CustomExperiment[]>([]);
+  const [experiments, setExperiments] = useState<DisplayExperiment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filter, setFilter] = useState<"all" | "public" | "private">("all");
-  const [selectedExperiment, setSelectedExperiment] = useState<CustomExperiment | null>(null);
-  const [rejectionReason, setRejectionReason] = useState("");
+  const [filter, setFilter] = useState<"all" | "built-in" | "custom">("all");
 
   useEffect(() => {
-    fetchExperiments();
+    fetchAllExperiments();
   }, []);
 
-  const fetchExperiments = async () => {
+  const fetchAllExperiments = async () => {
     try {
-      // Fetch experiments
-      const { data: experimentsData, error: expError } = await supabase
+      // Fetch built-in experiments
+      const { data: builtIn, error: biError } = await supabase
+        .from("experiments")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (biError) throw biError;
+
+      // Fetch custom experiments
+      const { data: custom, error: cError } = await supabase
         .from("custom_experiments")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (expError) throw expError;
+      if (cError) throw cError;
 
-      // Fetch profiles separately
-      const userIds = [...new Set((experimentsData || []).map(e => e.user_id))];
+      // Fetch profiles for custom experiments
+      const userIds = [...new Set((custom || []).map(e => e.user_id))];
       const { data: profiles } = await supabase
         .from("profiles")
         .select("user_id, full_name, username")
-        .in("user_id", userIds);
+        .in("user_id", userIds.length ? userIds : ['none']);
 
-      // Map profiles by user_id for quick lookup
       const profileMap = new Map(
         (profiles || []).map(p => [p.user_id, p])
       );
 
-      const experimentsWithUsers = (experimentsData || []).map(exp => {
-        const profile = profileMap.get(exp.user_id);
-        return {
-          ...exp,
-          user_name: profile?.full_name || profile?.username || "Unknown"
-        };
-      });
+      const allExperiments: DisplayExperiment[] = [
+        ...(builtIn || []).map(exp => ({
+          id: exp.id,
+          title: exp.title,
+          description: exp.description,
+          category: exp.category,
+          created_at: exp.created_at,
+          source: 'built-in' as const,
+          difficulty: exp.difficulty,
+          simulation_type: exp.simulation_type,
+        })),
+        ...(custom || []).map(exp => {
+          const profile = profileMap.get(exp.user_id);
+          return {
+            id: exp.id,
+            title: exp.title,
+            description: exp.description,
+            category: 'custom',
+            is_public: exp.is_public ?? false,
+            user_id: exp.user_id,
+            created_at: exp.created_at,
+            source: 'custom' as const,
+            user_name: profile?.full_name || profile?.username || "Unknown",
+          };
+        }),
+      ];
 
-      setExperiments(experimentsWithUsers);
+      setExperiments(allExperiments);
     } catch (error) {
       console.error("Error fetching experiments:", error);
       toast.error("Failed to load experiments");
@@ -96,46 +119,35 @@ export function ExperimentModeration() {
         .from("custom_experiments")
         .update({ is_public: !isPublic })
         .eq("id", id);
-
       if (error) throw error;
-
       setExperiments(prev => prev.map(e => 
         e.id === id ? { ...e, is_public: !isPublic } : e
       ));
-
       toast.success(isPublic ? "Experiment hidden" : "Experiment made public");
     } catch (error) {
-      console.error("Error updating visibility:", error);
       toast.error("Failed to update visibility");
     }
   };
 
-  const deleteExperiment = async (id: string) => {
+  const deleteExperiment = async (id: string, source: string) => {
     try {
-      const { error } = await supabase
-        .from("custom_experiments")
-        .delete()
-        .eq("id", id);
-
+      const table = source === 'built-in' ? 'experiments' : 'custom_experiments';
+      const { error } = await supabase.from(table).delete().eq("id", id);
       if (error) throw error;
-
       setExperiments(prev => prev.filter(e => e.id !== id));
       toast.success("Experiment deleted");
     } catch (error) {
-      console.error("Error deleting experiment:", error);
       toast.error("Failed to delete experiment");
     }
   };
 
-  const filteredExperiments = experiments.filter(exp => {
+  const filtered = experiments.filter(exp => {
     const matchesSearch = !searchQuery || 
       exp.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       exp.user_name?.toLowerCase().includes(searchQuery.toLowerCase());
-    
     const matchesFilter = filter === "all" || 
-      (filter === "public" && exp.is_public) ||
-      (filter === "private" && !exp.is_public);
-
+      (filter === "built-in" && exp.source === 'built-in') ||
+      (filter === "custom" && exp.source === 'custom');
     return matchesSearch && matchesFilter;
   });
 
@@ -152,46 +164,23 @@ export function ExperimentModeration() {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
             <CardTitle className="flex items-center gap-2">
               <FlaskConical className="w-5 h-5 text-primary" />
-              Experiment Moderation
+              All Experiments ({experiments.length})
             </CardTitle>
-            <CardDescription>Review and moderate user-created experiments</CardDescription>
+            <CardDescription>Built-in and user-created experiments</CardDescription>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
             <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
-              <Button
-                variant={filter === "all" ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => setFilter("all")}
-              >
-                All
-              </Button>
-              <Button
-                variant={filter === "public" ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => setFilter("public")}
-              >
-                Public
-              </Button>
-              <Button
-                variant={filter === "private" ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => setFilter("private")}
-              >
-                Private
-              </Button>
+              <Button variant={filter === "all" ? "secondary" : "ghost"} size="sm" onClick={() => setFilter("all")}>All</Button>
+              <Button variant={filter === "built-in" ? "secondary" : "ghost"} size="sm" onClick={() => setFilter("built-in")}>Built-in</Button>
+              <Button variant={filter === "custom" ? "secondary" : "ghost"} size="sm" onClick={() => setFilter("custom")}>Custom</Button>
             </div>
-            <div className="relative w-64">
+            <div className="relative flex-1 sm:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search experiments..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
+              <Input placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
             </div>
           </div>
         </div>
@@ -202,84 +191,63 @@ export function ExperimentModeration() {
             <TableHeader>
               <TableRow>
                 <TableHead>Experiment</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Source</TableHead>
                 <TableHead>Creator</TableHead>
-                <TableHead>Status</TableHead>
                 <TableHead>Created</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredExperiments.map((experiment) => (
-                <TableRow key={experiment.id}>
+              {filtered.map((exp) => (
+                <TableRow key={exp.id}>
                   <TableCell>
                     <div>
-                      <p className="font-medium">{experiment.title}</p>
-                      {experiment.description && (
-                        <p className="text-sm text-muted-foreground truncate max-w-[200px]">
-                          {experiment.description}
-                        </p>
+                      <p className="font-medium">{exp.title}</p>
+                      {exp.description && (
+                        <p className="text-sm text-muted-foreground truncate max-w-[200px]">{exp.description}</p>
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {experiment.user_name}
+                  <TableCell>
+                    <Badge variant="outline" className="capitalize">{exp.category.replace('_', ' ')}</Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge 
-                      variant="secondary" 
-                      className={experiment.is_public 
-                        ? "bg-green-500/10 text-green-500" 
-                        : "bg-muted text-muted-foreground"
-                      }
-                    >
-                      {experiment.is_public ? (
-                        <><Eye className="w-3 h-3 mr-1" /> Public</>
-                      ) : (
-                        <><EyeOff className="w-3 h-3 mr-1" /> Private</>
-                      )}
+                    <Badge variant={exp.source === 'built-in' ? 'default' : 'secondary'}>
+                      {exp.source === 'built-in' ? 'Built-in' : 'Custom'}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {new Date(experiment.created_at).toLocaleDateString()}
+                    {exp.source === 'built-in' ? 'VirtuLab' : exp.user_name || '—'}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {new Date(exp.created_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
+                        <Button variant="ghost" size="icon"><MoreHorizontal className="w-4 h-4" /></Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem 
-                          onClick={() => window.open(`/builder?id=${experiment.id}`, '_blank')}
-                        >
-                          <Eye className="w-4 h-4 mr-2" />
-                          View
+                        <DropdownMenuItem onClick={() => window.open(`/workspace?type=${exp.simulation_type || 'pendulum'}`, '_blank')}>
+                          <Eye className="w-4 h-4 mr-2" /> View
                         </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => toggleVisibility(experiment.id, experiment.is_public)}
-                        >
-                          {experiment.is_public ? (
-                            <><EyeOff className="w-4 h-4 mr-2" /> Hide</>
-                          ) : (
-                            <><Eye className="w-4 h-4 mr-2" /> Make Public</>
-                          )}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className="text-destructive"
-                          onClick={() => deleteExperiment(experiment.id)}
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Delete
+                        {exp.source === 'custom' && (
+                          <DropdownMenuItem onClick={() => toggleVisibility(exp.id, exp.is_public || false)}>
+                            {exp.is_public ? <><EyeOff className="w-4 h-4 mr-2" /> Hide</> : <><Eye className="w-4 h-4 mr-2" /> Make Public</>}
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem className="text-destructive" onClick={() => deleteExperiment(exp.id, exp.source)}>
+                          <Trash2 className="w-4 h-4 mr-2" /> Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))}
-              {filteredExperiments.length === 0 && (
+              {filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                     No experiments found
                   </TableCell>
                 </TableRow>
