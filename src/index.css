@@ -337,6 +337,16 @@
   box-sizing: border-box;
 }
 
+.card-nav-static {
+  position: relative;
+  top: 0;
+  left: 0;
+  transform: none;
+  width: 100%;
+  max-width: 100%;
+  padding: 1rem 1.5rem;
+}
+
 .card-nav {
   display: block;
   height: 60px;

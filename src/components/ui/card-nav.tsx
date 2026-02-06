@@ -33,6 +33,7 @@ interface CardNavProps {
   ctaText?: string;
   rightContent?: React.ReactNode;
   onSearch?: (query: string) => void;
+  sticky?: boolean;
 }
 
 export function CardNav({
@@ -48,6 +49,7 @@ export function CardNav({
   ctaText = 'Get Started',
   rightContent,
   onSearch,
+  sticky = false,
 }: CardNavProps) {
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -205,7 +207,7 @@ export function CardNav({
   };
 
   return (
-    <div className={cn('card-nav-container', className)}>
+    <div className={cn(sticky ? 'card-nav-container' : 'card-nav-container card-nav-static', className)}>
       <nav
         ref={navRef}
         className={cn('card-nav', isExpanded && 'open')}
