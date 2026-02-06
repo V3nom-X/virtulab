@@ -1,4 +1,6 @@
 // Educational content for all experiments based on research knowledge base
+import { biologyEducation } from './biologyEducation';
+import { earthScienceEducation } from './earthScienceEducation';
 
 export interface ExperimentEducation {
   id: string;
@@ -356,9 +358,197 @@ export const experimentEducation: Record<string, ExperimentEducation> = {
       { title: 'Food Science', description: 'Chemical reactions determine flavors, textures, and preservation methods.' }
     ],
     conclusion: `Chemistry is the study of matter and its transformations. By visualizing atomic interactions, students build intuition for the molecular world that underlies biology, medicine, materials science, and environmental sustainability.`
+  },
+  acidbase: {
+    id: 'acidbase',
+    overview: `Acids, bases, and indicators are fundamental to chemistry. Acids donate hydrogen ions (H⁺), bases accept them. pH measures acidity on a 0-14 scale. Chemical indicators change color at specific pH ranges, allowing visual identification of acidic or basic solutions.`,
+    howItWorks: [
+      'Acids dissolve in water and release hydrogen ions (H⁺), increasing acidity.',
+      'Bases dissolve and release hydroxide ions (OH⁻), increasing alkalinity.',
+      'The pH scale measures hydrogen ion concentration logarithmically from 0-14.',
+      'Indicators are weak acids/bases that change color depending on the pH.',
+      'Neutralization occurs when acids and bases react: H⁺ + OH⁻ → H₂O.',
+      'Buffer solutions resist pH changes by absorbing excess H⁺ or OH⁻ ions.'
+    ],
+    keyConcepts: [
+      { title: 'pH Scale', description: 'Logarithmic measure: pH = -log[H⁺]. Values 0-6 are acidic, 7 is neutral, 8-14 are basic.' },
+      { title: 'Indicators', description: 'Substances like litmus, phenolphthalein, and universal indicator that change color at specific pH ranges.' },
+      { title: 'Strong vs Weak Acids', description: 'Strong acids (HCl) fully dissociate; weak acids (acetic acid) partially dissociate.' },
+      { title: 'Neutralization', description: 'Acid + Base → Salt + Water. The resulting pH depends on the relative strengths.' },
+      { title: 'Buffers', description: 'Solutions that maintain relatively constant pH when small amounts of acid or base are added.' }
+    ],
+    applications: [
+      { title: 'Medicine', description: 'Blood pH must stay at 7.35-7.45; antacids neutralize excess stomach acid.' },
+      { title: 'Agriculture', description: 'Soil pH affects nutrient availability; farmers add lime (base) to acidic soil.' },
+      { title: 'Food Industry', description: 'pH controls fermentation, preservation, and the taste of foods and beverages.' },
+      { title: 'Water Treatment', description: 'pH adjustment is critical in water purification and wastewater treatment.' }
+    ],
+    conclusion: `Understanding acids, bases, and pH is essential for chemistry, biology, medicine, and environmental science. Indicators provide a visual bridge between invisible molecular behavior and observable color changes.`,
+    equations: [
+      { name: 'pH Definition', formula: 'pH = -log₁₀[H⁺]', description: 'Negative log of hydrogen ion concentration' },
+      { name: 'Water Ionization', formula: 'Kw = [H⁺][OH⁻] = 10⁻¹⁴', description: 'Ion product of water at 25°C' },
+      { name: 'pH + pOH', formula: 'pH + pOH = 14', description: 'Relationship between pH and pOH' }
+    ]
+  },
+  friction: {
+    id: 'friction',
+    overview: `Friction is a force that opposes the relative motion between two surfaces in contact. It plays a crucial role in everyday life—from walking and driving to engineering and sports. Without friction, objects would slide indefinitely, and we couldn't grip anything.`,
+    howItWorks: [
+      'When two surfaces are pressed together, microscopic irregularities interlock.',
+      'Static friction prevents motion until an applied force exceeds the maximum static friction.',
+      'Once motion begins, kinetic friction opposes movement—usually less than static friction.',
+      'The friction force depends on the normal force and the coefficient of friction (μ).',
+      'Smoother surfaces have lower friction coefficients; rougher surfaces have higher ones.',
+      'Lubrication reduces friction by creating a thin fluid layer between surfaces.'
+    ],
+    keyConcepts: [
+      { title: 'Static Friction', description: 'Prevents stationary objects from moving. fs ≤ μs × N.' },
+      { title: 'Kinetic Friction', description: 'Acts on moving objects. fk = μk × N, always opposing motion direction.' },
+      { title: 'Coefficient of Friction (μ)', description: 'Dimensionless value depending on surface materials. Higher μ = more friction.' },
+      { title: 'Normal Force', description: 'Perpendicular contact force between surfaces. On flat ground, N = mg.' },
+      { title: 'Rolling Friction', description: 'Much less than sliding friction—why wheels revolutionized transportation.' }
+    ],
+    applications: [
+      { title: 'Vehicle Braking', description: 'Brake pads use friction to convert kinetic energy to heat, stopping the vehicle.' },
+      { title: 'Walking & Running', description: 'Friction between shoes and ground provides the grip needed for locomotion.' },
+      { title: 'Industrial Machinery', description: 'Engineers optimize friction using lubricants to reduce wear and energy loss.' },
+      { title: 'Sports Equipment', description: 'Tennis racket strings, climbing shoes, and ski wax all manipulate friction.' }
+    ],
+    conclusion: `Friction is both a help and a hindrance. Understanding its principles allows engineers to control it—maximizing grip where needed and minimizing energy waste where friction is unwanted.`,
+    equations: [
+      { name: 'Friction Force', formula: 'f = μ × N', description: 'Friction equals coefficient times normal force' },
+      { name: 'Net Force', formula: 'F_net = F_applied - f', description: 'Net force determines acceleration' },
+      { name: 'Acceleration', formula: 'a = F_net / m', description: 'Newton\'s second law' }
+    ]
+  },
+  lever: {
+    id: 'lever',
+    overview: `The lever is one of the six classical simple machines. It consists of a rigid beam (lever arm) that pivots on a fixed point called the fulcrum. By adjusting the positions of the load and effort relative to the fulcrum, a lever can multiply force, making it easier to lift heavy objects.`,
+    howItWorks: [
+      'A rigid beam rests on a fulcrum (pivot point).',
+      'A load (resistance) is placed on one side, effort (force) is applied on the other.',
+      'Torque = Force × Distance from fulcrum determines the turning effect.',
+      'When effort arm > load arm, less force is needed (mechanical advantage > 1).',
+      'Balance occurs when clockwise torque equals counterclockwise torque.',
+      'There are three classes of levers based on the relative positions of load, effort, and fulcrum.'
+    ],
+    keyConcepts: [
+      { title: 'Mechanical Advantage', description: 'MA = Effort Arm / Load Arm. Greater MA means less effort needed.' },
+      { title: 'Torque (Moment)', description: 'Turning effect of a force: τ = F × d. Must balance for equilibrium.' },
+      { title: 'Fulcrum', description: 'The pivot point around which the lever rotates.' },
+      { title: 'Lever Classes', description: 'Class 1: fulcrum between load/effort (seesaw). Class 2: load between (wheelbarrow). Class 3: effort between (tweezers).' },
+      { title: 'Trade-off', description: 'Levers trade force for distance—less force but greater movement distance at the effort end.' }
+    ],
+    applications: [
+      { title: 'Construction', description: 'Crowbars and pry bars use lever principles to lift heavy objects with minimal effort.' },
+      { title: 'Human Body', description: 'Bones act as levers, joints as fulcrums, and muscles provide effort to move limbs.' },
+      { title: 'Playground Equipment', description: 'Seesaws are Class 1 levers demonstrating balance and torque principles.' },
+      { title: 'Tools', description: 'Scissors, pliers, and nutcrackers are all lever-based tools.' }
+    ],
+    conclusion: `The lever demonstrates how simple mechanics can multiply human effort. Understanding torque and mechanical advantage is fundamental to engineering, biomechanics, and everyday tool design.`,
+    equations: [
+      { name: 'Torque', formula: 'τ = F × d', description: 'Torque equals force times distance from fulcrum' },
+      { name: 'Equilibrium', formula: 'F₁ × d₁ = F₂ × d₂', description: 'Balanced when torques are equal' },
+      { name: 'Mechanical Advantage', formula: 'MA = d_effort / d_load', description: 'Ratio of arm lengths' }
+    ]
+  },
+  expansion: {
+    id: 'expansion',
+    overview: `Thermal expansion is the tendency of materials to change size when temperature changes. As materials are heated, their particles vibrate more vigorously and occupy more space, causing the material to expand. This principle affects everything from bridge design to thermometer construction.`,
+    howItWorks: [
+      'Atoms and molecules vibrate about fixed positions in solids.',
+      'Increasing temperature increases the average kinetic energy of particles.',
+      'Greater vibration amplitude means particles push farther apart.',
+      'Linear expansion: ΔL = α × L₀ × ΔT, where α is the coefficient of linear expansion.',
+      'Different materials expand at different rates—metals typically more than ceramics.',
+      'Cooling reverses the process, causing contraction.'
+    ],
+    keyConcepts: [
+      { title: 'Linear Expansion', description: 'Change in length proportional to original length and temperature change: ΔL = αL₀ΔT.' },
+      { title: 'Coefficient of Expansion (α)', description: 'Material-specific constant. Aluminum (23×10⁻⁶) expands more than iron (12×10⁻⁶).' },
+      { title: 'Volume Expansion', description: 'For solids, β ≈ 3α. Liquids and gases expand more than solids.' },
+      { title: 'Anomalous Expansion', description: 'Water expands when cooled below 4°C—why ice floats and pipes burst in winter.' },
+      { title: 'Thermal Stress', description: 'If expansion is constrained, internal stresses build up that can crack or warp materials.' }
+    ],
+    applications: [
+      { title: 'Bridge Design', description: 'Expansion joints allow bridges to lengthen in summer without buckling.' },
+      { title: 'Thermometers', description: 'Mercury and alcohol expand predictably with temperature, enabling measurement.' },
+      { title: 'Bimetallic Strips', description: 'Two metals with different α bonded together bend when heated—used in thermostats.' },
+      { title: 'Railroad Tracks', description: 'Gaps between rails accommodate expansion to prevent dangerous buckling in hot weather.' }
+    ],
+    conclusion: `Thermal expansion is a fundamental property that engineers must account for in design. Understanding how materials respond to temperature changes prevents structural failures and enables precision instruments.`,
+    equations: [
+      { name: 'Linear Expansion', formula: 'ΔL = α × L₀ × ΔT', description: 'Change in length from temperature change' },
+      { name: 'Volume Expansion', formula: 'ΔV = β × V₀ × ΔT', description: 'Change in volume (β ≈ 3α for solids)' },
+      { name: 'Final Length', formula: 'L = L₀(1 + αΔT)', description: 'New length after temperature change' }
+    ]
+  },
+  statesofmatter: {
+    id: 'statesofmatter',
+    overview: `Matter exists in three primary states—solid, liquid, and gas—determined by the arrangement and energy of its particles. Temperature and pressure control phase transitions: melting, boiling, freezing, and condensation. Understanding states of matter is fundamental to chemistry, physics, and materials science.`,
+    howItWorks: [
+      'In solids, particles are tightly packed in fixed positions, vibrating in place.',
+      'In liquids, particles are close but can slide past each other, flowing freely.',
+      'In gases, particles move rapidly and freely with large spaces between them.',
+      'Adding heat energy increases particle motion and can cause phase transitions.',
+      'Melting point: solid → liquid. Boiling point: liquid → gas.',
+      'During phase transitions, temperature stays constant as energy breaks intermolecular bonds.'
+    ],
+    keyConcepts: [
+      { title: 'Kinetic Molecular Theory', description: 'All matter consists of particles in constant motion. Temperature measures average kinetic energy.' },
+      { title: 'Phase Transitions', description: 'Melting, freezing, boiling, condensation, sublimation—each involves energy transfer.' },
+      { title: 'Latent Heat', description: 'Energy absorbed/released during phase change without temperature change.' },
+      { title: 'Intermolecular Forces', description: 'Stronger forces (hydrogen bonds, ionic) = higher melting/boiling points.' },
+      { title: 'Pressure Effects', description: 'Increasing pressure raises boiling point (pressure cookers) and can solidify gases.' }
+    ],
+    applications: [
+      { title: 'Cooking', description: 'Boiling, melting butter, and pressure cooking all exploit phase transitions.' },
+      { title: 'Refrigeration', description: 'Refrigerants absorb heat when evaporating and release heat when condensing.' },
+      { title: 'Metallurgy', description: 'Melting and solidifying metals is essential for casting and manufacturing.' },
+      { title: 'Weather', description: 'Water cycle involves continuous phase transitions driving weather patterns.' }
+    ],
+    conclusion: `States of matter demonstrate the interplay between particle energy and intermolecular forces. Understanding phase transitions is essential for cooking, industry, weather prediction, and materials engineering.`,
+    equations: [
+      { name: 'Latent Heat', formula: 'Q = mL', description: 'Energy for phase change = mass × latent heat' },
+      { name: 'Heat Transfer', formula: 'Q = mcΔT', description: 'Energy for temperature change' },
+      { name: 'Ideal Gas Law', formula: 'PV = nRT', description: 'Relates pressure, volume, and temperature of gases' }
+    ]
+  },
+  diffusionosmosis: {
+    id: 'diffusionosmosis',
+    overview: `Diffusion and osmosis are fundamental biological transport processes. Diffusion is the net movement of particles from high to low concentration. Osmosis is the diffusion of water across a semi-permeable membrane. These processes are essential for nutrient absorption, gas exchange, and cellular homeostasis.`,
+    howItWorks: [
+      'Molecules are in constant random motion (Brownian motion).',
+      'Net movement occurs from regions of higher to lower concentration.',
+      'Semi-permeable membranes selectively allow certain molecules to pass.',
+      'In osmosis, water moves toward the side with higher solute concentration.',
+      'Cells in hypertonic solutions lose water (crenation); in hypotonic solutions they swell (lysis).',
+      'Equilibrium is reached when concentrations equalize on both sides.'
+    ],
+    keyConcepts: [
+      { title: 'Concentration Gradient', description: 'The difference in concentration driving the direction and rate of diffusion.' },
+      { title: 'Semi-permeable Membrane', description: 'Allows water and small molecules through but blocks larger solutes.' },
+      { title: 'Tonicity', description: 'Hypertonic (more solute outside), Hypotonic (less), Isotonic (equal).' },
+      { title: 'Osmotic Pressure', description: 'Pressure required to prevent osmosis across a membrane.' },
+      { title: 'Active Transport', description: 'Movement against concentration gradient requiring cellular energy (ATP).' }
+    ],
+    applications: [
+      { title: 'Plant Water Uptake', description: 'Root hair cells absorb water by osmosis from soil.' },
+      { title: 'Kidney Function', description: 'Nephrons use osmosis and diffusion to filter blood and produce urine.' },
+      { title: 'IV Drips', description: 'Saline solutions must be isotonic to prevent damage to blood cells.' },
+      { title: 'Food Preservation', description: 'Salting/sugaring creates hypertonic conditions that dehydrate bacteria.' }
+    ],
+    conclusion: `Diffusion and osmosis are passive transport mechanisms vital to life. They enable cells to exchange nutrients and waste, maintain water balance, and respond to their chemical environment.`,
+    equations: [
+      { name: "Fick's Law", formula: 'J = -D × (dC/dx)', description: 'Diffusion rate proportional to concentration gradient' },
+      { name: 'Osmotic Pressure', formula: 'π = iMRT', description: 'Pressure needed to prevent osmosis' },
+      { name: 'Water Potential', formula: 'Ψ = Ψs + Ψp', description: 'Determines water movement direction' }
+    ]
   }
 };
 
+const allEducation = { ...experimentEducation, ...biologyEducation, ...earthScienceEducation };
+
 export const getExperimentEducation = (experimentId: string): ExperimentEducation | null => {
-  return experimentEducation[experimentId] || null;
+  return allEducation[experimentId] || null;
 };

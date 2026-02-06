@@ -20,7 +20,12 @@ import { InclinedPlaneSimulation, InclinedPlaneSimulationHandle } from "@/compon
 import { LightOpticsSimulation, LightOpticsSimulationHandle } from "@/components/simulations/LightOpticsSimulation";
 import { BuoyancySimulation, BuoyancySimulationHandle } from "@/components/simulations/BuoyancySimulation";
 import { ChemistryWorkspace } from "@/components/chemistry/ChemistryWorkspace";
-import { DataVisualizationPanel } from "@/components/workspace/DataVisualizationPanel";
+import { AcidBaseSimulation, AcidBaseSimulationHandle } from "@/components/simulations/AcidBaseSimulation";
+import { FrictionSimulation, FrictionSimulationHandle } from "@/components/simulations/FrictionSimulation";
+import { LeverSimulation, LeverSimulationHandle } from "@/components/simulations/LeverSimulation";
+import { ExpansionSimulation, ExpansionSimulationHandle } from "@/components/simulations/ExpansionSimulation";
+import { StatesOfMatterSimulation, StatesOfMatterSimulationHandle } from "@/components/simulations/StatesOfMatterSimulation";
+import { DiffusionOsmosisSimulation, DiffusionOsmosisSimulationHandle } from "@/components/simulations/DiffusionOsmosisSimulation";
 import { MobileParametersDrawer } from "@/components/workspace/MobileParametersDrawer";
 import { ExperimentEducation } from "@/components/workspace/ExperimentEducation";
 import { exportToCSV, exportToJSON, generatePDFReport } from "@/utils/exportData";
@@ -109,6 +114,30 @@ const Workspace = () => {
   const [buoyancyObjectDensity, setBuoyancyObjectDensity] = useState([500]);
   const [buoyancyFluidDensity, setBuoyancyFluidDensity] = useState([1000]);
   const [buoyancyVolume, setBuoyancyVolume] = useState([1]);
+
+  // New experiment states
+  const [acidBasePH, setAcidBasePH] = useState([7]);
+  const [acidBaseIndicator, setAcidBaseIndicator] = useState<'litmus' | 'phenolphthalein' | 'methyl_orange' | 'universal'>('universal');
+
+  const [frictionMass, setFrictionMass] = useState([2]);
+  const [frictionAppliedForce, setFrictionAppliedForce] = useState([15]);
+  const [frictionCoeff, setFrictionCoeff] = useState([0.3]);
+  const [frictionSurface, setFrictionSurface] = useState<'wood' | 'ice' | 'rubber' | 'steel'>('wood');
+
+  const [leverLoadMass, setLeverLoadMass] = useState([5]);
+  const [leverEffortForce, setLeverEffortForce] = useState([20]);
+  const [leverFulcrumPos, setLeverFulcrumPos] = useState([0.3]);
+
+  const [expansionTemp, setExpansionTemp] = useState([100]);
+  const [expansionMaterial, setExpansionMaterial] = useState<'iron' | 'copper' | 'aluminum' | 'glass'>('iron');
+
+  const [statesTemp, setStatesTemp] = useState([25]);
+  const [statesSubstance, setStatesSubstance] = useState<'water' | 'iron' | 'oxygen' | 'wax'>('water');
+
+  const [diffusionMode, setDiffusionMode] = useState<'diffusion' | 'osmosis'>('diffusion');
+  const [diffusionConcLeft, setDiffusionConcLeft] = useState([8]);
+  const [diffusionConcRight, setDiffusionConcRight] = useState([2]);
+  const [diffusionPermeability, setDiffusionPermeability] = useState([0.5]);
 
   const pendulumRef = useRef<PendulumSimulationHandle>(null);
   const projectileRef = useRef<ProjectileSimulationHandle>(null);
