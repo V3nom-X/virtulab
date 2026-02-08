@@ -1,9 +1,9 @@
-import { useState, useEffect, ReactNode } from "react";
+import { useState, useEffect, useRef, ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FlipFadeText } from "@/components/ui/FlipFadeText";
 
-const LOADING_DURATION = 4000; // 4 seconds
+const LOADING_DURATION = 4000;
 
 interface PageTransitionProps {
   children: ReactNode;
@@ -13,15 +13,14 @@ export function PageTransition({ children }: PageTransitionProps) {
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
   const [showContent, setShowContent] = useState(true);
-  const [currentKey, setCurrentKey] = useState(location.key);
+  const prevKeyRef = useRef(location.key);
 
   useEffect(() => {
-    // Skip loading on initial mount
-    if (currentKey === location.key) return;
+    if (prevKeyRef.current === location.key) return;
+    prevKeyRef.current = location.key;
 
     setShowContent(false);
     setIsLoading(true);
-    setCurrentKey(location.key);
 
     const timer = setTimeout(() => {
       setIsLoading(false);
@@ -29,7 +28,7 @@ export function PageTransition({ children }: PageTransitionProps) {
     }, LOADING_DURATION);
 
     return () => clearTimeout(timer);
-  }, [location.key, currentKey]);
+  }, [location.key]);
 
   return (
     <>
@@ -51,16 +50,9 @@ export function PageTransition({ children }: PageTransitionProps) {
         )}
       </AnimatePresence>
 
-      {showContent && (
-        <motion.div
-          key={currentKey}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          {children}
-        </motion.div>
-      )}
+      <div style={{ display: showContent ? 'block' : 'none' }}>
+        {children}
+      </div>
     </>
   );
 }
