@@ -32,56 +32,89 @@ export function AuraAssistant() {
   }, [isOpen]);
 
   const stopAudio = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
-    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    try {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        audioRef.current = null;
+      }
+    } catch { /* ignore */ }
+    try {
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    } catch { /* ignore */ }
     setSpeakingIdx(null);
   }, []);
 
   const playNativeTTS = useCallback((text: string, idx: number) => {
-    if (!('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text.slice(0, 2000));
-    utterance.rate = 1;
-    utterance.pitch = 1.1;
-    // Prefer a female English voice
-    const voices = window.speechSynthesis.getVoices();
-    const preferred = voices.find(v => v.name.includes('Samantha') || v.name.includes('Google UK English Female') || (v.lang.startsWith('en') && v.name.toLowerCase().includes('female')));
-    if (preferred) utterance.voice = preferred;
-    setSpeakingIdx(idx);
-    utterance.onend = () => setSpeakingIdx(null);
-    utterance.onerror = () => setSpeakingIdx(null);
-    window.speechSynthesis.speak(utterance);
+    try {
+      if (!('speechSynthesis' in window)) {
+        setSpeakingIdx(null);
+        return;
+      }
+      window.speechSynthesis.cancel();
+
+      const stripped = text.replace(/[#*_`~>\[\]()]/g, '').slice(0, 2000);
+      if (!stripped.trim()) { setSpeakingIdx(null); return; }
+
+      const utterance = new SpeechSynthesisUtterance(stripped);
+      utterance.rate = 1;
+      utterance.pitch = 1.1;
+
+      const voices = window.speechSynthesis.getVoices();
+      const preferred = voices.find(v =>
+        v.name.includes('Samantha') ||
+        v.name.includes('Google UK English Female') ||
+        (v.lang.startsWith('en') && v.name.toLowerCase().includes('female'))
+      );
+      if (preferred) utterance.voice = preferred;
+
+      setSpeakingIdx(idx);
+      utterance.onend = () => setSpeakingIdx(null);
+      utterance.onerror = () => setSpeakingIdx(null);
+      window.speechSynthesis.speak(utterance);
+    } catch {
+      setSpeakingIdx(null);
+    }
   }, []);
 
   const playTTS = useCallback(async (text: string, idx: number) => {
     stopAudio();
     setSpeakingIdx(idx);
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+
       const resp = await fetch(TTS_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ text: text.slice(0, 2000) }),
+        body: JSON.stringify({ text: text.replace(/[#*_`~>\[\]()]/g, '').slice(0, 2000) }),
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
+
       if (!resp.ok) {
-        // Fallback to browser-native TTS
         playNativeTTS(text, idx);
         return;
       }
       const blob = await resp.blob();
+      if (blob.size < 100) {
+        playNativeTTS(text, idx);
+        return;
+      }
       const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
       audioRef.current = audio;
       audio.onended = () => { setSpeakingIdx(null); URL.revokeObjectURL(url); };
-      audio.onerror = () => { setSpeakingIdx(null); URL.revokeObjectURL(url); };
+      audio.onerror = () => {
+        setSpeakingIdx(null);
+        URL.revokeObjectURL(url);
+        playNativeTTS(text, idx);
+      };
       await audio.play();
     } catch {
-      // Fallback to browser-native TTS on any error
       playNativeTTS(text, idx);
     }
   }, [stopAudio, playNativeTTS]);
