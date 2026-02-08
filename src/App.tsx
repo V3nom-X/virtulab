@@ -22,6 +22,7 @@ import ResetPassword from "./pages/ResetPassword";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import { AuraAssistant } from "./components/aura/AuraAssistant";
+import { PageTransition } from "./components/layout/PageTransition";
 
 // Accessibility wrapper component
 function AccessibilityProvider({ children }: { children: React.ReactNode }) {
@@ -40,24 +41,26 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/library" element={<Library />} />
-                <Route path="/workspace" element={<Workspace />} />
-                <Route path="/workspace/:experimentId" element={<Workspace />} />
-                <Route path="/builder" element={<Builder />} />
-                <Route path="/community" element={<Community />} />
-                <Route path="/collaboration/:roomId" element={<Collaboration />} />
-                <Route path="/analytics" element={<Analytics />} />
-                <Route path="/videos" element={<Videos />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/admin" element={<Admin />} />
-                <Route path="/help" element={<Help />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <PageTransition>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/library" element={<Library />} />
+                  <Route path="/workspace" element={<Workspace />} />
+                  <Route path="/workspace/:experimentId" element={<Workspace />} />
+                  <Route path="/builder" element={<Builder />} />
+                  <Route path="/community" element={<Community />} />
+                  <Route path="/collaboration/:roomId" element={<Collaboration />} />
+                  <Route path="/analytics" element={<Analytics />} />
+                  <Route path="/videos" element={<Videos />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/admin" element={<Admin />} />
+                  <Route path="/help" element={<Help />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </PageTransition>
               <AuraAssistant />
             </BrowserRouter>
           </TooltipProvider>
