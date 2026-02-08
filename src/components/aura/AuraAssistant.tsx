@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { X, Send, Sparkles, Loader2, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -12,6 +12,77 @@ interface Message {
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/aura-chat`;
 const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts`;
 
+function stripMarkdown(text: string): string {
+  return text.replace(/[#*_`~>\[\]()]/g, '').slice(0, 2000).trim();
+}
+
+function useDraggable(initialPos: { x: number; y: number }) {
+  const [pos, setPos] = useState(initialPos);
+  const dragging = useRef(false);
+  const offset = useRef({ x: 0, y: 0 });
+
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    dragging.current = true;
+    offset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    e.preventDefault();
+  }, [pos]);
+
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragging.current) return;
+    const newX = Math.max(0, Math.min(window.innerWidth - 60, e.clientX - offset.current.x));
+    const newY = Math.max(0, Math.min(window.innerHeight - 60, e.clientY - offset.current.y));
+    setPos({ x: newX, y: newY });
+  }, []);
+
+  const onPointerUp = useCallback(() => {
+    dragging.current = false;
+  }, []);
+
+  return { pos, onPointerDown, onPointerMove, onPointerUp, isDragging: dragging };
+}
+
+const MessageBubble = memo(function MessageBubble({
+  message,
+  index,
+  speakingIdx,
+  onPlay,
+  onStop,
+}: {
+  message: Message;
+  index: number;
+  speakingIdx: number | null;
+  onPlay: (text: string, idx: number) => void;
+  onStop: () => void;
+}) {
+  return (
+    <div className={cn("flex", message.role === 'user' ? 'justify-end' : 'justify-start')}>
+      <div className={cn(
+        "max-w-[85%] rounded-2xl px-3 py-2 text-sm",
+        message.role === 'user'
+          ? 'bg-primary text-primary-foreground rounded-br-md'
+          : 'bg-muted rounded-bl-md'
+      )}>
+        {message.role === 'assistant' ? (
+          <div className="prose prose-sm dark:prose-invert max-w-none [&>p]:mb-1.5 [&>p:last-child]:mb-0">
+            <ReactMarkdown>{message.content}</ReactMarkdown>
+            <button
+              onClick={() => speakingIdx === index ? onStop() : onPlay(message.content, index)}
+              className={cn(
+                "mt-1 inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors",
+                speakingIdx === index && "text-primary"
+              )}
+            >
+              <Volume2 className={cn("w-3 h-3", speakingIdx === index && "animate-pulse")} />
+              {speakingIdx === index ? 'Playing...' : 'Listen'}
+            </button>
+          </div>
+        ) : message.content}
+      </div>
+    </div>
+  );
+});
+
 export function AuraAssistant() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -22,6 +93,11 @@ export function AuraAssistant() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const drag = useDraggable({
+    x: typeof window !== 'undefined' ? window.innerWidth - 76 : 0,
+    y: typeof window !== 'undefined' ? window.innerHeight - 76 : 0,
+  });
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -52,9 +128,8 @@ export function AuraAssistant() {
         return;
       }
       window.speechSynthesis.cancel();
-
-      const stripped = text.replace(/[#*_`~>\[\]()]/g, '').slice(0, 2000);
-      if (!stripped.trim()) { setSpeakingIdx(null); return; }
+      const stripped = stripMarkdown(text);
+      if (!stripped) { setSpeakingIdx(null); return; }
 
       const utterance = new SpeechSynthesisUtterance(stripped);
       utterance.rate = 1;
@@ -90,7 +165,7 @@ export function AuraAssistant() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ text: text.replace(/[#*_`~>\[\]()]/g, '').slice(0, 2000) }),
+        body: JSON.stringify({ text: stripMarkdown(text) }),
         signal: controller.signal,
       });
       clearTimeout(timeout);
@@ -162,10 +237,10 @@ export function AuraAssistant() {
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
 
-        let idx: number;
-        while ((idx = buffer.indexOf('\n')) !== -1) {
-          let line = buffer.slice(0, idx);
-          buffer = buffer.slice(idx + 1);
+        let nlIdx: number;
+        while ((nlIdx = buffer.indexOf('\n')) !== -1) {
+          let line = buffer.slice(0, nlIdx);
+          buffer = buffer.slice(nlIdx + 1);
           if (line.endsWith('\r')) line = line.slice(0, -1);
           if (!line.startsWith('data: ') || line.startsWith(':') || !line.trim()) continue;
           const json = line.slice(6).trim();
@@ -182,7 +257,6 @@ export function AuraAssistant() {
     }
     setIsLoading(false);
 
-    // Auto-play voice if enabled
     if (voiceEnabled && assistantSoFar) {
       setMessages(prev => {
         const lastIdx = prev.length - 1;
@@ -202,27 +276,45 @@ export function AuraAssistant() {
     await streamChat(newMessages);
   };
 
+  // Calculate chat position relative to blob
+  const chatStyle: React.CSSProperties = {
+    position: 'fixed',
+    left: Math.min(drag.pos.x - 300, window.innerWidth - 370),
+    top: Math.max(10, drag.pos.y - 530),
+    zIndex: 50,
+  };
+
+  // Clamp chat position
+  if (chatStyle.left && (chatStyle.left as number) < 10) chatStyle.left = 10;
+
   return (
     <>
-      {/* Floating blob button */}
+      {/* Draggable floating blob button */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onPointerDown={drag.onPointerDown}
+        onPointerMove={drag.onPointerMove}
+        onPointerUp={drag.onPointerUp}
+        onClick={() => { if (!drag.isDragging.current) setIsOpen(!isOpen); }}
         className={cn(
-          "fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110",
+          "fixed z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-transform duration-300 hover:scale-110 touch-none select-none cursor-grab active:cursor-grabbing",
           "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground",
           isOpen && "scale-0 opacity-0"
         )}
+        style={{ left: drag.pos.x, top: drag.pos.y }}
         aria-label="Open AURA AI Assistant"
       >
-        <Sparkles className="w-6 h-6" />
+        <Sparkles className="w-6 h-6 pointer-events-none" />
         <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-background animate-pulse" />
       </button>
 
       {/* Chat popup */}
-      <div className={cn(
-        "fixed bottom-5 right-5 z-50 w-[360px] max-w-[calc(100vw-2.5rem)] h-[520px] max-h-[calc(100vh-6rem)] bg-card border rounded-2xl shadow-2xl flex flex-col transition-all duration-300 origin-bottom-right",
-        isOpen ? "scale-100 opacity-100" : "scale-0 opacity-0 pointer-events-none"
-      )}>
+      <div
+        className={cn(
+          "w-[360px] max-w-[calc(100vw-2.5rem)] h-[520px] max-h-[calc(100vh-6rem)] bg-card border rounded-2xl shadow-2xl flex flex-col transition-all duration-300 origin-bottom-right",
+          isOpen ? "scale-100 opacity-100" : "scale-0 opacity-0 pointer-events-none"
+        )}
+        style={chatStyle}
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b bg-gradient-to-r from-primary/10 to-primary/5 rounded-t-2xl">
           <div className="flex items-center gap-2">
@@ -259,7 +351,7 @@ export function AuraAssistant() {
               <p className="text-xs text-muted-foreground">Your AI science tutor. Ask me anything about physics, chemistry, biology, or earth science!</p>
               <div className="mt-4 flex flex-wrap gap-1.5 justify-center">
                 {['Explain osmosis', 'How do pendulums work?', 'What is pH?'].map(q => (
-                  <button key={q} onClick={() => { setInput(q); }} className="text-xs px-2.5 py-1 rounded-full border hover:bg-muted transition-colors">
+                  <button key={q} onClick={() => setInput(q)} className="text-xs px-2.5 py-1 rounded-full border hover:bg-muted transition-colors">
                     {q}
                   </button>
                 ))}
@@ -267,31 +359,14 @@ export function AuraAssistant() {
             </div>
           )}
           {messages.map((m, i) => (
-            <div key={i} className={cn("flex", m.role === 'user' ? 'justify-end' : 'justify-start')}>
-              <div className={cn(
-                "max-w-[85%] rounded-2xl px-3 py-2 text-sm",
-                m.role === 'user'
-                  ? 'bg-primary text-primary-foreground rounded-br-md'
-                  : 'bg-muted rounded-bl-md'
-              )}>
-                {m.role === 'assistant' ? (
-                  <div className="prose prose-sm dark:prose-invert max-w-none [&>p]:mb-1.5 [&>p:last-child]:mb-0">
-                    <ReactMarkdown>{m.content}</ReactMarkdown>
-                    {/* Speaker button for assistant messages */}
-                    <button
-                      onClick={() => speakingIdx === i ? stopAudio() : playTTS(m.content, i)}
-                      className={cn(
-                        "mt-1 inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors",
-                        speakingIdx === i && "text-primary"
-                      )}
-                    >
-                      <Volume2 className={cn("w-3 h-3", speakingIdx === i && "animate-pulse")} />
-                      {speakingIdx === i ? 'Playing...' : 'Listen'}
-                    </button>
-                  </div>
-                ) : m.content}
-              </div>
-            </div>
+            <MessageBubble
+              key={i}
+              message={m}
+              index={i}
+              speakingIdx={speakingIdx}
+              onPlay={playTTS}
+              onStop={stopAudio}
+            />
           ))}
           {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
             <div className="flex justify-start">

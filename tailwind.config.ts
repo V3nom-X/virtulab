@@ -147,6 +147,10 @@ export default {
           "80%": { transform: "translate(0, 0)" },
           "100%": { transform: "translate(50%, 50%)" },
         },
+        "logo-scroll": {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -159,6 +163,7 @@ export default {
         "dot-3": "dot-3 2s linear infinite",
         "dot-4": "dot-4 2s linear infinite",
         "dot-5": "dot-5 2s linear infinite",
+        "logo-scroll": "logo-scroll var(--duration, 60s) linear infinite var(--direction, normal)",
       },
     },
   },

@@ -30,6 +30,7 @@ import { MobileParametersDrawer } from "@/components/workspace/MobileParametersD
 import { ExperimentEducation } from "@/components/workspace/ExperimentEducation";
 import { DataVisualizationPanel } from "@/components/workspace/DataVisualizationPanel";
 import { exportToCSV, exportToJSON, generatePDFReport } from "@/utils/exportData";
+import { SimulationLoader } from "@/components/simulations/SimulationLoader";
 import { toast } from "sonner";
 import { physicsPresets } from "@/data/physicsPresets";
 import { 
@@ -691,6 +692,7 @@ const Workspace = () => {
         <div className="flex-1 flex flex-col lg:flex-row min-h-0">
           <div className="flex-1 flex flex-col min-h-0">
             <div className="flex-1 relative bg-gradient-to-b from-muted/50 to-muted min-h-[250px] sm:min-h-[350px] lg:min-h-[400px]">
+              <SimulationLoader simulationName={activeSim?.name}>
               {activeSimulation === 'pendulum' && <PendulumSimulation ref={pendulumRef} mass={pendulumMass[0]} length={pendulumLength[0]} gravity={pendulumGravity[0]} angle={pendulumAngle[0]} isPlaying={isPlaying} speed={speed[0]} onDataUpdate={handleDataUpdate} />}
               {activeSimulation === 'projectile' && <ProjectileSimulation ref={projectileRef} velocity={projectileVelocity[0]} angle={projectileAngle[0]} gravity={projectileGravity[0]} isPlaying={isPlaying} speed={speed[0]} onDataUpdate={handleDataUpdate} />}
               {activeSimulation === 'spring' && <SpringSimulation ref={springRef} mass={springMass[0]} springConstant={springConstant[0]} damping={springDamping[0]} displacement={springDisplacement[0]} isPlaying={isPlaying} speed={speed[0]} onDataUpdate={handleDataUpdate} />}
@@ -708,6 +710,7 @@ const Workspace = () => {
               {activeSimulation === 'expansion' && <ExpansionSimulation ref={expansionRef} temperature={expansionTemp[0]} material={expansionMaterial} isPlaying={isPlaying} speed={speed[0]} onDataUpdate={handleDataUpdate} />}
               {activeSimulation === 'statesofmatter' && <StatesOfMatterSimulation ref={statesOfMatterRef} temperature={statesTemp[0]} substance={statesSubstance} isPlaying={isPlaying} speed={speed[0]} onDataUpdate={handleDataUpdate} />}
               {activeSimulation === 'diffusionosmosis' && <DiffusionOsmosisSimulation ref={diffusionOsmosisRef} mode={diffusionMode} concentrationLeft={diffusionConcLeft[0]} concentrationRight={diffusionConcRight[0]} membranePermeability={diffusionPermeability[0]} isPlaying={isPlaying} speed={speed[0]} onDataUpdate={handleDataUpdate} />}
+              </SimulationLoader>
             </div>
             {hasPlayControls && (
               <div className="h-12 sm:h-16 border-t bg-card px-2 sm:px-4 flex items-center gap-2 sm:gap-6 flex-shrink-0">
