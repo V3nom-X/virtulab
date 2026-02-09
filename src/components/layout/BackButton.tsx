@@ -10,7 +10,7 @@ export function BackButton() {
       variant="ghost"
       size="icon"
       onClick={() => navigate(-1)}
-      className="fixed top-4 left-4 z-50 bg-background/80 backdrop-blur-sm border shadow-sm hover:bg-muted"
+      className="fixed top-4 left-4 z-50 bg-background/80 backdrop-blur-sm border border-gold/30 shadow-sm hover:bg-muted hover:border-gold/50 transition-colors"
       aria-label="Go back"
     >
       <ArrowLeft className="w-5 h-5" />

@@ -3,7 +3,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { HelpCircle, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardNav } from "@/components/ui/card-nav";
-import { NativeHoverCard } from "@/components/ui/native-hover-card";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import virtulabLogo from "@/assets/virtulab-logo.png";
 
@@ -43,12 +42,7 @@ const navItems = [
 
 export function Navbar({ sticky = false }: { sticky?: boolean }) {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
-  };
+  const { user } = useAuth();
 
   const Logo = (
     <Link to="/" className="flex items-center gap-2">
@@ -75,28 +69,6 @@ export function Navbar({ sticky = false }: { sticky?: boolean }) {
         </Link>
       </Button>
       
-      {user ? (
-        <NativeHoverCard
-          imageSrc=""
-          name={user.email || "User"}
-          username={user.email?.split('@')[0]}
-          description="Click to view your profile and manage account"
-          buttonText="View Profile"
-          onButtonClick={() => navigate('/profile')}
-          size="md"
-          variant="glass"
-          buttonContent={
-            <div className="flex flex-col gap-2">
-              <Button size="sm" className="w-full" onClick={() => navigate('/profile')}>
-                View Profile
-              </Button>
-              <Button size="sm" variant="outline" className="w-full text-destructive" onClick={handleSignOut}>
-                Sign Out
-              </Button>
-            </div>
-          }
-        />
-      ) : null}
     </div>
   );
 

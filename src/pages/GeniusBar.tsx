@@ -73,9 +73,9 @@ const GeniusBar = () => {
     <Layout>
       <div className="min-h-screen">
         <section className="py-12 border-b bg-muted/30">
-          <div className="container">
+          <div className="container px-4">
             <div className="flex items-center gap-3 mb-3">
-              <BookOpen className="w-8 h-8 text-primary" />
+              <BookOpen className="w-8 h-8 text-gold" />
               <h1 className="text-3xl md:text-4xl font-bold">Genius Bar</h1>
             </div>
             <p className="text-muted-foreground">Curriculum notes for Grade 7–9 Natural Sciences</p>
@@ -83,12 +83,12 @@ const GeniusBar = () => {
         </section>
 
         <section className="py-8">
-          <div className="container">
+          <div className="container px-4">
             <Tabs defaultValue="7">
               <TabsList className="mb-6">
-                <TabsTrigger value="7">Grade 7</TabsTrigger>
-                <TabsTrigger value="8">Grade 8</TabsTrigger>
-                <TabsTrigger value="9">Grade 9</TabsTrigger>
+                <TabsTrigger value="7" className="data-[state=active]:bg-gold data-[state=active]:text-gold-foreground">Grade 7</TabsTrigger>
+                <TabsTrigger value="8" className="data-[state=active]:bg-gold data-[state=active]:text-gold-foreground">Grade 8</TabsTrigger>
+                <TabsTrigger value="9" className="data-[state=active]:bg-gold data-[state=active]:text-gold-foreground">Grade 9</TabsTrigger>
               </TabsList>
 
               {Object.entries(gradeData).map(([grade, subjects]) => (
