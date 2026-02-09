@@ -50,7 +50,7 @@ const Library = () => {
           </div>
         </section>
 
-        <section className="py-6 border-b sticky top-16 bg-background/95 backdrop-blur-sm z-40">
+        <section className="py-6 border-b bg-background/95 backdrop-blur-sm z-40">
           <div className="container">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
