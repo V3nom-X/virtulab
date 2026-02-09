@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PeriodicTable } from "@/components/chemistry/PeriodicTable";
 import { useExperiments } from "@/hooks/useExperiments";
+import { getExperimentThumbnail } from "@/data/experimentThumbnails";
 import { 
   Search, Grid3X3, List, Clock, BarChart2, Play,
   Atom, FlaskConical, Dna, Globe, Table2, Loader2
@@ -137,8 +138,15 @@ const Library = () => {
                             <div className={viewMode === "grid" ? "bg-card rounded-xl border overflow-hidden hover-lift" : "flex items-center gap-4 p-4 bg-card rounded-xl border hover:border-primary/30 transition-all"}>
                               {viewMode === "grid" ? (
                                 <>
-                                  <div className="relative h-40 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                                    <Icon className="w-16 h-16 text-primary/50" />
+                                  <div className="relative h-40 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center overflow-hidden">
+                                    {(() => {
+                                      const thumb = getExperimentThumbnail(exp.simulation_type);
+                                      return thumb ? (
+                                        <img src={thumb} alt={exp.title} className="w-full h-full object-cover" />
+                                      ) : (
+                                        <Icon className="w-16 h-16 text-primary/50" />
+                                      );
+                                    })()}
                                     <Badge className="absolute top-3 left-3 bg-background/80 backdrop-blur-sm capitalize">
                                       <Icon className="w-3 h-3 mr-1" />
                                       {exp.category.replace('_', ' ')}
@@ -154,8 +162,15 @@ const Library = () => {
                                 </>
                               ) : (
                                 <>
-                                  <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                                    <Icon className="w-8 h-8 text-primary/50" />
+                                  <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center overflow-hidden">
+                                    {(() => {
+                                      const thumb = getExperimentThumbnail(exp.simulation_type);
+                                      return thumb ? (
+                                        <img src={thumb} alt={exp.title} className="w-full h-full object-cover" />
+                                      ) : (
+                                        <Icon className="w-8 h-8 text-primary/50" />
+                                      );
+                                    })()}
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <Badge variant="secondary" className="text-xs capitalize mb-1"><Icon className="w-3 h-3 mr-1" />{exp.category.replace('_', ' ')}</Badge>
