@@ -16,6 +16,7 @@ const navItems = [
       { label: "Home", href: "/", ariaLabel: "Go to home" },
       { label: "Library", href: "/library", ariaLabel: "Browse experiment library" },
       { label: "Videos", href: "/videos", ariaLabel: "Watch educational videos" },
+      { label: "Genius Bar", href: "/genius-bar", ariaLabel: "Browse curriculum notes" },
     ],
   },
   {

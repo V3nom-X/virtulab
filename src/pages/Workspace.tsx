@@ -691,7 +691,7 @@ const Workspace = () => {
 
         <div className="flex-1 flex flex-col lg:flex-row min-h-0">
           <div className="flex-1 flex flex-col min-h-0">
-            <div className="flex-1 relative bg-gradient-to-b from-muted/50 to-muted min-h-[250px] sm:min-h-[350px] lg:min-h-[400px]">
+            <div className="flex-1 relative bg-gradient-to-b from-muted/50 to-muted min-h-[300px] sm:min-h-[400px] lg:min-h-[500px]">
               <SimulationLoader simulationName={activeSim?.name}>
               {activeSimulation === 'pendulum' && <PendulumSimulation ref={pendulumRef} mass={pendulumMass[0]} length={pendulumLength[0]} gravity={pendulumGravity[0]} angle={pendulumAngle[0]} isPlaying={isPlaying} speed={speed[0]} onDataUpdate={handleDataUpdate} />}
               {activeSimulation === 'projectile' && <ProjectileSimulation ref={projectileRef} velocity={projectileVelocity[0]} angle={projectileAngle[0]} gravity={projectileGravity[0]} isPlaying={isPlaying} speed={speed[0]} onDataUpdate={handleDataUpdate} />}

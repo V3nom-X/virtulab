@@ -516,33 +516,43 @@ export const experimentEducation: Record<string, ExperimentEducation> = {
   },
   diffusionosmosis: {
     id: 'diffusionosmosis',
-    overview: `Diffusion and osmosis are fundamental biological transport processes. Diffusion is the net movement of particles from high to low concentration. Osmosis is the diffusion of water across a semi-permeable membrane. These processes are essential for nutrient absorption, gas exchange, and cellular homeostasis.`,
+    overview: `Living organisms constantly exchange substances such as gases, nutrients, and water with their surroundings through two important biological processes: diffusion and osmosis. This experiment introduces learners to both processes using two classic experiments — the potassium permanganate diffusion experiment and the visking tubing osmosis experiment.
+
+Diffusion and osmosis are passive processes, meaning they do not require energy from living cells. Instead, they depend on the natural movement of particles and differences in concentration. Because these movements happen at a microscopic level, they are difficult to observe directly in a physical classroom. A simulation-based experiment allows learners to visualize particle movement clearly, observe gradual changes over time, and repeat the experiments safely.
+
+Part A — Diffusion Using Potassium Permanganate: A small crystal of potassium permanganate is placed in a beaker of still water. Over time, without stirring, the purple colour slowly spreads throughout the water until the entire beaker has a uniform light purple colour. The particles move randomly from a region of high concentration (near the crystal) to regions of low concentration (the clear water).
+
+Part B — Osmosis Using Visking Tubing: Visking tubing represents a cell membrane. Sugar solution is sealed inside the tubing and placed in clean water. Over time, water molecules move from the beaker into the tubing through the semi-permeable membrane, causing the tubing to swell and become firm. Sugar molecules cannot pass through the membrane.`,
     howItWorks: [
-      'Molecules are in constant random motion (Brownian motion).',
-      'Net movement occurs from regions of higher to lower concentration.',
-      'Semi-permeable membranes selectively allow certain molecules to pass.',
-      'In osmosis, water moves toward the side with higher solute concentration.',
-      'Cells in hypertonic solutions lose water (crenation); in hypotonic solutions they swell (lysis).',
-      'Equilibrium is reached when concentrations equalize on both sides.'
+      'A potassium permanganate crystal is placed in still water inside a beaker.',
+      'The spread of purple colour is observed over time as particles diffuse.',
+      'Concentration differences are identified between regions of colour and clear water.',
+      'A visking tubing bag containing sugar solution is prepared and sealed.',
+      'The tubing is placed in a beaker of clean water.',
+      'Swelling of the tubing is observed as water enters by osmosis.',
+      'Particle movement (diffusion) and water movement (osmosis) are compared.',
+      'Conclusions are drawn: diffusion moves solute particles; osmosis moves water across a membrane.'
     ],
     keyConcepts: [
-      { title: 'Concentration Gradient', description: 'The difference in concentration driving the direction and rate of diffusion.' },
-      { title: 'Semi-permeable Membrane', description: 'Allows water and small molecules through but blocks larger solutes.' },
-      { title: 'Tonicity', description: 'Hypertonic (more solute outside), Hypotonic (less), Isotonic (equal).' },
-      { title: 'Osmotic Pressure', description: 'Pressure required to prevent osmosis across a membrane.' },
-      { title: 'Active Transport', description: 'Movement against concentration gradient requiring cellular energy (ATP).' }
+      { title: 'Diffusion', description: 'The movement of particles from a region of high concentration to a region of low concentration. Occurs in liquids and gases without requiring energy.' },
+      { title: 'Osmosis', description: 'The movement of water molecules through a semi-permeable membrane from a dilute solution to a concentrated solution. Involves water only and requires a membrane.' },
+      { title: 'Concentration Gradient', description: 'The difference in concentration between two regions. It provides the driving force for both diffusion and osmosis.' },
+      { title: 'Semi-Permeable Membrane', description: 'A membrane that allows small molecules like water to pass through but prevents larger molecules (e.g. sugar) from crossing. Cell membranes behave this way.' },
+      { title: 'Passive Transport', description: 'Both diffusion and osmosis are passive processes — they do not require energy from the cell. Movement is driven by concentration differences.' },
+      { title: 'Tonicity', description: 'Hypertonic (more solute outside cell), Hypotonic (less solute outside), Isotonic (equal). Determines direction of osmotic water flow.' }
     ],
     applications: [
-      { title: 'Plant Water Uptake', description: 'Root hair cells absorb water by osmosis from soil.' },
-      { title: 'Kidney Function', description: 'Nephrons use osmosis and diffusion to filter blood and produce urine.' },
-      { title: 'IV Drips', description: 'Saline solutions must be isotonic to prevent damage to blood cells.' },
-      { title: 'Food Preservation', description: 'Salting/sugaring creates hypertonic conditions that dehydrate bacteria.' }
+      { title: 'Animal Biology', description: 'Oxygen diffuses from lungs into blood; carbon dioxide diffuses out. Nutrients diffuse from intestines into bloodstream. Osmosis maintains water balance in cells.' },
+      { title: 'Plant Biology', description: 'Roots absorb water by osmosis. Plant cells become turgid due to osmosis. Diffusion allows gas exchange through stomata and controls their opening/closing.' },
+      { title: 'Medicine & Healthcare', description: 'IV drip solutions must match blood concentration (isotonic). Kidney dialysis uses diffusion principles. Drug absorption across membranes relies on diffusion.' },
+      { title: 'Food Preservation', description: 'Salting and sugaring remove water from microbes by creating hypertonic conditions, preventing bacterial growth and food spoilage.' },
+      { title: 'Agriculture', description: 'Soil salinity affects osmosis in plant roots. Excessive salt leads to poor osmosis, causing wilting and reduced crop yields.' }
     ],
-    conclusion: `Diffusion and osmosis are passive transport mechanisms vital to life. They enable cells to exchange nutrients and waste, maintain water balance, and respond to their chemical environment.`,
+    conclusion: `Diffusion and osmosis are passive transport mechanisms vital to life. They enable cells to exchange nutrients and waste, maintain water balance, and respond to their chemical environment. Understanding these processes is foundational for biology topics including respiration, nutrition, transpiration, and circulation.`,
     equations: [
-      { name: "Fick's Law", formula: 'J = -D × (dC/dx)', description: 'Diffusion rate proportional to concentration gradient' },
-      { name: 'Osmotic Pressure', formula: 'π = iMRT', description: 'Pressure needed to prevent osmosis' },
-      { name: 'Water Potential', formula: 'Ψ = Ψs + Ψp', description: 'Determines water movement direction' }
+      { name: "Fick's Law of Diffusion", formula: 'J = -D × (dC/dx)', description: 'Rate of diffusion is proportional to the concentration gradient' },
+      { name: 'Osmotic Pressure', formula: 'π = iMRT', description: 'Pressure needed to prevent osmosis across a membrane' },
+      { name: 'Water Potential', formula: 'Ψ = Ψs + Ψp', description: 'Determines direction of water movement in cells' }
     ]
   }
 };
