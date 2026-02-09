@@ -34,7 +34,7 @@ export function TechLogos() {
           Built With Modern Technologies
         </p>
       </div>
-      <LogoSlider logos={logos} speed={40} direction="left" />
+      <LogoSlider logos={logos} speed={50} direction="right" />
     </section>
   );
 }

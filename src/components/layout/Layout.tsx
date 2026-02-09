@@ -6,9 +6,10 @@ interface LayoutProps {
   children: ReactNode;
   stickyNav?: boolean;
   showNav?: boolean;
+  hideBackButton?: boolean;
 }
 
-export function Layout({ children, stickyNav = false, showNav = false }: LayoutProps) {
+export function Layout({ children, stickyNav = false, showNav = false, hideBackButton = false }: LayoutProps) {
   return (
     <div className="min-h-screen bg-background">
       {showNav ? (
@@ -18,7 +19,7 @@ export function Layout({ children, stickyNav = false, showNav = false }: LayoutP
         </>
       ) : (
         <>
-          <BackButton />
+          {!hideBackButton && <BackButton />}
           <main>{children}</main>
         </>
       )}

@@ -92,6 +92,10 @@
     --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(210 15% 98%));
     --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.9), hsl(0 0% 100% / 0.7));
 
+    /* Gold */
+    --gold: 45 93% 47%;
+    --gold-foreground: 220 15% 15%;
+
     /* Shadows */
     --shadow-sm: 0 1px 2px hsl(220 15% 15% / 0.04);
     --shadow-md: 0 4px 12px hsl(220 15% 15% / 0.08);
@@ -144,6 +148,9 @@
     --sidebar-accent-foreground: 162 77% 60%;
     --sidebar-border: 220 15% 18%;
     --sidebar-ring: 162 77% 46%;
+
+    --gold: 45 93% 55%;
+    --gold-foreground: 220 20% 10%;
 
     --gradient-hero: linear-gradient(135deg, hsl(162 77% 46% / 0.05), hsl(220 20% 10%));
     --gradient-card: linear-gradient(180deg, hsl(220 18% 13%), hsl(220 18% 11%));

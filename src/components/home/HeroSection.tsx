@@ -19,7 +19,7 @@ export function HeroSection() {
       <div className="container relative z-10 py-20 md:py-32">
         <div className="max-w-4xl mx-auto text-center">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/80 text-accent-foreground text-sm font-medium mb-8 animate-fade-in backdrop-blur-sm border border-primary/20">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold/10 text-gold text-sm font-medium mb-8 animate-fade-in backdrop-blur-sm border border-gold/30">
             <Sparkles className="w-4 h-4" />
             <span>200+ Interactive Science Experiments</span>
           </div>
