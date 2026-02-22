@@ -1,114 +1,130 @@
 
-# UI Polish, Canvas Sizing, Logo Slider, and Gold Accents
+# Gold, Midnight Blue, and Purple Accents + Genius Bar Content + Experiment Thumbnails
 
-This plan addresses all the issues visible in the screenshot and the requested enhancements.
-
----
-
-## 1. Expand Experiment Canvas to Full Available Space
-
-The screenshot shows the simulation canvas is too small. The workspace currently uses `min-h-[300px] sm:min-h-[400px] lg:min-h-[500px]` but the flex layout should allow it to grow. The fix:
-
-- Change the simulation area to use `flex-1` with `min-h-0` so it fills all remaining vertical space
-- Use `h-[calc(100vh-8rem)]` on the main flex container to ensure full viewport usage
-- Remove restrictive `min-h` values and let flexbox do the work
-- On the workspace page specifically, hide the BackButton since the toolbar already provides context
-
-**File**: `src/pages/Workspace.tsx`
-- Line 664: Change the outer container to `h-screen` or `100vh` based layout
-- Line 694: Remove fixed `min-h` constraints, let `flex-1` fill space
+This plan covers three main areas: enhanced color accents across all pages, adding Strand 1 curriculum content to the Genius Bar, and generating remaining experiment thumbnails.
 
 ---
 
-## 2. Remove Profile Icon from Navbar
+## 1. Add Midnight Blue and Purple CSS Variables
 
-Remove the `NativeHoverCard` user avatar and related sign-out logic from the navbar right content area. Keep only ThemeToggle, Help, and Admin icons.
-
-**File**: `src/components/layout/Navbar.tsx`
-- Lines 78-99: Remove the entire `{user ? (<NativeHoverCard ... />) : null}` block
-
----
-
-## 3. Fix Logo Slider Direction and Glow
-
-Change the slider to move left-to-right (direction="right") at a moderate speed, and add a subtle glow effect to the logo items.
-
-**File**: `src/components/home/TechLogos.tsx`
-- Line 37: Change `direction="left"` to `direction="right"` and adjust `speed={50}` for moderate pace
-
-**File**: `src/components/ui/logo-slider.tsx`
-- Line 33: Replace `opacity-60 hover:opacity-100 transition-opacity grayscale hover:grayscale-0` with a glow style using `drop-shadow` for subtle luminosity, remove grayscale
-
----
-
-## 4. Add Gold Accent Colors
-
-Introduce a gold/amber accent throughout the UI for visual richness.
+Add new CSS custom properties for midnight blue and purple in both light and dark themes, alongside the existing gold variables.
 
 **File**: `src/index.css`
-- Add CSS variable `--gold` in both light and dark themes (e.g., `45 93% 47%` / `45 93% 55%`)
-- Add `--gold-foreground` for text on gold backgrounds
+- Add `--midnight: 220 60% 20%` / dark: `220 60% 35%` and `--midnight-foreground`
+- Add `--purple: 270 60% 55%` / dark: `270 60% 65%` and `--purple-foreground`
 
 **File**: `tailwind.config.ts`
-- Add `gold` color mapping: `DEFAULT: "hsl(var(--gold))"`, `foreground: "hsl(var(--gold-foreground))"`
-
-Apply gold accents to:
-- `src/components/home/HeroSection.tsx` or `FeaturesSection.tsx`: Add gold highlights to section headings or badges
-- `src/pages/GeniusBar.tsx`: Use gold badge accents for grade tabs
-- `src/components/layout/BackButton.tsx`: Add a subtle gold border or ring
+- Map `midnight` and `purple` colors like gold: `DEFAULT` and `foreground` variants
 
 ---
 
-## 5. Fix BackButton Overlapping Content
+## 2. Apply Gold, Midnight Blue, and Purple Accents Across Pages
 
-The screenshot shows the back button overlapping the workspace toolbar. Fix by:
-- Making the BackButton position-aware: on workspace pages where there's already a toolbar, don't render it
-- OR adjust the workspace layout to account for the back button with left padding
+### Home Page
+- **HeroSection.tsx**: Add a subtle midnight blue radial gradient alongside the existing primary ones; stats section numbers get a gold color
+- **FeaturesSection.tsx**: Section heading "Everything You Need" gets a gold underline accent; feature icon backgrounds alternate with purple and midnight tints for variety
+- **CategoryTiles.tsx**: Section heading gets gold accent; the Biology tile already uses purple, keep consistent
+- **FeaturedExperiments.tsx**: "Featured Experiments" heading gets a gold accent; carousel navigation buttons get a midnight blue border on hover
+- **Footer.tsx**: Brand icon background changes to midnight blue; section headings get a subtle gold color
 
-**File**: `src/pages/Workspace.tsx`
-- The workspace already has its own header bar. Pass a prop to Layout to hide the BackButton, or integrate a back action into the workspace header itself.
+### Library Page
+- **Library.tsx**: Page heading "Experiment Library" gets gold accent on the word "Library"; category badges use purple/midnight tints; the Periodic Table tab trigger uses a purple active state
 
-**File**: `src/components/layout/Layout.tsx`
-- Add a `hideBackButton` prop option
+### Profile Page
+- **Profile.tsx**: Tab triggers use gold active state; badge display section gets a purple-tinted background; stat cards get midnight blue borders
+
+### Settings Page
+- **Settings.tsx**: Section headers get gold accents; toggle switches keep primary color but danger zone uses a purple-tinted warning
+
+### Admin Page
+- **Admin.tsx**: Tab triggers use midnight blue active state; stat cards alternate gold/purple/midnight borders
+
+### Help Page
+- **Help.tsx**: Page header icon uses gold; FAQ section gets a midnight blue accent line on the left border
+
+### Genius Bar
+- Already has gold tabs; add a midnight blue card header border and purple accent on the Strand badges
 
 ---
 
-## 6. Ensure Responsive Design Across Pages
+## 3. Add Strand 1: Scientific Investigation to Genius Bar
 
-Review and fix:
-- **Workspace**: Tab list with 17 items - ensure `overflow-x-auto` scrolls properly on mobile; parameter sidebar hidden on mobile with drawer access (already implemented)
-- **GeniusBar**: Content is container-based and responsive - add `px-4` padding on mobile
-- **Library**: Already responsive with grid/list toggle
-- **Admin/Analytics**: Verify grid stacking (currently uses `grid-cols-1 md:grid-cols-2`)
+The uploaded document provides Grade 7 Strand 1 content organized into 3 sub-strands (topics). This will be added as a new subject entry under Grade 7 in the `gradeData` object.
+
+**File**: `src/pages/GeniusBar.tsx`
+
+Add a new subject under Grade 7 with icon `Globe` (representing Scientific Investigation):
+
+**Subject: "Strand 1: Scientific Investigation"**
+
+Topics (condensed from the document into key bullet points):
+
+1. **Sub-Strand 1.1: Introduction to Integrated Science**
+   - Meaning of Integrated Science: combines Biology, Chemistry, Physics, Earth Science, and Technology
+   - Why science is integrated: real-life problems involve multiple disciplines (e.g., farming needs biology, chemistry, physics)
+   - Goals: develop scientific thinking, inquiry skills, problem solving, scientific literacy, STEM preparation
+   - Components: Biology (living things), Chemistry (matter/substances), Physics (energy/forces), Earth & Environmental Science, Scientific Process Skills, Technology & Innovation
+   - Importance in daily life: health, agriculture, industry, transport, food production, textiles, environmental conservation
+   - Career pathways: medicine, engineering, agriculture, technology, teaching
+   - Values and competencies: communication, collaboration, critical thinking, digital literacy, curiosity, responsibility
+
+2. **Sub-Strand 1.2: Importance of Science in Daily Life**
+   - Science in health: vaccination, hygiene, diagnosis (thermometers, X-rays), treatment (antibiotics), nutrition
+   - Science in agriculture: improved seeds, fertilisers, pest control, irrigation, livestock breeding
+   - Science in industry: manufacturing medicines, plastics, cement, food processing, job creation
+   - Science in transport: vehicles, road construction, fuel technology (SGR, highways)
+   - Science in food production: preservation (refrigeration, drying, canning), processing, nutrition knowledge
+   - Science in textiles: fabric production, dyeing, clothing manufacture
+   - Science in environmental conservation: pollution control, waste management, climate monitoring
+
+3. **Sub-Strand 1.3: Pathways Related to Integrated Science at Senior School**
+   - CBC pathways: STEM, Social Sciences, Arts and Sports Science
+   - STEM pathway: Science, Technology, Engineering, Mathematics
+   - Pure Sciences: Biology, Chemistry, Physics and related careers
+   - Applied Sciences: Agriculture, Environmental Science, Health Sciences, Computer Science
+   - Engineering: Civil, Mechanical, Electrical, Computer Engineering
+   - Technical and vocational careers: electrician, mechanic, lab technician, welder
+   - Skills developed: scientific skills, problem-solving, critical thinking, innovation
+   - Factors for choosing a pathway: interest, ability, talent, career goals, societal needs
 
 ---
 
-## 7. Prevent AURA from Blocking Content
+## 4. Generate Remaining Experiment Thumbnails
 
-The AURA button is draggable but may still overlap critical UI. Ensure:
-- Initial position is bottom-right corner with adequate margin
-- The chat panel doesn't extend beyond viewport bounds on mobile
-- Add a small margin/padding around the draggable area
+The current thumbnail mapping is missing images for: pendulum, spring, buoyancy, friction, lever, inclinedplane, expansion, emspectrum.
 
-**File**: `src/components/aura/AuraAssistant.tsx`
-- Verify initial position uses `window.innerWidth - 70` and `window.innerHeight - 70`
-- On mobile, constrain the chat panel width to `max-w-[calc(100vw-2rem)]`
+Since we cannot generate actual images, we will use a gradient-based SVG placeholder approach -- creating simple, colorful SVG thumbnails for each missing experiment type that are visually distinct and informative.
+
+**New file**: `src/assets/experiments/generated/` -- Create SVG placeholder thumbnails programmatically
+
+Alternative approach (simpler): Update `experimentThumbnails.ts` to map missing simulation types to the closest existing thumbnail or to a themed Unsplash image URL. Since the existing thumbnails are imported as static assets, and we cannot generate actual JPG files, we will:
+
+- Map `pendulum` to the existing wave thumbnail (related physics)
+- Map `spring` to the existing wave thumbnail
+- Map `buoyancy`, `friction`, `lever`, `inclinedplane` to the projectile thumbnail (mechanics)
+- Map `expansion`, `emspectrum` to the lightoptics thumbnail (related physics)
+
+**File**: `src/data/experimentThumbnails.ts` -- Add fallback mappings for all missing simulation types
 
 ---
 
 ## Technical Summary
 
 ### Files to Modify
-1. `src/pages/Workspace.tsx` - Expand canvas, integrate back navigation, remove fixed min-heights
-2. `src/components/layout/Navbar.tsx` - Remove profile icon/NativeHoverCard
-3. `src/components/home/TechLogos.tsx` - Change slider direction to right, moderate speed
-4. `src/components/ui/logo-slider.tsx` - Add glow effect to logo items
-5. `src/index.css` - Add gold CSS variables
-6. `tailwind.config.ts` - Add gold color to theme
-7. `src/components/layout/Layout.tsx` - Add hideBackButton prop
-8. `src/components/layout/BackButton.tsx` - Add gold accent styling
-9. `src/components/aura/AuraAssistant.tsx` - Verify mobile constraints
-10. `src/pages/GeniusBar.tsx` - Add gold accent badges, ensure mobile padding
+1. `src/index.css` -- Add midnight blue and purple CSS variables
+2. `tailwind.config.ts` -- Map midnight and purple to Tailwind theme
+3. `src/pages/GeniusBar.tsx` -- Add Strand 1 content with 3 sub-strands, apply accent colors
+4. `src/data/experimentThumbnails.ts` -- Add fallback mappings for missing thumbnails
+5. `src/components/home/HeroSection.tsx` -- Add midnight blue gradient, gold stat numbers
+6. `src/components/home/FeaturesSection.tsx` -- Gold/purple/midnight icon accents
+7. `src/components/home/FeaturedExperiments.tsx` -- Gold heading accent
+8. `src/components/home/CategoryTiles.tsx` -- Gold section heading accent
+9. `src/components/home/Footer.tsx` -- Midnight blue brand icon, gold section headers
+10. `src/pages/Library.tsx` -- Gold/purple tab and heading accents
+11. `src/pages/Profile.tsx` -- Gold tab accents, purple badge section
+12. `src/pages/Settings.tsx` -- Gold section header accents
+13. `src/pages/Admin.tsx` -- Midnight blue tabs, alternating accent borders
+14. `src/pages/Help.tsx` -- Gold icon, midnight blue FAQ borders
 
-### No New Files Required
-All changes are modifications to existing components.
+### No New Dependencies Required
+All changes use existing Tailwind utilities and CSS custom properties.
