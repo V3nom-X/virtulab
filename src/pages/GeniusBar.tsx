@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
-import { BookOpen, ChevronDown, ChevronRight, Atom, FlaskConical, Dna, Globe } from "lucide-react";
+import { BookOpen, ChevronDown, ChevronRight, Atom, FlaskConical, Dna, Globe, Search as SearchIcon } from "lucide-react";
 
 interface Topic {
   title: string;
@@ -29,6 +29,70 @@ const gradeData: Record<string, Subject[]> = {
         { title: "Energy and Change", notes: ["Sources of energy: sun, food, fuel, electricity", "Energy transfer and transformation", "Heat transfer: conduction, convection, radiation", "Insulators and conductors of heat"] },
         { title: "Life and Living", notes: ["Cells: basic unit of life", "Plant vs animal cells", "Cell organelles: nucleus, membrane, cytoplasm, cell wall, chloroplast", "Unicellular vs multicellular organisms", "Classification of living things into groups"] },
         { title: "Earth and Beyond", notes: ["The solar system: planets, sun, moons", "Earth's rotation (day/night) and revolution (seasons)", "Phases of the moon", "Atmosphere layers and weather basics"] },
+      ]
+    },
+    {
+      name: "Strand 1: Scientific Investigation", icon: SearchIcon,
+      topics: [
+        {
+          title: "Sub-Strand 1.1: Introduction to Integrated Science",
+          notes: [
+            "Integrated Science combines Biology, Chemistry, Physics, Earth Science, and Technology into one subject",
+            "Real-life problems require multiple science disciplines (e.g., farming needs biology, chemistry, physics)",
+            "Goals: develop scientific thinking, inquiry skills, problem-solving, scientific literacy, and STEM preparation",
+            "Biology: study of living things (plants, animals, microorganisms)",
+            "Chemistry: study of matter, substances, and their reactions",
+            "Physics: study of energy, forces, motion, and their interactions",
+            "Earth & Environmental Science: study of the Earth, atmosphere, weather, and ecosystems",
+            "Scientific Process Skills: observing, measuring, classifying, predicting, experimenting, recording, analysing",
+            "Technology & Innovation: applying scientific knowledge to solve practical problems",
+            "Importance in daily life: health, agriculture, industry, transport, food production, textiles, environmental conservation",
+            "Career pathways: medicine, nursing, pharmacy, engineering, agriculture, ICT, teaching, research",
+            "Values: curiosity, honesty, open-mindedness, responsibility, respect for evidence",
+            "Competencies: communication, collaboration, critical thinking, creativity, digital literacy"
+          ]
+        },
+        {
+          title: "Sub-Strand 1.2: Laboratory Safety",
+          notes: [
+            "A laboratory is a special room designed for scientific experiments and investigations",
+            "Lab rules: no eating/drinking, no running, follow teacher instructions, report accidents immediately",
+            "Personal protective equipment (PPE): lab coats, goggles, gloves, closed shoes",
+            "Hazard symbols: flammable, toxic, corrosive, irritant, explosive, radioactive, biohazard, oxidising",
+            "Fire safety: know fire exit locations, use fire extinguishers correctly, stop-drop-roll technique",
+            "Chemical safety: read labels before use, never taste/smell directly, handle acids and bases with care",
+            "Electrical safety: do not touch exposed wires, keep water away from electrical equipment",
+            "Glass safety: check for cracks before use, handle with care, dispose of broken glass in designated containers",
+            "First aid: eye wash stations, burn treatment (run cool water), cut treatment, chemical spill procedures",
+            "Waste disposal: separate chemical, biological, and general waste; follow school disposal guidelines",
+            "Emergency procedures: know emergency exits, assembly points, and how to alert the teacher",
+            "Hygiene: wash hands before and after experiments, clean workstations after use"
+          ]
+        },
+        {
+          title: "Sub-Strand 1.3: Laboratory Apparatus and Instruments",
+          notes: [
+            "Beaker: used for mixing, stirring, and heating liquids (not for accurate measurement)",
+            "Measuring cylinder: accurately measures liquid volumes; read at the meniscus (bottom of curve)",
+            "Test tube: holds small amounts of liquid for reactions; heated using a test tube holder",
+            "Conical flask (Erlenmeyer): used for mixing and swirling solutions; narrow neck reduces spillage",
+            "Round-bottom flask: used for heating and distillation; even heat distribution",
+            "Bunsen burner: provides a controlled flame for heating; adjust air hole for blue (hot) or yellow (safety) flame",
+            "Tripod and wire gauze: supports containers over a Bunsen burner for even heating",
+            "Thermometer: measures temperature in °C; handle carefully to avoid breakage",
+            "Balance (scale): measures mass of substances in grams (g) or kilograms (kg)",
+            "Spatula: used to scoop and transfer solid chemicals",
+            "Dropper/pipette: transfers small, precise amounts of liquid",
+            "Funnel and filter paper: used for filtration to separate solids from liquids",
+            "Retort stand, clamp, and boss head: holds apparatus securely at various heights",
+            "Evaporating dish: used to evaporate liquids from a solution to recover dissolved solids",
+            "Mortar and pestle: grinds solid substances into fine powder",
+            "Wash bottle: contains distilled water for rinsing apparatus",
+            "Magnifying glass/hand lens: magnifies small objects for closer observation",
+            "Microscope: magnifies very small objects (cells, microorganisms); learn parts — eyepiece, objective lens, stage, mirror/light",
+            "Proper handling: carry microscopes with both hands, clean lenses with lens paper, store apparatus properly"
+          ]
+        }
       ]
     },
   ],
@@ -95,12 +159,12 @@ const GeniusBar = () => {
                 <TabsContent key={grade} value={grade}>
                   <div className="space-y-6">
                     {subjects.map((subject) => (
-                      <Card key={subject.name}>
+                      <Card key={subject.name} className="border-t-2 border-t-midnight/30">
                         <CardHeader className="pb-3">
                           <CardTitle className="flex items-center gap-2 text-lg">
-                            <subject.icon className="w-5 h-5 text-primary" />
+                            <subject.icon className="w-5 h-5 text-purple" />
                             {subject.name}
-                            <Badge variant="secondary" className="ml-auto">Grade {grade}</Badge>
+                            <Badge variant="secondary" className="ml-auto bg-gold/10 text-gold border border-gold/30">Grade {grade}</Badge>
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2">

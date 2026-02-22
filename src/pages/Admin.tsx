@@ -381,7 +381,7 @@ const Admin = () => {
 
           {/* Main Content Tabs */}
           <Tabs defaultValue="analytics" className="space-y-6">
-            <TabsList className="bg-muted/50">
+            <TabsList className="bg-muted/50 border border-midnight/20">
               <TabsTrigger value="analytics" className="flex items-center gap-2">
                 <BarChart3 className="w-4 h-4" />
                 Analytics

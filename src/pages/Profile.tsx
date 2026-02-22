@@ -338,7 +338,7 @@ const Profile = () => {
         <div className="container py-8">
           {/* Stats */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div className="bg-card rounded-xl border p-5">
+            <div className="bg-card rounded-xl border border-midnight/20 p-5">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                   <Beaker className="w-5 h-5 text-primary" />
@@ -349,10 +349,10 @@ const Profile = () => {
                 </div>
               </div>
             </div>
-            <div className="bg-card rounded-xl border p-5">
+            <div className="bg-card rounded-xl border border-gold/20 p-5">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-primary" />
+                <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-gold" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{formatTime(stats.totalTimeSpent)}</p>
@@ -360,10 +360,10 @@ const Profile = () => {
                 </div>
               </div>
             </div>
-            <div className="bg-card rounded-xl border p-5">
+            <div className="bg-card rounded-xl border border-purple/20 p-5">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Target className="w-5 h-5 text-primary" />
+                <div className="w-10 h-10 rounded-lg bg-purple/10 flex items-center justify-center">
+                  <Target className="w-5 h-5 text-purple" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{stats.averageScore}%</p>
@@ -371,10 +371,10 @@ const Profile = () => {
                 </div>
               </div>
             </div>
-            <div className="bg-card rounded-xl border p-5">
+            <div className="bg-card rounded-xl border border-midnight/20 p-5">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Award className="w-5 h-5 text-primary" />
+                <div className="w-10 h-10 rounded-lg bg-midnight/10 flex items-center justify-center">
+                  <Award className="w-5 h-5 text-midnight" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{stats.badgesEarned}</p>
@@ -386,18 +386,18 @@ const Profile = () => {
 
           <Tabs defaultValue="badges">
             <TabsList>
-              <TabsTrigger value="badges" className="gap-2">
+              <TabsTrigger value="badges" className="gap-2 data-[state=active]:bg-gold data-[state=active]:text-gold-foreground">
                 <Award className="w-4 h-4" />
                 Badges
               </TabsTrigger>
-              <TabsTrigger value="favorites" className="gap-2">
+              <TabsTrigger value="favorites" className="gap-2 data-[state=active]:bg-gold data-[state=active]:text-gold-foreground">
                 <Heart className="w-4 h-4" />
                 Favorites
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="badges" className="mt-6">
-              <div className="bg-card rounded-xl border p-6">
+              <div className="bg-card rounded-xl border border-purple/20 p-6">
                 <h3 className="font-semibold mb-4">Earned Badges</h3>
                 {badges.length === 0 ? (
                   <p className="text-muted-foreground">No badges earned yet. Complete experiments to earn badges!</p>

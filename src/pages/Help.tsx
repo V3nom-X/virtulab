@@ -55,7 +55,7 @@ const Help = () => {
         {/* Header */}
         <section className="py-12 border-b bg-muted/30">
           <div className="container">
-            <h1 className="text-3xl md:text-4xl font-bold mb-3">Help & About</h1>
+            <h1 className="text-3xl md:text-4xl font-bold mb-3">Help & <span className="text-gold">About</span></h1>
             <p className="text-muted-foreground">
               Get help and learn more about VirtuLab
             </p>
@@ -77,9 +77,9 @@ const Help = () => {
           <div className="grid lg:grid-cols-3 gap-8">
             {/* FAQ */}
             <div className="lg:col-span-2">
-              <div className="bg-card rounded-xl border p-6">
+              <div className="bg-card rounded-xl border border-l-4 border-l-midnight p-6">
                 <div className="flex items-center gap-2 mb-6">
-                  <HelpCircle className="w-5 h-5" />
+                  <HelpCircle className="w-5 h-5 text-gold" />
                   <h2 className="font-semibold text-xl">Frequently Asked Questions</h2>
                 </div>
                 <Accordion type="single" collapsible className="w-full">
