@@ -45,7 +45,7 @@ const Library = () => {
       <div className="min-h-screen">
         <section className="py-12 border-b bg-muted/30">
           <div className="container">
-            <h1 className="text-3xl md:text-4xl font-bold mb-3">Experiment Library</h1>
+            <h1 className="text-3xl md:text-4xl font-bold mb-3">Experiment <span className="text-gold">Library</span></h1>
             <p className="text-muted-foreground">Browse interactive science simulations</p>
           </div>
         </section>
@@ -56,7 +56,7 @@ const Library = () => {
               <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                 <TabsList>
                   <TabsTrigger value="experiments">Experiments</TabsTrigger>
-                  <TabsTrigger value="periodic-table" className="gap-1">
+                  <TabsTrigger value="periodic-table" className="gap-1 data-[state=active]:bg-purple data-[state=active]:text-purple-foreground">
                     <Table2 className="w-4 h-4" />
                     Periodic Table
                   </TabsTrigger>

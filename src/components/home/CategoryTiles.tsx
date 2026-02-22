@@ -45,7 +45,8 @@ export function CategoryTiles() {
     <section className="py-20">
       <div className="container">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-3">Explore by Category</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-3">Explore by <span className="text-gold">Category</span></h2>
+          <div className="w-16 h-1 bg-gold mx-auto rounded-full mt-4 mb-4" />
           <p className="text-muted-foreground max-w-lg mx-auto">
             Dive deep into your favorite science field or discover something new
           </p>

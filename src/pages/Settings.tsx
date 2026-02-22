@@ -238,7 +238,7 @@ const Settings = () => {
             {/* Profile Section */}
             <div className="bg-card rounded-xl border p-6">
               <div className="flex items-center gap-2 mb-6">
-                <User className="w-5 h-5" />
+                <User className="w-5 h-5 text-gold" />
                 <h2 className="font-semibold">Profile</h2>
               </div>
               <div className="space-y-4">
@@ -303,7 +303,7 @@ const Settings = () => {
             {/* Appearance */}
             <div className="bg-card rounded-xl border p-6">
               <div className="flex items-center gap-2 mb-6">
-                <Palette className="w-5 h-5" />
+                <Palette className="w-5 h-5 text-purple" />
                 <h2 className="font-semibold">Appearance</h2>
               </div>
               <div className="space-y-4">
@@ -342,7 +342,7 @@ const Settings = () => {
             {/* Accessibility */}
             <div className="bg-card rounded-xl border p-6">
               <div className="flex items-center gap-2 mb-6">
-                <Accessibility className="w-5 h-5" />
+                <Accessibility className="w-5 h-5 text-midnight" />
                 <h2 className="font-semibold">Accessibility</h2>
               </div>
               <div className="space-y-4">

@@ -64,8 +64,9 @@ export function FeaturesSection() {
       <div className="container">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-3">
-            Everything You Need to Learn Science
+            Everything You Need to <span className="text-gold">Learn Science</span>
           </h2>
+          <div className="w-16 h-1 bg-gold mx-auto rounded-full mt-4 mb-4" />
           <p className="text-muted-foreground max-w-2xl mx-auto">
             VirtuLab provides a complete virtual laboratory experience with powerful tools 
             for students, teachers, and curious minds
@@ -81,8 +82,12 @@ export function FeaturesSection() {
                 className="group p-6 bg-card rounded-xl border hover:border-primary/30 transition-all duration-300 animate-fade-in"
                 style={{ animationDelay: `${idx * 50}ms` }}
               >
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                  <Icon className="w-6 h-6 text-primary" />
+                <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:scale-105 transition-transform ${
+                  idx % 3 === 0 ? 'bg-gold/10' : idx % 3 === 1 ? 'bg-purple/10' : 'bg-midnight/10'
+                }`}>
+                  <Icon className={`w-6 h-6 ${
+                    idx % 3 === 0 ? 'text-gold' : idx % 3 === 1 ? 'text-purple' : 'text-midnight'
+                  }`} />
                 </div>
                 <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
                 <p className="text-sm text-muted-foreground">{feature.description}</p>

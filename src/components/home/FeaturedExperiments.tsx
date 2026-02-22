@@ -83,16 +83,16 @@ export function FeaturedExperiments() {
         {/* Header */}
         <div className="flex items-end justify-between mb-12">
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-3">Featured Experiments</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-3">Featured <span className="text-gold">Experiments</span></h2>
             <p className="text-muted-foreground max-w-lg">
               Hand-picked simulations to jumpstart your scientific exploration
             </p>
           </div>
           <div className="hidden sm:flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={prev} className="rounded-full">
+            <Button variant="outline" size="icon" onClick={prev} className="rounded-full hover:border-midnight hover:text-midnight">
               <ChevronLeft className="w-5 h-5" />
             </Button>
-            <Button variant="outline" size="icon" onClick={next} className="rounded-full">
+            <Button variant="outline" size="icon" onClick={next} className="rounded-full hover:border-midnight hover:text-midnight">
               <ChevronRight className="w-5 h-5" />
             </Button>
           </div>

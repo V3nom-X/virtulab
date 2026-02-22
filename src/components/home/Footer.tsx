@@ -9,7 +9,7 @@ export function Footer() {
           {/* Brand */}
           <div className="md:col-span-1">
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
+              <div className="w-9 h-9 rounded-xl bg-midnight flex items-center justify-center">
                 <Beaker className="w-5 h-5 text-primary-foreground" />
               </div>
               <span className="text-xl font-bold">
@@ -31,7 +31,7 @@ export function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-semibold mb-4">Explore</h4>
+            <h4 className="font-semibold mb-4 text-gold">Explore</h4>
             <ul className="space-y-2.5">
               <li><Link to="/library" className="text-sm text-muted-foreground hover:text-primary transition-colors">Experiment Library</Link></li>
               <li><Link to="/workspace" className="text-sm text-muted-foreground hover:text-primary transition-colors">Workspace</Link></li>
@@ -42,7 +42,7 @@ export function Footer() {
 
           {/* Resources */}
           <div>
-            <h4 className="font-semibold mb-4">Resources</h4>
+            <h4 className="font-semibold mb-4 text-gold">Resources</h4>
             <ul className="space-y-2.5">
               <li><Link to="/help" className="text-sm text-muted-foreground hover:text-primary transition-colors">Help Center</Link></li>
               <li><Link to="/videos" className="text-sm text-muted-foreground hover:text-primary transition-colors">Educational Videos</Link></li>
@@ -53,7 +53,7 @@ export function Footer() {
 
           {/* Legal */}
           <div>
-            <h4 className="font-semibold mb-4">About</h4>
+            <h4 className="font-semibold mb-4 text-gold">About</h4>
             <ul className="space-y-2.5">
               <li><Link to="/help" className="text-sm text-muted-foreground hover:text-primary transition-colors">About VirtuLab</Link></li>
               <li><Link to="/help" className="text-sm text-muted-foreground hover:text-primary transition-colors">Privacy Policy</Link></li>

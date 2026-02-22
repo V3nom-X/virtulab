@@ -7,7 +7,7 @@ export function HeroSection() {
     <section className="relative min-h-[85vh] flex items-center overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.15),transparent_50%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,hsl(var(--primary)/0.1),transparent_50%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,hsl(var(--midnight)/0.15),transparent_50%)]" />
       
       {/* Floating Elements */}
       <div className="absolute top-20 right-[15%] w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-float" />
@@ -57,15 +57,15 @@ export function HeroSection() {
           {/* Stats */}
           <div className="grid grid-cols-3 gap-8 mt-16 pt-16 border-t border-border/50 animate-fade-in stagger-3">
             <div>
-              <div className="text-3xl md:text-4xl font-bold text-foreground">200+</div>
+              <div className="text-3xl md:text-4xl font-bold text-gold">200+</div>
               <div className="text-sm text-muted-foreground mt-1">Experiments</div>
             </div>
             <div>
-              <div className="text-3xl md:text-4xl font-bold text-foreground">4</div>
+              <div className="text-3xl md:text-4xl font-bold text-purple">4</div>
               <div className="text-sm text-muted-foreground mt-1">Science Fields</div>
             </div>
             <div>
-              <div className="text-3xl md:text-4xl font-bold text-foreground">100%</div>
+              <div className="text-3xl md:text-4xl font-bold text-midnight">100%</div>
               <div className="text-sm text-muted-foreground mt-1">Free Access</div>
             </div>
           </div>

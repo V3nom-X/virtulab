@@ -18,6 +18,15 @@ export const experimentThumbnails: Record<string, string> = {
   chemistry: chemistry,
   acidbase: chemistry,
   statesofmatter: chemistry,
+  // Fallback mappings for remaining experiments
+  pendulum: wave,
+  spring: wave,
+  buoyancy: projectile,
+  friction: projectile,
+  lever: projectile,
+  inclinedplane: projectile,
+  expansion: lightoptics,
+  emspectrum: lightoptics,
 };
 
 export const getExperimentThumbnail = (simulationType?: string | null): string | null => {
