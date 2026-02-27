@@ -114,6 +114,25 @@ const Library = () => {
 
         <section className="py-8">
           <div className="container">
+            {/* Featured Module Card */}
+            {activeTab === "experiments" && (
+              <Link to="/separation-of-mixtures" className="block mb-8 group">
+                <div className="rounded-xl overflow-hidden border hover-lift" style={{ background: "linear-gradient(135deg, hsl(120 100% 15%), hsl(140 60% 25%))" }}>
+                  <div className="p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center gap-4">
+                    <div className="text-4xl">🧪⚗️</div>
+                    <div className="flex-1 text-white">
+                      <Badge className="bg-white/20 text-white border-white/30 mb-2">New Module</Badge>
+                      <h3 className="text-xl font-bold mb-1">Separation of Mixtures</h3>
+                      <p className="text-white/70 text-sm">7 interactive experiments: Evaporation, Crystallization, Distillation, Sublimation, Chromatography & more</p>
+                    </div>
+                    <Button className="bg-black text-white hover:bg-black/80 shrink-0">
+                      Explore Module →
+                    </Button>
+                  </div>
+                </div>
+              </Link>
+            )}
+
             {activeTab === "experiments" && (
               <>
                 {isLoading ? (
