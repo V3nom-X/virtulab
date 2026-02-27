@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { BookOpen, ChevronDown, ChevronRight, Atom, FlaskConical, Dna, Globe, Search as SearchIcon } from "lucide-react";
+import { ComingSoonOverlay } from "@/components/overlays/ComingSoonOverlay";
 
 interface Topic {
   title: string;
@@ -135,7 +136,17 @@ const GeniusBar = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen">
+      <div className="min-h-screen relative">
+        <ComingSoonOverlay 
+          title="Genius Bar – Coming Soon" 
+          features={[
+            "Structured curriculum notes for Grades 7–12",
+            "Interactive study guides with quizzes",
+            "Downloadable revision materials",
+            "Topic-by-topic breakdowns aligned to CBC",
+            "Searchable knowledge base"
+          ]} 
+        />
         <section className="py-12 border-b bg-muted/30">
           <div className="container px-4">
             <div className="flex items-center gap-3 mb-3">
