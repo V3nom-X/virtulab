@@ -21,6 +21,8 @@ import Profile from "./pages/Profile";
 import ResetPassword from "./pages/ResetPassword";
 import Admin from "./pages/Admin";
 import GeniusBar from "./pages/GeniusBar";
+import SeparationOfMixtures from "./pages/SeparationOfMixtures";
+import SeparationExperiment from "./pages/SeparationExperiment";
 import NotFound from "./pages/NotFound";
 import { AuraAssistant } from "./components/aura/AuraAssistant";
 import { PageTransition } from "./components/layout/PageTransition";
@@ -59,6 +61,8 @@ const App = () => (
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/admin" element={<Admin />} />
                   <Route path="/genius-bar" element={<GeniusBar />} />
+                  <Route path="/separation-of-mixtures" element={<SeparationOfMixtures />} />
+                  <Route path="/separation-of-mixtures/:experimentId" element={<SeparationExperiment />} />
                   <Route path="/help" element={<Help />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
