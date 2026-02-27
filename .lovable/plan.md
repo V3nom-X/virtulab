@@ -1,130 +1,149 @@
 
-# Gold, Midnight Blue, and Purple Accents + Genius Bar Content + Experiment Thumbnails
+# Separation of Mixtures Module - Implementation Plan
 
-This plan covers three main areas: enhanced color accents across all pages, adding Strand 1 curriculum content to the Genius Bar, and generating remaining experiment thumbnails.
-
----
-
-## 1. Add Midnight Blue and Purple CSS Variables
-
-Add new CSS custom properties for midnight blue and purple in both light and dark themes, alongside the existing gold variables.
-
-**File**: `src/index.css`
-- Add `--midnight: 220 60% 20%` / dark: `220 60% 35%` and `--midnight-foreground`
-- Add `--purple: 270 60% 55%` / dark: `270 60% 65%` and `--purple-foreground`
-
-**File**: `tailwind.config.ts`
-- Map `midnight` and `purple` colors like gold: `DEFAULT` and `foreground` variants
+This plan implements a comprehensive "Separation of Mixtures" module with 7 interactive experiments, following the existing simulation architecture patterns and the design specifications provided.
 
 ---
 
-## 2. Apply Gold, Midnight Blue, and Purple Accents Across Pages
+## Phase 1: Module Infrastructure
 
-### Home Page
-- **HeroSection.tsx**: Add a subtle midnight blue radial gradient alongside the existing primary ones; stats section numbers get a gold color
-- **FeaturesSection.tsx**: Section heading "Everything You Need" gets a gold underline accent; feature icon backgrounds alternate with purple and midnight tints for variety
-- **CategoryTiles.tsx**: Section heading gets gold accent; the Biology tile already uses purple, keep consistent
-- **FeaturedExperiments.tsx**: "Featured Experiments" heading gets a gold accent; carousel navigation buttons get a midnight blue border on hover
-- **Footer.tsx**: Brand icon background changes to midnight blue; section headings get a subtle gold color
+### 1.1 New Route and Page
+Create a new page `src/pages/SeparationOfMixtures.tsx` and add route `/separation-of-mixtures` in `App.tsx`.
 
-### Library Page
-- **Library.tsx**: Page heading "Experiment Library" gets gold accent on the word "Library"; category badges use purple/midnight tints; the Periodic Table tab trigger uses a purple active state
+The page serves as the **Module Overview Screen** with:
+- Royal green gradient background (`#006400`)
+- Animated hero section with beaker illustration (CSS/SVG animated)
+- Title: "Separation of Mixtures" with subtitle
+- Three navigation buttons: "Start Experiment", "Theory & Concepts", "Applications in Real Life"
+- Scrollable experiment selection cards below
 
-### Profile Page
-- **Profile.tsx**: Tab triggers use gold active state; badge display section gets a purple-tinted background; stat cards get midnight blue borders
+### 1.2 Experiment Selection Menu
+Within the same page, a card-based experiment list:
+- **Evaporation** - Separate salt from water using heat
+- **Crystallization** - Form pure crystals from saturated solutions
+- **Simple Distillation** - Separate liquids by boiling point differences
+- **Fractional Distillation** - Separate liquids with close boiling points
+- **Sublimation** - Separate solids that change directly to gas
+- **Solvent Extraction** - Separate using immiscible liquids
+- **Chromatography** - Separate dyes by movement rate
 
-### Settings Page
-- **Settings.tsx**: Section headers get gold accents; toggle switches keep primary color but danger zone uses a purple-tinted warning
+Each card shows icon, name, short description, and "Enter Experiment" button.
 
-### Admin Page
-- **Admin.tsx**: Tab triggers use midnight blue active state; stat cards alternate gold/purple/midnight borders
+### 1.3 Individual Experiment Page
+Create `src/pages/SeparationExperiment.tsx` with route `/separation-of-mixtures/:experimentId`.
 
-### Help Page
-- **Help.tsx**: Page header icon uses gold; FAQ section gets a midnight blue accent line on the left border
-
-### Genius Bar
-- Already has gold tabs; add a midnight blue card header border and purple accent on the Strand badges
-
----
-
-## 3. Add Strand 1: Scientific Investigation to Genius Bar
-
-The uploaded document provides Grade 7 Strand 1 content organized into 3 sub-strands (topics). This will be added as a new subject entry under Grade 7 in the `gradeData` object.
-
-**File**: `src/pages/GeniusBar.tsx`
-
-Add a new subject under Grade 7 with icon `Globe` (representing Scientific Investigation):
-
-**Subject: "Strand 1: Scientific Investigation"**
-
-Topics (condensed from the document into key bullet points):
-
-1. **Sub-Strand 1.1: Introduction to Integrated Science**
-   - Meaning of Integrated Science: combines Biology, Chemistry, Physics, Earth Science, and Technology
-   - Why science is integrated: real-life problems involve multiple disciplines (e.g., farming needs biology, chemistry, physics)
-   - Goals: develop scientific thinking, inquiry skills, problem solving, scientific literacy, STEM preparation
-   - Components: Biology (living things), Chemistry (matter/substances), Physics (energy/forces), Earth & Environmental Science, Scientific Process Skills, Technology & Innovation
-   - Importance in daily life: health, agriculture, industry, transport, food production, textiles, environmental conservation
-   - Career pathways: medicine, engineering, agriculture, technology, teaching
-   - Values and competencies: communication, collaboration, critical thinking, digital literacy, curiosity, responsibility
-
-2. **Sub-Strand 1.2: Importance of Science in Daily Life**
-   - Science in health: vaccination, hygiene, diagnosis (thermometers, X-rays), treatment (antibiotics), nutrition
-   - Science in agriculture: improved seeds, fertilisers, pest control, irrigation, livestock breeding
-   - Science in industry: manufacturing medicines, plastics, cement, food processing, job creation
-   - Science in transport: vehicles, road construction, fuel technology (SGR, highways)
-   - Science in food production: preservation (refrigeration, drying, canning), processing, nutrition knowledge
-   - Science in textiles: fabric production, dyeing, clothing manufacture
-   - Science in environmental conservation: pollution control, waste management, climate monitoring
-
-3. **Sub-Strand 1.3: Pathways Related to Integrated Science at Senior School**
-   - CBC pathways: STEM, Social Sciences, Arts and Sports Science
-   - STEM pathway: Science, Technology, Engineering, Mathematics
-   - Pure Sciences: Biology, Chemistry, Physics and related careers
-   - Applied Sciences: Agriculture, Environmental Science, Health Sciences, Computer Science
-   - Engineering: Civil, Mechanical, Electrical, Computer Engineering
-   - Technical and vocational careers: electrician, mechanic, lab technician, welder
-   - Skills developed: scientific skills, problem-solving, critical thinking, innovation
-   - Factors for choosing a pathway: interest, ability, talent, career goals, societal needs
+Layout uses **tabbed navigation** with 6 sections:
+1. **Overview** - How it works (scrollable text from the document)
+2. **Concepts** - Accordion-style key scientific concepts
+3. **Applications** - Real-life application cards
+4. **Simulation** - Interactive canvas with controls
+5. **Analysis** - Observation tables and graphing
+6. **Summary** - Key points and quiz
 
 ---
 
-## 4. Generate Remaining Experiment Thumbnails
+## Phase 2: Educational Content Data
 
-The current thumbnail mapping is missing images for: pendulum, spring, buoyancy, friction, lever, inclinedplane, expansion, emspectrum.
+### 2.1 Create `src/data/separationExperiments.ts`
+A large data file containing all 7 experiments with structured content extracted from the uploaded document:
 
-Since we cannot generate actual images, we will use a gradient-based SVG placeholder approach -- creating simple, colorful SVG thumbnails for each missing experiment type that are visually distinct and informative.
+For each experiment:
+- `id`, `title`, `icon`, `description`
+- `overview`: Full explanation text (~1100 words condensed to key paragraphs)
+- `howItWorks`: Step-by-step process array
+- `keyConcepts`: Array of `{title, description}` objects (Solubility, Boiling Point, etc.)
+- `applications`: Array of `{title, description}` real-life uses
+- `summary`: Bullet points of key takeaways
+- `quizQuestions`: 3-5 multiple choice questions per experiment
+- `simulationConfig`: Parameters for each simulation (temperature ranges, substances, etc.)
 
-**New file**: `src/assets/experiments/generated/` -- Create SVG placeholder thumbnails programmatically
-
-Alternative approach (simpler): Update `experimentThumbnails.ts` to map missing simulation types to the closest existing thumbnail or to a themed Unsplash image URL. Since the existing thumbnails are imported as static assets, and we cannot generate actual JPG files, we will:
-
-- Map `pendulum` to the existing wave thumbnail (related physics)
-- Map `spring` to the existing wave thumbnail
-- Map `buoyancy`, `friction`, `lever`, `inclinedplane` to the projectile thumbnail (mechanics)
-- Map `expansion`, `emspectrum` to the lightoptics thumbnail (related physics)
-
-**File**: `src/data/experimentThumbnails.ts` -- Add fallback mappings for all missing simulation types
+Content is sourced directly from the 50-page document covering all 7 experiments.
 
 ---
 
-## Technical Summary
+## Phase 3: Interactive Simulations (Canvas-based)
 
-### Files to Modify
-1. `src/index.css` -- Add midnight blue and purple CSS variables
-2. `tailwind.config.ts` -- Map midnight and purple to Tailwind theme
-3. `src/pages/GeniusBar.tsx` -- Add Strand 1 content with 3 sub-strands, apply accent colors
-4. `src/data/experimentThumbnails.ts` -- Add fallback mappings for missing thumbnails
-5. `src/components/home/HeroSection.tsx` -- Add midnight blue gradient, gold stat numbers
-6. `src/components/home/FeaturesSection.tsx` -- Gold/purple/midnight icon accents
-7. `src/components/home/FeaturedExperiments.tsx` -- Gold heading accent
-8. `src/components/home/CategoryTiles.tsx` -- Gold section heading accent
-9. `src/components/home/Footer.tsx` -- Midnight blue brand icon, gold section headers
-10. `src/pages/Library.tsx` -- Gold/purple tab and heading accents
-11. `src/pages/Profile.tsx` -- Gold tab accents, purple badge section
-12. `src/pages/Settings.tsx` -- Gold section header accents
-13. `src/pages/Admin.tsx` -- Midnight blue tabs, alternating accent borders
-14. `src/pages/Help.tsx` -- Gold icon, midnight blue FAQ borders
+### 3.1 Create `src/components/separations/SeparationSimulation.tsx`
+A unified canvas-based simulation component that renders different experiments based on type. Uses the same `forwardRef` + `useImperativeHandle` pattern as existing simulations.
 
-### No New Dependencies Required
-All changes use existing Tailwind utilities and CSS custom properties.
+Each simulation includes:
+- **Control Panel**: Heat/Cool slider, Start/Pause/Reset, substance selector
+- **Canvas Visualization**: Animated particles, liquid levels, vapour, crystal formation
+- **Temperature/Volume Display**: Real-time readings
+
+### 3.2 Individual Simulation Renderers
+Seven rendering functions within the component, one per experiment:
+
+1. **Evaporation**: Beaker with salt solution, heat source below. Water particles escape as vapour, liquid level drops, salt crystals appear at bottom. Temperature slider controls evaporation rate.
+
+2. **Crystallization**: Beaker with copper sulfate solution. Heat dissolves more solid, then cooling slider causes crystal lattice formation. Particles visually arrange into geometric patterns.
+
+3. **Simple Distillation**: Full apparatus - flask, condenser, receiving flask. Vapour travels through condenser, condensation droplets form, distillate collects. Thermometer shows temperature.
+
+4. **Fractional Distillation**: Flask with fractionating column. Color-coded particles (ethanol=blue, water=red). Temperature gradient in column. Fractions collected separately.
+
+5. **Sublimation**: Evaporating dish with ammonium chloride + sand mixture. White particles rise as vapour, deposit on inverted funnel surface as crystals. Sand remains.
+
+6. **Solvent Extraction**: Separating funnel with two immiscible liquid layers. Shake/mix animation, settling, stopcock drain control. Density-based layer separation.
+
+7. **Chromatography**: Paper strip in beaker with solvent. Capillary action moves solvent up, ink spot separates into colored bands at different heights. Rf value calculation.
+
+All simulations use 2D Canvas rendering with particle animations, consistent with the existing simulation architecture.
+
+---
+
+## Phase 4: Analysis and Gamification
+
+### 4.1 Observation Tables
+Pre-filled tables within each experiment's Analysis tab:
+- Evaporation: Temperature vs. liquid volume remaining
+- Crystallization: Cooling rate vs. crystal size
+- Distillation: Temperature vs. volume collected
+- Chromatography: Rf value calculation table
+
+### 4.2 Quiz Component
+Reuse the existing `QuizSystem` component pattern for "Check Your Understanding" quizzes at the end of each experiment summary.
+
+### 4.3 Progress Tracking
+Simple local state progress bar showing completion percentage across the 7 experiments. Badge awards: "Evaporation Expert", "Crystallization Master", "Chromatography Champion", etc.
+
+---
+
+## Phase 5: Navigation and Polish
+
+### 5.1 Link from Library
+Add the Separation of Mixtures module as a featured card in the Library page, linking to `/separation-of-mixtures`.
+
+### 5.2 Visual Style
+- Royal green (`#006400`) as primary accent throughout the module
+- Black buttons with white text for CTAs
+- Smooth particle animations using requestAnimationFrame
+- Tooltips on apparatus parts explaining their function
+
+---
+
+## Files to Create
+1. `src/pages/SeparationOfMixtures.tsx` - Module overview + experiment selection
+2. `src/pages/SeparationExperiment.tsx` - Individual experiment page with tabs
+3. `src/data/separationExperiments.ts` - All educational content for 7 experiments
+4. `src/components/separations/SeparationSimulation.tsx` - Unified simulation canvas
+5. `src/components/separations/SeparationAnalysis.tsx` - Observation tables and graphs
+6. `src/components/separations/ExperimentCard.tsx` - Reusable experiment selection card
+
+## Files to Modify
+1. `src/App.tsx` - Add two new routes
+2. `src/pages/Library.tsx` - Add link to the module
+
+## No New Dependencies Required
+Uses existing Canvas API, React, and UI components. Matter.js is already installed for optional physics enhancements.
+
+---
+
+## Implementation Priority
+Given the scale, the implementation will proceed in order:
+1. Data file with all 7 experiments' content (largest piece)
+2. Module overview page with experiment cards
+3. Individual experiment page with tabs (Overview, Concepts, Applications)
+4. Simulation canvas for all 7 experiments
+5. Analysis tables and summary/quiz sections
+6. Route registration and Library integration
