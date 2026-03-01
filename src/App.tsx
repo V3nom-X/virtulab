@@ -28,6 +28,8 @@ import AcidBaseExperiment from "./pages/AcidBaseExperiment";
 import NotFound from "./pages/NotFound";
 import ExcretorySystem from "./pages/ExcretorySystem";
 import ExcretoryExperiment from "./pages/ExcretoryExperiment";
+import ForceAndEnergy from "./pages/ForceAndEnergy";
+import ForceEnergyExperiment from "./pages/ForceEnergyExperiment";
 import { AuraAssistant } from "./components/aura/AuraAssistant";
 import { PageTransition } from "./components/layout/PageTransition";
 
@@ -71,6 +73,8 @@ const App = () => (
                   <Route path="/acids-bases-indicators/:experimentId" element={<AcidBaseExperiment />} />
                   <Route path="/excretory-system" element={<ExcretorySystem />} />
                   <Route path="/excretory-system/:experimentId" element={<ExcretoryExperiment />} />
+                  <Route path="/force-and-energy" element={<ForceAndEnergy />} />
+                  <Route path="/force-and-energy/:experimentId" element={<ForceEnergyExperiment />} />
                   <Route path="/help" element={<Help />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
