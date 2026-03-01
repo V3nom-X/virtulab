@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { FertilizationAnimation } from "./FertilizationAnimation";
 
 interface Organ {
   id: string;
@@ -40,6 +41,7 @@ export function ReproductiveSystemSimulation({ system }: { system: "male" | "fem
   const [showPathway, setShowPathway] = useState(false);
   const [showMicroscopic, setShowMicroscopic] = useState(false);
   const [cycleDay, setCycleDay] = useState(14);
+  const [showFertilization, setShowFertilization] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef(0);
   const timeRef = useRef(0);
@@ -272,20 +274,26 @@ export function ReproductiveSystemSimulation({ system }: { system: "male" | "fem
               <span className="text-sm">Microscopic View</span>
             </div>
             {system === "female" && (
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>Menstrual Cycle Day</span>
-                  <span className="font-mono">Day {cycleDay}</span>
+              <>
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>Menstrual Cycle Day</span>
+                    <span className="font-mono">Day {cycleDay}</span>
+                  </div>
+                  <input
+                    type="range" min={1} max={28} value={cycleDay}
+                    onChange={e => setCycleDay(Number(e.target.value))}
+                    className="w-full accent-primary"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {cycleDay <= 5 ? "Menstruation phase" : cycleDay <= 13 ? "Follicular phase" : cycleDay === 14 ? "Ovulation" : "Luteal phase"}
+                  </p>
                 </div>
-                <input
-                  type="range" min={1} max={28} value={cycleDay}
-                  onChange={e => setCycleDay(Number(e.target.value))}
-                  className="w-full accent-primary"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  {cycleDay <= 5 ? "Menstruation phase" : cycleDay <= 13 ? "Follicular phase" : cycleDay === 14 ? "Ovulation" : "Luteal phase"}
-                </p>
-              </div>
+                <div className="flex items-center gap-2">
+                  <Switch checked={showFertilization} onCheckedChange={setShowFertilization} />
+                  <span className="text-sm">Fertilization Animation</span>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
@@ -310,6 +318,8 @@ export function ReproductiveSystemSimulation({ system }: { system: "male" | "fem
           </CardContent>
         </Card>
       </div>
+
+      {system === "female" && showFertilization && <FertilizationAnimation />}
     </div>
   );
 }

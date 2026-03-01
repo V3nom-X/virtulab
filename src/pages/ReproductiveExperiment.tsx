@@ -7,8 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ReproductiveSystemSimulation } from "@/components/reproductive/ReproductiveSystemSimulation";
+import { LabelingExercise } from "@/components/reproductive/LabelingExercise";
 import { reproductiveExperiments } from "@/data/reproductiveSystemData";
-import { ArrowLeft, CheckCircle2, Globe, BookOpen, FlaskConical, Trophy } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Globe, BookOpen, FlaskConical, Trophy, Tag } from "lucide-react";
 import { useState } from "react";
 import { useReproductiveProgress } from "@/hooks/useReproductiveProgress";
 
@@ -63,6 +64,7 @@ const ReproductiveExperiment = () => {
                 <TabsTrigger value="concepts" className="gap-1"><BookOpen className="w-4 h-4" />Concepts</TabsTrigger>
                 <TabsTrigger value="applications" className="gap-1"><Globe className="w-4 h-4" />Applications</TabsTrigger>
                 <TabsTrigger value="simulation" className="gap-1"><FlaskConical className="w-4 h-4" />Simulation</TabsTrigger>
+                <TabsTrigger value="labeling" className="gap-1"><Tag className="w-4 h-4" />Labeling</TabsTrigger>
                 <TabsTrigger value="summary" className="gap-1"><Trophy className="w-4 h-4" />Summary</TabsTrigger>
               </TabsList>
 
@@ -110,6 +112,10 @@ const ReproductiveExperiment = () => {
 
               <TabsContent value="simulation">
                 <ReproductiveSystemSimulation system={systemType as "male" | "female"} />
+              </TabsContent>
+
+              <TabsContent value="labeling">
+                <LabelingExercise system={systemType as "male" | "female"} />
               </TabsContent>
 
               <TabsContent value="summary" className="space-y-8">
