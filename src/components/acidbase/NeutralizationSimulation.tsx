@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Play, Pause, RotateCcw, Eye, EyeOff, Droplets } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 
 const acids = [
   { name: "Hydrochloric Acid (HCl)", pH: 1, color: "#ff4444" },
@@ -41,6 +42,7 @@ export function NeutralizationSimulation() {
   const [isPlaying, setIsPlaying] = useState(true);
   const [showMolecular, setShowMolecular] = useState(true);
   const [isPouring, setIsPouring] = useState(false);
+  const [titrationData, setTitrationData] = useState<{ volume: number; pH: number }[]>([]);
 
   const acid = acids[selectedAcid];
   const base = bases[selectedBase];
@@ -212,6 +214,7 @@ export function NeutralizationSimulation() {
   const handleReset = () => {
     setBaseAdded([0]);
     setIsPouring(false);
+    setTitrationData([]);
     particlesRef.current = [];
   };
 
@@ -220,6 +223,8 @@ export function NeutralizationSimulation() {
     const interval = setInterval(() => {
       setBaseAdded((prev) => {
         const next = Math.min(prev[0] + 2, 100);
+        const newpH = acid.pH + (base.pH - acid.pH) * (next / 100);
+        setTitrationData((td) => [...td, { volume: next, pH: parseFloat(newpH.toFixed(2)) }]);
         if (next >= 100) { clearInterval(interval); setIsPouring(false); }
         return [next];
       });
@@ -293,11 +298,29 @@ export function NeutralizationSimulation() {
           </div>
 
           {Math.abs(resultingpH - 7) < 0.5 && (
-            <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg text-sm text-green-400">
+            <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg text-sm text-green-600 dark:text-green-400">
               🎉 <strong>Neutralization achieved!</strong> The acid and base have reacted to form salt and water.
             </div>
           )}
         </div>
+      </div>
+
+      {/* Titration Curve Graph */}
+      <div className="p-4 border rounded-lg">
+        <h3 className="font-semibold text-sm mb-3">Titration Curve: pH vs Volume of Base Added</h3>
+        <div className="h-[220px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={titrationData.length > 0 ? titrationData : [{ volume: 0, pH: acid.pH }]} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="volume" tick={{ fontSize: 11 }} label={{ value: "Base Added (%)", position: "insideBottom", offset: -3, fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+              <YAxis domain={[0, 14]} tick={{ fontSize: 11 }} label={{ value: "pH", angle: -90, position: "insideLeft", fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+              <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }} labelFormatter={(v) => `Volume: ${v}%`} />
+              <ReferenceLine y={7} stroke="hsl(var(--muted-foreground))" strokeDasharray="5 5" label={{ value: "Neutral (pH 7)", position: "right", fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+              <Line type="monotone" dataKey="pH" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 2 }} isAnimationActive={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+        <p className="text-xs text-muted-foreground mt-2">Click "Pour Base Slowly" to plot the titration curve in real-time.</p>
       </div>
     </div>
   );

@@ -26,6 +26,8 @@ import SeparationExperiment from "./pages/SeparationExperiment";
 import AcidsBasesIndicators from "./pages/AcidsBasesIndicators";
 import AcidBaseExperiment from "./pages/AcidBaseExperiment";
 import NotFound from "./pages/NotFound";
+import ExcretorySystem from "./pages/ExcretorySystem";
+import ExcretoryExperiment from "./pages/ExcretoryExperiment";
 import { AuraAssistant } from "./components/aura/AuraAssistant";
 import { PageTransition } from "./components/layout/PageTransition";
 
@@ -67,6 +69,8 @@ const App = () => (
                   <Route path="/separation-of-mixtures/:experimentId" element={<SeparationExperiment />} />
                   <Route path="/acids-bases-indicators" element={<AcidsBasesIndicators />} />
                   <Route path="/acids-bases-indicators/:experimentId" element={<AcidBaseExperiment />} />
+                  <Route path="/excretory-system" element={<ExcretorySystem />} />
+                  <Route path="/excretory-system/:experimentId" element={<ExcretoryExperiment />} />
                   <Route path="/help" element={<Help />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
