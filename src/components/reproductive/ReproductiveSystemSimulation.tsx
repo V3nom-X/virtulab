@@ -17,6 +17,7 @@ const maleOrgansInfo: Record<string, { name: string; description: string }> = {
   "vas-deferens": { name: "Vas Deferens", description: "Muscular tube that transports mature sperm from the epididymis to the urethra during ejaculation." },
   "seminal-vesicle": { name: "Seminal Vesicle", description: "Secretes fructose-rich fluid that nourishes sperm and aids their mobility. Located behind the bladder." },
   prostate: { name: "Prostate Gland", description: "Produces alkaline fluid that forms part of semen, protecting sperm from the acidic vaginal environment." },
+  "cowpers-gland": { name: "Cowper's Gland (Bulbourethral)", description: "Pea-sized glands below the prostate that secrete pre-ejaculatory fluid to lubricate and neutralize residual urine acidity in the urethra." },
   urethra: { name: "Urethra", description: "Shared passage for urine and semen (at different times). Extends from the bladder through the penis." },
   penis: { name: "Penis", description: "External organ that delivers semen into the female reproductive tract during intercourse." },
   scrotum: { name: "Scrotum", description: "External pouch of skin that holds and protects the testes, keeping them at a temperature slightly below body temperature." },
@@ -29,8 +30,10 @@ const femaleOrgansInfo: Record<string, { name: string; description: string }> = 
   fimbriae: { name: "Fimbriae", description: "Finger-like projections at the end of the fallopian tubes that sweep the released egg into the tube." },
   uterus: { name: "Uterus", description: "Muscular organ where the fertilized egg implants and the fetus develops. Endometrium thickens each cycle." },
   "uterine-fundus": { name: "Uterine Fundus", description: "The broad, curved upper area of the uterus where the fallopian tubes connect." },
+  perimetrium: { name: "Perimetrium", description: "The outermost serous layer of the uterus, a thin membrane continuous with the peritoneum that covers and protects the organ." },
   endometrium: { name: "Endometrium", description: "Inner lining of the uterus that thickens during the menstrual cycle to prepare for implantation." },
   myometrium: { name: "Myometrium", description: "Thick muscular wall of the uterus responsible for contractions during labor." },
+  "ovarian-ligament": { name: "Ovarian Ligament", description: "Fibrous cord connecting the ovary to the uterus, anchoring the ovary in position within the pelvic cavity." },
   cervix: { name: "Cervix", description: "Lower narrow part of the uterus opening into the vagina. Acts as a gateway protecting from infection." },
   vagina: { name: "Vagina", description: "Muscular canal serving as the birth canal and receiving semen during intercourse." },
 };
@@ -86,6 +89,42 @@ function drawMaleSystem(ctx: CanvasRenderingContext2D, w: number, h: number, sel
   ctx.globalAlpha = 1;
   ctx.strokeStyle = "hsl(340, 40%, 30%)";
   ctx.lineWidth = 1.2;
+  ctx.stroke();
+
+  // Cowper's Gland (Bulbourethral) - below prostate
+  const isCowpers = selectedOrgan === "cowpers-gland";
+  // Left gland
+  ctx.beginPath();
+  ctx.ellipse(180, 185, 10, 8, 0, 0, Math.PI * 2);
+  ctx.fillStyle = isCowpers ? "hsl(60, 55%, 55%)" : "hsl(60, 30%, 40%)";
+  ctx.globalAlpha = isCowpers ? 1 : 0.7;
+  if (isCowpers) { ctx.shadowColor = "hsl(60, 55%, 55%)"; ctx.shadowBlur = 10; }
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = "hsl(60, 35%, 30%)";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  // Right gland
+  ctx.beginPath();
+  ctx.ellipse(220, 185, 10, 8, 0, 0, Math.PI * 2);
+  ctx.fillStyle = isCowpers ? "hsl(60, 55%, 55%)" : "hsl(60, 30%, 40%)";
+  ctx.globalAlpha = isCowpers ? 1 : 0.7;
+  if (isCowpers) { ctx.shadowColor = "hsl(60, 55%, 55%)"; ctx.shadowBlur = 10; }
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = "hsl(60, 35%, 30%)";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  // Ducts connecting to urethra
+  ctx.beginPath();
+  ctx.moveTo(188, 185);
+  ctx.lineTo(200, 195);
+  ctx.moveTo(212, 185);
+  ctx.lineTo(200, 195);
+  ctx.strokeStyle = isCowpers ? "hsl(60, 50%, 50%)" : "hsl(60, 25%, 38%)";
+  ctx.lineWidth = 1;
   ctx.stroke();
 
   // Vas Deferens (curved tube from testicle area up to seminal vesicle)
@@ -185,6 +224,7 @@ function drawMaleSystem(ctx: CanvasRenderingContext2D, w: number, h: number, sel
     { text: "Vas deferens", id: "vas-deferens", lx: 270, ly: 240, tx: 310, ty: 220 },
     { text: "Seminal vesicle", id: "seminal-vesicle", lx: 280, ly: 120, tx: 320, ty: 100 },
     { text: "Prostate gland", id: "prostate", lx: 200, ly: 150, tx: 50, ty: 150 },
+    { text: "Cowper's gland", id: "cowpers-gland", lx: 200, ly: 185, tx: 50, ty: 185 },
     { text: "Urethra", id: "urethra", lx: 155, ly: 260, tx: 40, ty: 260 },
     { text: "Penis", id: "penis", lx: 120, ly: 340, tx: 10, ty: 340 },
     { text: "Testicle", id: "testes", lx: 210, ly: 385, tx: 310, ty: 385 },
@@ -300,6 +340,29 @@ function drawFemaleSystem(ctx: CanvasRenderingContext2D, w: number, h: number, s
   const isFundus = selectedOrgan === "uterine-fundus";
   const isMyo = selectedOrgan === "myometrium";
   const isEndo = selectedOrgan === "endometrium";
+  const isPeri = selectedOrgan === "perimetrium";
+  const isOvarianLig = selectedOrgan === "ovarian-ligament";
+
+  // Perimetrium (outermost serous layer - drawn slightly larger than uterus)
+  ctx.beginPath();
+  ctx.moveTo(200, 94);
+  ctx.bezierCurveTo(125, 94, 98, 157, 114, 243);
+  ctx.bezierCurveTo(124, 284, 146, 314, 172, 324);
+  ctx.lineTo(228, 324);
+  ctx.bezierCurveTo(254, 314, 276, 284, 286, 243);
+  ctx.bezierCurveTo(302, 157, 275, 94, 200, 94);
+  ctx.closePath();
+  ctx.fillStyle = isPeri ? "hsl(270, 40%, 55%)" : "hsl(270, 20%, 38%)";
+  ctx.globalAlpha = isPeri ? 0.6 : 0.3;
+  if (isPeri) { ctx.shadowColor = "hsl(270, 40%, 55%)"; ctx.shadowBlur = 12; }
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = isPeri ? "hsl(270, 45%, 55%)" : "hsl(270, 25%, 40%)";
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 3]);
+  ctx.stroke();
+  ctx.setLineDash([]);
 
   // Uterus body (pear shape)
   ctx.beginPath();
@@ -464,23 +527,41 @@ function drawFemaleSystem(ctx: CanvasRenderingContext2D, w: number, h: number, s
     ctx.fill();
   }
 
-  // Ovarian ligaments
+  // Ovarian ligaments (enhanced - thicker, curved, with anchoring detail)
   ctx.beginPath();
   ctx.moveTo(72, 155);
-  ctx.lineTo(120, 140);
-  ctx.moveTo(328, 155);
-  ctx.lineTo(280, 140);
-  ctx.strokeStyle = "hsl(330, 30%, 40%)";
-  ctx.lineWidth = 1.5;
+  ctx.bezierCurveTo(85, 148, 100, 142, 120, 140);
+  ctx.strokeStyle = isOvarianLig ? "hsl(30, 55%, 55%)" : "hsl(330, 30%, 40%)";
+  ctx.lineWidth = isOvarianLig ? 3.5 : 2.5;
+  if (isOvarianLig) { ctx.shadowColor = "hsl(30, 55%, 55%)"; ctx.shadowBlur = 8; }
   ctx.stroke();
+  ctx.shadowBlur = 0;
+  // Right ligament
+  ctx.beginPath();
+  ctx.moveTo(328, 155);
+  ctx.bezierCurveTo(315, 148, 300, 142, 280, 140);
+  ctx.strokeStyle = isOvarianLig ? "hsl(30, 55%, 55%)" : "hsl(330, 30%, 40%)";
+  ctx.lineWidth = isOvarianLig ? 3.5 : 2.5;
+  if (isOvarianLig) { ctx.shadowColor = "hsl(30, 55%, 55%)"; ctx.shadowBlur = 8; }
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  // Anchor dots
+  [{ x: 72, y: 155 }, { x: 120, y: 140 }, { x: 328, y: 155 }, { x: 280, y: 140 }].forEach(p => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, isOvarianLig ? 3 : 2, 0, Math.PI * 2);
+    ctx.fillStyle = isOvarianLig ? "hsl(30, 60%, 60%)" : "hsl(330, 35%, 45%)";
+    ctx.fill();
+  });
 
   // Labels
   const labels: { text: string; id: string; lx: number; ly: number; tx: number; ty: number }[] = [
     { text: "Fallopian tube", id: "fallopian-tube", lx: 80, ly: 90, tx: 5, ty: 70 },
     { text: "Uterine fundus", id: "uterine-fundus", lx: 200, ly: 105, tx: 200, ty: 65 },
+    { text: "Perimetrium", id: "perimetrium", lx: 290, ly: 100, tx: 340, ty: 100 },
     { text: "Uterus", id: "uterus", lx: 200, ly: 200, tx: 5, ty: 200 },
     { text: "Ovary", id: "ovary", lx: 350, ly: 155, tx: 385, ty: 155 },
     { text: "Fimbriae", id: "fimbriae", lx: 38, ly: 140, tx: 5, ty: 30 },
+    { text: "Ovarian ligament", id: "ovarian-ligament", lx: 95, ly: 148, tx: 5, ty: 148 },
     { text: "Endometrium", id: "endometrium", lx: 260, ly: 220, tx: 330, ty: 220 },
     { text: "Myometrium", id: "myometrium", lx: 280, ly: 180, tx: 330, ty: 180 },
     { text: "Cervix", id: "cervix", lx: 200, ly: 345, tx: 300, ty: 345 },
@@ -577,6 +658,7 @@ const maleHitRegions: { id: string; x: number; y: number; w: number; h: number }
   { id: "bladder", x: 130, y: 30, w: 140, h: 100 },
   { id: "seminal-vesicle", x: 265, y: 95, w: 50, h: 60 },
   { id: "prostate", x: 165, y: 125, w: 70, h: 50 },
+  { id: "cowpers-gland", x: 165, y: 175, w: 70, h: 25 },
   { id: "vas-deferens", x: 240, y: 200, w: 50, h: 150 },
   { id: "urethra", x: 125, y: 200, w: 40, h: 120 },
   { id: "penis", x: 75, y: 230, w: 110, h: 210 },
@@ -588,11 +670,13 @@ const maleHitRegions: { id: string; x: number; y: number; w: number; h: number }
 const femaleHitRegions: { id: string; x: number; y: number; w: number; h: number }[] = [
   { id: "fallopian-tube", x: 55, y: 70, w: 80, h: 50 },
   { id: "uterine-fundus", x: 160, y: 90, w: 80, h: 30 },
+  { id: "perimetrium", x: 100, y: 88, w: 200, h: 20 },
   { id: "uterus", x: 120, y: 120, w: 160, h: 200 },
   { id: "endometrium", x: 140, y: 160, w: 120, h: 140 },
   { id: "myometrium", x: 115, y: 115, w: 170, h: 80 },
   { id: "ovary", x: 25, y: 125, w: 50, h: 60 },
   { id: "fimbriae", x: 15, y: 115, w: 35, h: 40 },
+  { id: "ovarian-ligament", x: 70, y: 135, w: 55, h: 25 },
   { id: "cervix", x: 175, y: 315, w: 50, h: 55 },
   { id: "vagina", x: 175, y: 370, w: 50, h: 70 },
 ];
