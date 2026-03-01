@@ -12,7 +12,7 @@ const Index = () => {
     <Layout stickyNav showNav>
       <ShaderBackground />
       <HeroSection />
-      <FeaturedExperiments />
+      
       <CategoryTiles />
       <FeaturesSection />
       <TechLogos />
