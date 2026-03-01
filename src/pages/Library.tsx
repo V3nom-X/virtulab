@@ -156,6 +156,19 @@ const Library = () => {
                     </div>
                   </div>
                 </Link>
+                <Link to="/force-and-energy" className="block group">
+                  <div className="rounded-xl overflow-hidden border hover-lift" style={{ background: "linear-gradient(135deg, hsl(45 70% 25%), hsl(200 50% 20%))" }}>
+                    <div className="p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center gap-4">
+                      <div className="text-4xl">⚡🔌</div>
+                      <div className="flex-1 text-white">
+                        <Badge className="bg-white/20 text-white border-white/30 mb-2">New Module</Badge>
+                        <h3 className="text-xl font-bold mb-1">Force and Energy</h3>
+                        <p className="text-white/70 text-sm">3 interactive experiments: Sources of Electricity, Flow of Current & Uses in Daily Life</p>
+                      </div>
+                      <Button className="bg-black text-white hover:bg-black/80 shrink-0">Explore Module →</Button>
+                    </div>
+                  </div>
+                </Link>
               </div>
             )}
 
