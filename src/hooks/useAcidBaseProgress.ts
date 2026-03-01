@@ -23,7 +23,7 @@ export function useAcidBaseProgress() {
     });
   }, []);
 
-  const totalExperiments = 4;
+  const totalExperiments = 5;
   const completionPercentage = Math.round((completedExperiments.length / totalExperiments) * 100);
 
   return { completedExperiments, markComplete, completionPercentage, totalExperiments };
