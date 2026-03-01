@@ -23,6 +23,8 @@ import Admin from "./pages/Admin";
 import GeniusBar from "./pages/GeniusBar";
 import SeparationOfMixtures from "./pages/SeparationOfMixtures";
 import SeparationExperiment from "./pages/SeparationExperiment";
+import AcidsBasesIndicators from "./pages/AcidsBasesIndicators";
+import AcidBaseExperiment from "./pages/AcidBaseExperiment";
 import NotFound from "./pages/NotFound";
 import { AuraAssistant } from "./components/aura/AuraAssistant";
 import { PageTransition } from "./components/layout/PageTransition";
@@ -63,6 +65,8 @@ const App = () => (
                   <Route path="/genius-bar" element={<GeniusBar />} />
                   <Route path="/separation-of-mixtures" element={<SeparationOfMixtures />} />
                   <Route path="/separation-of-mixtures/:experimentId" element={<SeparationExperiment />} />
+                  <Route path="/acids-bases-indicators" element={<AcidsBasesIndicators />} />
+                  <Route path="/acids-bases-indicators/:experimentId" element={<AcidBaseExperiment />} />
                   <Route path="/help" element={<Help />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
