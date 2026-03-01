@@ -3,13 +3,16 @@ import { Layout } from "@/components/layout/Layout";
 import { Footer } from "@/components/home/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { ExperimentCard } from "@/components/separations/ExperimentCard";
 import { separationExperiments } from "@/data/separationExperiments";
+import { useSeparationProgress } from "@/hooks/useSeparationProgress";
 import { FlaskConical, BookOpen, Globe, ChevronDown } from "lucide-react";
 
 const SeparationOfMixtures = () => {
   const experimentsRef = useRef<HTMLDivElement>(null);
   const [activeSection, setActiveSection] = useState<"experiments" | "theory" | "applications">("experiments");
+  const { completedExperiments, completionPercentage, totalExperiments } = useSeparationProgress();
 
   const scrollToExperiments = () => {
     experimentsRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -123,14 +126,21 @@ const SeparationOfMixtures = () => {
               <h2 className="text-3xl font-bold mb-2">
                 Choose an <span className="text-gold">Experiment</span>
               </h2>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground mb-4">
                 7 interactive experiments covering key separation techniques
               </p>
+              {/* Progress bar */}
+              <div className="max-w-md mx-auto flex items-center gap-3">
+                <Progress value={completionPercentage} className="flex-1" />
+                <span className="text-sm font-medium whitespace-nowrap">
+                  {completedExperiments.length}/{totalExperiments} completed
+                </span>
+              </div>
             </div>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {separationExperiments.map((exp, idx) => (
-                <ExperimentCard key={exp.id} experiment={exp} index={idx} />
+                <ExperimentCard key={exp.id} experiment={exp} index={idx} completed={completedExperiments.includes(exp.id)} />
               ))}
             </div>
           </div>

@@ -11,6 +11,7 @@ import { SeparationAnalysis } from "@/components/separations/SeparationAnalysis"
 import { separationExperiments } from "@/data/separationExperiments";
 import { ArrowLeft, CheckCircle2, Globe, BookOpen, FlaskConical, BarChart2, Trophy } from "lucide-react";
 import { useState, useRef } from "react";
+import { useSeparationProgress } from "@/hooks/useSeparationProgress";
 
 const SeparationExperiment = () => {
   const { experimentId } = useParams<{ experimentId: string }>();
@@ -18,6 +19,7 @@ const SeparationExperiment = () => {
   const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
   const simRef = useRef<{ reset: () => void }>(null);
+  const { markComplete } = useSeparationProgress();
 
   if (!experiment) {
     return (
@@ -179,7 +181,14 @@ const SeparationExperiment = () => {
                   {!quizSubmitted ? (
                     <Button
                       className="mt-4 bg-[hsl(120,100%,20%)] hover:bg-[hsl(120,100%,15%)] text-white"
-                      onClick={() => setQuizSubmitted(true)}
+                      onClick={() => {
+                        setQuizSubmitted(true);
+                        // Mark complete if passing (>=50%)
+                        const score = experiment.quizQuestions.reduce((acc, q, i) => acc + (quizAnswers[i] === q.correctIndex ? 1 : 0), 0);
+                        if (score >= Math.ceil(experiment.quizQuestions.length / 2) && experimentId) {
+                          markComplete(experimentId);
+                        }
+                      }}
                       disabled={Object.keys(quizAnswers).length < experiment.quizQuestions.length}
                     >
                       Submit Answers

@@ -7,7 +7,7 @@ interface ComingSoonOverlayProps {
 
 export function ComingSoonOverlay({ title = "Coming Soon", features = [] }: ComingSoonOverlayProps) {
   return (
-    <div className="absolute inset-0 z-40 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+    <div className="absolute inset-0 z-40 bg-background flex items-center justify-center">
       <div className="text-center max-w-md p-8">
         <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
           <Construction className="w-8 h-8 text-primary" />
