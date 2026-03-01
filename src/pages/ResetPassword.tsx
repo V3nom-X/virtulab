@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { FlaskConical, Loader2, Lock, CheckCircle } from 'lucide-react';
+import { BackButton } from '@/components/layout/BackButton';
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -64,7 +65,8 @@ const ResetPassword = () => {
 
   if (!hasAccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted/50 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted/50 p-4 relative">
+        <BackButton />
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <div className="inline-flex items-center justify-center gap-2 mb-4">
@@ -89,7 +91,8 @@ const ResetPassword = () => {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted/50 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted/50 p-4 relative">
+        <BackButton />
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <div className="inline-flex items-center justify-center mb-4">
@@ -108,7 +111,8 @@ const ResetPassword = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted/50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted/50 p-4 relative">
+      <BackButton />
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">

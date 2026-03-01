@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { FlaskConical, Loader2, Mail, Lock, User, ArrowLeft } from 'lucide-react';
+import { BackButton } from '@/components/layout/BackButton';
 import { z } from 'zod';
 
 const emailSchema = z.string().email('Please enter a valid email address');
@@ -149,7 +150,8 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted/50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted/50 p-4 relative">
+      <BackButton />
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
