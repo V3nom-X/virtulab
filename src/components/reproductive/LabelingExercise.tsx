@@ -2,33 +2,37 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, XCircle, RotateCcw } from "lucide-react";
+import { CheckCircle2, RotateCcw } from "lucide-react";
 
 interface LabelTarget {
   id: string;
   name: string;
-  x: number;
-  y: number;
+  x: number; // percentage 0-100
+  y: number; // percentage 0-100
 }
 
 const maleTargets: LabelTarget[] = [
-  { id: "testes", name: "Testes", x: 0.42, y: 0.75 },
-  { id: "epididymis", name: "Epididymis", x: 0.62, y: 0.72 },
-  { id: "vas-deferens", name: "Vas Deferens", x: 0.58, y: 0.45 },
-  { id: "seminal-vesicle", name: "Seminal Vesicle", x: 0.68, y: 0.35 },
-  { id: "prostate", name: "Prostate Gland", x: 0.42, y: 0.42 },
-  { id: "urethra", name: "Urethra", x: 0.44, y: 0.55 },
-  { id: "penis", name: "Penis", x: 0.28, y: 0.65 },
+  { id: "bladder", name: "Bladder", x: 50, y: 18 },
+  { id: "seminal-vesicle", name: "Seminal Vesicle", x: 73, y: 28 },
+  { id: "prostate", name: "Prostate Gland", x: 50, y: 34 },
+  { id: "vas-deferens", name: "Vas Deferens", x: 68, y: 50 },
+  { id: "urethra", name: "Urethra", x: 36, y: 55 },
+  { id: "penis", name: "Penis", x: 28, y: 72 },
+  { id: "testes", name: "Testicle", x: 52, y: 85 },
+  { id: "epididymis", name: "Epididymis", x: 62, y: 82 },
+  { id: "scrotum", name: "Scrotum", x: 55, y: 95 },
 ];
 
 const femaleTargets: LabelTarget[] = [
-  { id: "ovaries", name: "Ovaries", x: 0.25, y: 0.4 },
-  { id: "fallopian", name: "Fallopian Tubes", x: 0.22, y: 0.28 },
-  { id: "uterus", name: "Uterus", x: 0.5, y: 0.45 },
-  { id: "cervix", name: "Cervix", x: 0.5, y: 0.65 },
-  { id: "vagina", name: "Vagina", x: 0.5, y: 0.78 },
-  { id: "ovary-right", name: "Ovary (Right)", x: 0.75, y: 0.4 },
-  { id: "fallopian-right", name: "Fallopian Tube (R)", x: 0.72, y: 0.28 },
+  { id: "fallopian-tube", name: "Fallopian Tube", x: 22, y: 18 },
+  { id: "uterine-fundus", name: "Uterine Fundus", x: 50, y: 16 },
+  { id: "ovary", name: "Ovary", x: 13, y: 35 },
+  { id: "fimbriae", name: "Fimbriae", x: 10, y: 26 },
+  { id: "uterus", name: "Uterus", x: 50, y: 42 },
+  { id: "endometrium", name: "Endometrium", x: 70, y: 48 },
+  { id: "myometrium", name: "Myometrium", x: 72, y: 38 },
+  { id: "cervix", name: "Cervix", x: 50, y: 72 },
+  { id: "vagina", name: "Vagina", x: 50, y: 88 },
 ];
 
 function shuffle<T>(arr: T[]): T[] {
@@ -45,8 +49,7 @@ export function LabelingExercise({ system }: { system: "male" | "female" }) {
   const [placed, setPlaced] = useState<Record<string, string>>({});
   const [incorrect, setIncorrect] = useState<string | null>(null);
   const [bank, setBank] = useState<LabelTarget[]>([]);
-  const [dragging, setDragging] = useState<string | null>(null);
-  const [touchDrag, setTouchDrag] = useState<{ id: string; x: number; y: number } | null>(null);
+  const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const correctCount = Object.entries(placed).filter(([targetId, labelId]) => targetId === labelId).length;
@@ -56,50 +59,39 @@ export function LabelingExercise({ system }: { system: "male" | "female" }) {
     setBank(shuffle(targets));
     setPlaced({});
     setIncorrect(null);
+    setSelectedLabel(null);
   }, [system]);
 
   const resetExercise = () => {
     setBank(shuffle(targets));
     setPlaced({});
     setIncorrect(null);
+    setSelectedLabel(null);
   };
 
-  const handleDrop = (targetId: string, labelId: string) => {
+  const handleDrop = useCallback((targetId: string, labelId: string) => {
     if (targetId === labelId) {
       setPlaced(p => ({ ...p, [targetId]: labelId }));
       setBank(b => b.filter(l => l.id !== labelId));
       setIncorrect(null);
     } else {
       setIncorrect(targetId);
-      setTimeout(() => setIncorrect(null), 800);
+      setTimeout(() => setIncorrect(null), 600);
     }
-    setDragging(null);
+    setSelectedLabel(null);
+  }, []);
+
+  // Click-to-place: select label from bank, then click target
+  const handleLabelClick = (id: string) => {
+    setSelectedLabel(prev => prev === id ? null : id);
   };
 
-  const handleTouchStart = (id: string, e: React.TouchEvent) => {
-    e.preventDefault();
-    const touch = e.touches[0];
-    setTouchDrag({ id, x: touch.clientX, y: touch.clientY });
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!touchDrag) return;
-    e.preventDefault();
-    const touch = e.touches[0];
-    setTouchDrag(prev => prev ? { ...prev, x: touch.clientX, y: touch.clientY } : null);
-  };
-
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    if (!touchDrag || !containerRef.current) return;
-    e.preventDefault();
-    const dropElements = document.elementsFromPoint(touchDrag.x, touchDrag.y);
-    const dropZone = dropElements.find(el => el.getAttribute("data-target-id"));
-    if (dropZone) {
-      const targetId = dropZone.getAttribute("data-target-id")!;
-      handleDrop(targetId, touchDrag.id);
+  const handleTargetClick = (targetId: string) => {
+    if (placed[targetId]) return; // already placed
+    if (selectedLabel) {
+      handleDrop(targetId, selectedLabel);
     }
-    setTouchDrag(null);
-  }, [touchDrag]);
+  };
 
   return (
     <Card>
@@ -123,17 +115,56 @@ export function LabelingExercise({ system }: { system: "male" | "female" }) {
           </div>
         )}
 
-        {/* Diagram area with drop targets */}
+        <p className="text-xs text-muted-foreground">
+          {selectedLabel
+            ? "Now click the correct position on the diagram below."
+            : "Select a label from the bank below, then click the matching target on the diagram. You can also drag labels."}
+        </p>
+
+        {/* Label bank - placed ABOVE diagram for better UX */}
+        <div className="flex flex-wrap gap-2">
+          {bank.map(label => (
+            <div
+              key={label.id}
+              draggable
+              onClick={() => handleLabelClick(label.id)}
+              onDragStart={e => {
+                e.dataTransfer.setData("text/plain", label.id);
+                e.dataTransfer.effectAllowed = "move";
+              }}
+              className={`px-3 py-1.5 rounded-full border text-xs font-medium cursor-pointer select-none transition-all ${
+                selectedLabel === label.id
+                  ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/40 scale-105"
+                  : "bg-primary/10 border-primary/30 hover:bg-primary/20"
+              }`}
+            >
+              {label.name}
+            </div>
+          ))}
+          {bank.length === 0 && !allCorrect && (
+            <span className="text-xs text-muted-foreground italic">All labels placed!</span>
+          )}
+        </div>
+
+        {/* Diagram with drop targets */}
         <div
           ref={containerRef}
-          className="relative w-full h-[350px] bg-muted/30 rounded-lg overflow-hidden"
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
+          className="relative w-full h-[420px] bg-muted/20 rounded-lg overflow-hidden border"
+          style={{ background: "hsl(220, 15%, 12%)" }}
         >
-          {/* Body outline */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-3/4 h-4/5 border-2 border-muted-foreground/20 rounded-full" />
-          </div>
+          {/* SVG guide lines from center to targets */}
+          <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
+            {targets.map(target => (
+              <line
+                key={target.id}
+                x1="50" y1="50"
+                x2={target.x} y2={target.y}
+                stroke="hsl(0, 0%, 30%)"
+                strokeWidth="0.15"
+                strokeDasharray="0.5,0.5"
+              />
+            ))}
+          </svg>
 
           {/* Drop targets */}
           {targets.map(target => {
@@ -143,86 +174,40 @@ export function LabelingExercise({ system }: { system: "male" | "female" }) {
               <div
                 key={target.id}
                 data-target-id={target.id}
-                className={`absolute flex items-center justify-center rounded-md border-2 border-dashed text-xs px-2 py-1 transition-all duration-300 min-w-[80px] text-center ${
+                onClick={() => handleTargetClick(target.id)}
+                className={`absolute flex items-center justify-center rounded-md border-2 text-xs px-2 py-1 transition-all duration-200 min-w-[70px] text-center cursor-pointer ${
                   isPlaced
-                    ? "border-green-500 bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300 border-solid"
+                    ? "border-green-500 bg-green-500/20 text-green-300 border-solid"
                     : isWrong
-                      ? "border-red-500 bg-red-100 dark:bg-red-900/40 animate-pulse"
-                      : "border-muted-foreground/40 bg-background/60"
+                      ? "border-red-500 bg-red-500/20 text-red-300 animate-pulse"
+                      : selectedLabel
+                        ? "border-primary/60 bg-primary/10 border-dashed hover:bg-primary/20 hover:border-primary"
+                        : "border-muted-foreground/30 bg-background/30 border-dashed"
                 }`}
                 style={{
-                  left: `${target.x * 100}%`,
-                  top: `${target.y * 100}%`,
+                  left: `${target.x}%`,
+                  top: `${target.y}%`,
                   transform: "translate(-50%, -50%)",
                 }}
                 onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }}
                 onDrop={e => {
                   e.preventDefault();
                   const labelId = e.dataTransfer.getData("text/plain");
-                  handleDrop(target.id, labelId);
+                  if (labelId) handleDrop(target.id, labelId);
                 }}
               >
                 {isPlaced ? (
                   <span className="flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" /> {target.name}
+                    <CheckCircle2 className="w-3 h-3 text-green-400" /> {target.name}
                   </span>
+                ) : isWrong ? (
+                  <span className="text-red-400">✗</span>
                 ) : (
-                  <span className="text-muted-foreground">?</span>
+                  <span className="text-muted-foreground/60">?</span>
                 )}
               </div>
             );
           })}
-
-          {/* Connecting lines from center */}
-          <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
-            {targets.map(target => (
-              <line
-                key={target.id}
-                x1="50" y1="50"
-                x2={target.x * 100} y2={target.y * 100}
-                stroke="currentColor"
-                className="text-muted-foreground/15"
-                strokeWidth="0.3"
-                strokeDasharray="1,1"
-              />
-            ))}
-          </svg>
-
-          {/* Touch drag ghost */}
-          {touchDrag && (
-            <div
-              className="fixed z-50 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-medium shadow-lg pointer-events-none"
-              style={{ left: touchDrag.x - 40, top: touchDrag.y - 15 }}
-            >
-              {targets.find(t => t.id === touchDrag.id)?.name}
-            </div>
-          )}
-        </div>
-
-        {/* Label bank */}
-        <div className="space-y-2">
-          <p className="text-xs text-muted-foreground font-medium">Drag labels to the correct positions:</p>
-          <div className="flex flex-wrap gap-2">
-            {bank.map(label => (
-              <div
-                key={label.id}
-                draggable
-                onDragStart={e => {
-                  e.dataTransfer.setData("text/plain", label.id);
-                  setDragging(label.id);
-                }}
-                onDragEnd={() => setDragging(null)}
-                onTouchStart={e => handleTouchStart(label.id, e)}
-                className={`px-3 py-1.5 rounded-full border text-xs font-medium cursor-grab active:cursor-grabbing select-none transition-all ${
-                  dragging === label.id
-                    ? "opacity-50 scale-95"
-                    : "bg-primary/10 border-primary/30 hover:bg-primary/20"
-                }`}
-              >
-                {label.name}
-              </div>
-            ))}
-          </div>
         </div>
       </CardContent>
     </Card>
