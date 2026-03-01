@@ -206,5 +206,53 @@ export const acidBaseExperiments: AcidBaseExperiment[] = [
       { question: "Turmeric turns reddish-brown in:", options: ["Acids", "Neutral solutions", "Bases", "All solutions"], correctIndex: 2 },
       { question: "Why are plant extract indicators useful?", options: ["They are expensive", "They are toxic", "They are safe, cheap, and effective", "They work only in labs"], correctIndex: 2 }
     ]
+  },
+  {
+    id: "neutralization",
+    title: "Neutralization Reactions",
+    icon: "⚗️💧",
+    description: "Mix acids with bases and observe real-time pH changes and salt + water formation",
+    overview: [
+      "Neutralization is the reaction between an acid and a base to produce salt and water. It is one of the most fundamental reactions in chemistry.",
+      "When hydrochloric acid (HCl) reacts with sodium hydroxide (NaOH), the H⁺ ions from the acid combine with OH⁻ ions from the base to form water (H₂O), while the remaining ions form sodium chloride (NaCl) — table salt.",
+      "The pH changes dramatically during neutralization. Starting from a low pH (acidic), as base is added the pH rises. At the equivalence point, the pH reaches ~7 (neutral). Adding excess base pushes the pH above 7.",
+      "This experiment lets you mix different acids and bases, observe the pH change in real-time, and visualize the molecular interactions as H⁺ and OH⁻ ions combine to form water molecules."
+    ],
+    howItWorks: [
+      { step: 1, title: "Select Reactants", description: "Choose an acid and a base from the available options." },
+      { step: 2, title: "Add Base Gradually", description: "Use the slider or pour button to slowly add the base to the acid solution." },
+      { step: 3, title: "Observe pH Change", description: "Watch the pH scale and liquid color change as neutralization progresses." },
+      { step: 4, title: "View Molecular Interactions", description: "Toggle the molecular view to see H⁺ and OH⁻ ions combining to form H₂O." },
+      { step: 5, title: "Reach Equivalence Point", description: "Find the point where pH reaches ~7 — complete neutralization has occurred." }
+    ],
+    keyConcepts: [
+      { title: "Neutralization Equation", description: "Acid + Base → Salt + Water. For example: HCl + NaOH → NaCl + H₂O" },
+      { title: "Equivalence Point", description: "The point at which equal moles of acid and base have reacted, resulting in a neutral solution (pH ~7)." },
+      { title: "Exothermic Reaction", description: "Neutralization releases heat energy. The temperature of the solution increases during the reaction." },
+      { title: "Salt Formation", description: "The salt produced depends on the acid and base used. HCl + NaOH gives NaCl; H₂SO₄ + NaOH gives Na₂SO₄." },
+      { title: "pH Titration Curve", description: "Plotting pH against volume of base added produces a characteristic S-shaped curve with a steep rise at the equivalence point." },
+      { title: "Indicator Use in Titration", description: "Indicators like phenolphthalein are used to detect the equivalence point by changing color at a specific pH." }
+    ],
+    applications: [
+      { title: "Antacids", description: "Antacid tablets contain bases (like Mg(OH)₂) that neutralize excess stomach acid to relieve heartburn." },
+      { title: "Wastewater Treatment", description: "Industrial wastewater is neutralized before discharge to prevent environmental damage." },
+      { title: "Soil pH Adjustment", description: "Lime (CaO) neutralizes acidic soil, while sulfur compounds neutralize basic soil." },
+      { title: "Toothpaste", description: "Toothpaste is basic and neutralizes acids produced by mouth bacteria, preventing tooth decay." },
+      { title: "Titration Analysis", description: "Neutralization titrations determine unknown acid/base concentrations in analytical chemistry." }
+    ],
+    summary: [
+      "Neutralization is the reaction of an acid with a base to form salt and water",
+      "The equivalence point occurs when equal moles of H⁺ and OH⁻ have reacted",
+      "pH rises from acidic to neutral (~7) to basic as more base is added",
+      "Neutralization is exothermic — it releases heat energy",
+      "Applications include antacids, wastewater treatment, and titration analysis"
+    ],
+    quizQuestions: [
+      { question: "What are the products of a neutralization reaction?", options: ["Acid and base", "Salt and water", "Gas and salt", "Only water"], correctIndex: 1 },
+      { question: "What is the pH at the equivalence point of a strong acid–strong base neutralization?", options: ["0", "3", "7", "14"], correctIndex: 2 },
+      { question: "Is neutralization exothermic or endothermic?", options: ["Endothermic", "Exothermic", "Neither", "Depends on the acid"], correctIndex: 1 },
+      { question: "What salt is formed when HCl reacts with NaOH?", options: ["Na₂SO₄", "NaCl", "KCl", "CaCl₂"], correctIndex: 1 },
+      { question: "Why do antacids relieve heartburn?", options: ["They add more acid", "They neutralize excess stomach acid", "They cool the stomach", "They absorb food"], correctIndex: 1 }
+    ]
   }
 ];

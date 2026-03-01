@@ -88,8 +88,8 @@ const AcidsBasesIndicators = () => {
               Acids, Bases & Indicators
             </h1>
             <p className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto mb-8">
-              Explore the colorful world of acids, bases, and indicators through four interactive experiments.
-              Test pH, observe color changes, and discover natural indicators.
+              Explore the colorful world of acids, bases, and indicators through five interactive experiments.
+              Test pH, observe color changes, discover natural indicators, and perform neutralization reactions.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -124,7 +124,7 @@ const AcidsBasesIndicators = () => {
                 Choose an <span className="text-primary">Experiment</span>
               </h2>
               <p className="text-muted-foreground mb-4">
-                4 interactive experiments covering acids, bases, and indicator chemistry
+                5 interactive experiments covering acids, bases, and indicator chemistry
               </p>
               <div className="max-w-md mx-auto flex items-center gap-3">
                 <Progress value={completionPercentage} className="flex-1" />

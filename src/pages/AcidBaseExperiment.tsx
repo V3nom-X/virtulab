@@ -7,10 +7,31 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { AcidBaseLabSimulation } from "@/components/acidbase/AcidBaseLabSimulation";
+import { LitmusPaperSimulation } from "@/components/acidbase/LitmusPaperSimulation";
+import { PhysicalPropertiesSimulation } from "@/components/acidbase/PhysicalPropertiesSimulation";
+import { PlantExtractSimulation } from "@/components/acidbase/PlantExtractSimulation";
+import { NeutralizationSimulation } from "@/components/acidbase/NeutralizationSimulation";
 import { acidBaseExperiments } from "@/data/acidBaseExperiments";
 import { ArrowLeft, CheckCircle2, Globe, BookOpen, FlaskConical, Trophy } from "lucide-react";
 import { useState } from "react";
 import { useAcidBaseProgress } from "@/hooks/useAcidBaseProgress";
+
+const getSimulationComponent = (experimentId: string) => {
+  switch (experimentId) {
+    case "acids-and-bases":
+      return <AcidBaseLabSimulation experimentId={experimentId} />;
+    case "litmus-paper-test":
+      return <LitmusPaperSimulation />;
+    case "physical-properties":
+      return <PhysicalPropertiesSimulation />;
+    case "plant-extract-indicators":
+      return <PlantExtractSimulation />;
+    case "neutralization":
+      return <NeutralizationSimulation />;
+    default:
+      return <AcidBaseLabSimulation experimentId={experimentId} />;
+  }
+};
 
 const AcidBaseExperiment = () => {
   const { experimentId } = useParams<{ experimentId: string }>();
@@ -118,9 +139,9 @@ const AcidBaseExperiment = () => {
                 </div>
               </TabsContent>
 
-              {/* Simulation */}
+              {/* Simulation - now uses dedicated component per experiment */}
               <TabsContent value="simulation">
-                <AcidBaseLabSimulation experimentId={experiment.id} />
+                {getSimulationComponent(experiment.id)}
               </TabsContent>
 
               {/* Summary & Quiz */}
