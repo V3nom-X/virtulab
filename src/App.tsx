@@ -30,6 +30,8 @@ import ExcretorySystem from "./pages/ExcretorySystem";
 import ExcretoryExperiment from "./pages/ExcretoryExperiment";
 import ForceAndEnergy from "./pages/ForceAndEnergy";
 import ForceEnergyExperiment from "./pages/ForceEnergyExperiment";
+import ReproductiveSystem from "./pages/ReproductiveSystem";
+import ReproductiveExperiment from "./pages/ReproductiveExperiment";
 import { AuraAssistant } from "./components/aura/AuraAssistant";
 import { PageTransition } from "./components/layout/PageTransition";
 
@@ -75,6 +77,8 @@ const App = () => (
                   <Route path="/excretory-system/:experimentId" element={<ExcretoryExperiment />} />
                   <Route path="/force-and-energy" element={<ForceAndEnergy />} />
                   <Route path="/force-and-energy/:experimentId" element={<ForceEnergyExperiment />} />
+                  <Route path="/reproductive-system" element={<ReproductiveSystem />} />
+                  <Route path="/reproductive-system/:experimentId" element={<ReproductiveExperiment />} />
                   <Route path="/help" element={<Help />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
