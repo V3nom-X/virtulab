@@ -15,7 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { UserRoleManagement } from "@/components/admin/UserRoleManagement";
 import { ExperimentModeration } from "@/components/admin/ExperimentModeration";
-import { EmailNotifications } from "@/components/admin/EmailNotifications";
+
 import { 
   Users, 
   Activity, 
@@ -32,7 +32,6 @@ import {
   RefreshCw,
   Download,
   Search,
-  Mail,
   UserCog,
   FlaskConical
 } from "lucide-react";
@@ -398,10 +397,6 @@ const Admin = () => {
                 <FlaskConical className="w-4 h-4" />
                 Experiments
               </TabsTrigger>
-              <TabsTrigger value="email" className="flex items-center gap-2">
-                <Mail className="w-4 h-4" />
-                Email
-              </TabsTrigger>
               <TabsTrigger value="system" className="flex items-center gap-2">
                 <Database className="w-4 h-4" />
                 System
@@ -595,10 +590,6 @@ const Admin = () => {
               <ExperimentModeration />
             </TabsContent>
 
-            {/* Email Tab */}
-            <TabsContent value="email" className="space-y-6">
-              <EmailNotifications />
-            </TabsContent>
 
             {/* System Tab */}
             <TabsContent value="system" className="space-y-6">
