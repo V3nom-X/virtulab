@@ -267,12 +267,15 @@ export function AuraAssistant() {
   }, [voiceEnabled, playTTS]);
 
   const handleSend = async () => {
-    const text = input.trim();
+    const text = input.trim().slice(0, 2000); // Limit input length
     if (!text || isLoading) return;
+    if (text.length < 1) return;
     setInput('');
     const userMsg: Message = { role: 'user', content: text };
-    const newMessages = [...messages, userMsg];
-    setMessages(newMessages);
+    // Keep only last 20 messages to prevent payload bloat
+    const trimmedHistory = messages.slice(-19);
+    const newMessages = [...trimmedHistory, userMsg];
+    setMessages(prev => [...prev, userMsg]);
     await streamChat(newMessages);
   };
 
@@ -383,8 +386,9 @@ export function AuraAssistant() {
           <input
             ref={inputRef}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => setInput(e.target.value.slice(0, 2000))}
             placeholder="Ask AURA anything..."
+            maxLength={2000}
             className="flex-1 bg-muted rounded-full px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
             disabled={isLoading}
           />

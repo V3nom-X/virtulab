@@ -78,29 +78,13 @@ export function UserRoleManagement() {
   const updateUserRole = async (userId: string, newRole: AppRole) => {
     setIsUpdating(true);
     try {
-      // Check if user already has a role entry
-      const { data: existingRole } = await supabase
-        .from("user_roles")
-        .select("*")
-        .eq("user_id", userId)
-        .single();
+      // Use server-side security definer function for role updates
+      const { data, error } = await supabase.rpc('update_user_role', {
+        _target_user_id: userId,
+        _new_role: newRole,
+      });
 
-      if (existingRole) {
-        // Update existing role
-        const { error } = await supabase
-          .from("user_roles")
-          .update({ role: newRole })
-          .eq("user_id", userId);
-
-        if (error) throw error;
-      } else {
-        // Insert new role
-        const { error } = await supabase
-          .from("user_roles")
-          .insert({ user_id: userId, role: newRole });
-
-        if (error) throw error;
-      }
+      if (error) throw error;
 
       // Update local state
       setUsers(prev => prev.map(u => 
@@ -109,9 +93,12 @@ export function UserRoleManagement() {
 
       toast.success(`Role updated to ${newRole}`);
       setSelectedUser(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating role:", error);
-      toast.error("Failed to update role");
+      const msg = error?.message?.includes('last admin') 
+        ? "Cannot remove the last admin" 
+        : "Failed to update role. Admin privileges required.";
+      toast.error(msg);
     } finally {
       setIsUpdating(false);
     }
