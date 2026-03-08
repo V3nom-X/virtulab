@@ -15,6 +15,44 @@ const emailSchema = z.string().email('Please enter a valid email address');
 const passwordSchema = z.string().min(8, 'Password must be at least 8 characters').max(128, 'Password is too long').regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain uppercase, lowercase, and a number');
 const usernameSchema = z.string().min(3, 'Username must be at least 3 characters').optional();
 
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MS = 60_000; // 1 minute
+
+function useRateLimiter(key: string) {
+  const [attempts, setAttempts] = useState(0);
+  const [lockedUntil, setLockedUntil] = useState(0);
+
+  const isLocked = Date.now() < lockedUntil;
+  const remainingSeconds = isLocked ? Math.ceil((lockedUntil - Date.now()) / 1000) : 0;
+
+  useEffect(() => {
+    if (!isLocked) return;
+    const timer = setInterval(() => {
+      if (Date.now() >= lockedUntil) {
+        setAttempts(0);
+        setLockedUntil(0);
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isLocked, lockedUntil]);
+
+  const recordAttempt = () => {
+    const next = attempts + 1;
+    setAttempts(next);
+    if (next >= MAX_ATTEMPTS) {
+      setLockedUntil(Date.now() + LOCKOUT_DURATION_MS);
+      toast.error(`Too many attempts. Please wait ${LOCKOUT_DURATION_MS / 1000} seconds.`);
+    }
+  };
+
+  const reset = () => {
+    setAttempts(0);
+    setLockedUntil(0);
+  };
+
+  return { isLocked, remainingSeconds, recordAttempt, reset };
+}
+
 const Auth = () => {
   const navigate = useNavigate();
   const { user, signIn, signUp, signInWithGoogle, resetPassword, loading } = useAuth();

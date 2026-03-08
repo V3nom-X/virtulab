@@ -9,7 +9,7 @@ import ShaderBackground from "@/components/ui/ShaderBackground";
 
 const Index = () => {
   return (
-    <Layout stickyNav showNav>
+    <Layout showNav>
       <ShaderBackground />
       <HeroSection />
       
