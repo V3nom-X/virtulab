@@ -15,6 +15,44 @@ const emailSchema = z.string().email('Please enter a valid email address');
 const passwordSchema = z.string().min(8, 'Password must be at least 8 characters').max(128, 'Password is too long').regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain uppercase, lowercase, and a number');
 const usernameSchema = z.string().min(3, 'Username must be at least 3 characters').optional();
 
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MS = 60_000; // 1 minute
+
+function useRateLimiter(key: string) {
+  const [attempts, setAttempts] = useState(0);
+  const [lockedUntil, setLockedUntil] = useState(0);
+
+  const isLocked = Date.now() < lockedUntil;
+  const remainingSeconds = isLocked ? Math.ceil((lockedUntil - Date.now()) / 1000) : 0;
+
+  useEffect(() => {
+    if (!isLocked) return;
+    const timer = setInterval(() => {
+      if (Date.now() >= lockedUntil) {
+        setAttempts(0);
+        setLockedUntil(0);
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isLocked, lockedUntil]);
+
+  const recordAttempt = () => {
+    const next = attempts + 1;
+    setAttempts(next);
+    if (next >= MAX_ATTEMPTS) {
+      setLockedUntil(Date.now() + LOCKOUT_DURATION_MS);
+      toast.error(`Too many attempts. Please wait ${LOCKOUT_DURATION_MS / 1000} seconds.`);
+    }
+  };
+
+  const reset = () => {
+    setAttempts(0);
+    setLockedUntil(0);
+  };
+
+  return { isLocked, remainingSeconds, recordAttempt, reset };
+}
+
 const Auth = () => {
   const navigate = useNavigate();
   const { user, signIn, signUp, signInWithGoogle, resetPassword, loading } = useAuth();
@@ -23,6 +61,9 @@ const Auth = () => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [isResetting, setIsResetting] = useState(false);
+
+  const loginLimiter = useRateLimiter('login');
+  const signupLimiter = useRateLimiter('signup');
   
   // Login form
   const [loginEmail, setLoginEmail] = useState('');
@@ -43,6 +84,11 @@ const Auth = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (loginLimiter.isLocked) {
+      toast.error(`Too many attempts. Try again in ${loginLimiter.remainingSeconds}s.`);
+      return;
+    }
+    
     try {
       emailSchema.parse(loginEmail);
       passwordSchema.parse(loginPassword);
@@ -58,12 +104,14 @@ const Auth = () => {
     const { error } = await signIn(loginEmail, loginPassword);
     
     if (error) {
+      loginLimiter.recordAttempt();
       if (error.message.includes('Invalid login credentials')) {
         toast.error('Invalid email or password');
       } else {
         toast.error(error.message);
       }
     } else {
+      loginLimiter.reset();
       toast.success('Welcome back!');
       navigate('/');
     }
@@ -99,6 +147,11 @@ const Auth = () => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (signupLimiter.isLocked) {
+      toast.error(`Too many attempts. Try again in ${signupLimiter.remainingSeconds}s.`);
+      return;
+    }
+    
     try {
       emailSchema.parse(signupEmail);
       passwordSchema.parse(signupPassword);
@@ -118,12 +171,14 @@ const Auth = () => {
     });
     
     if (error) {
+      signupLimiter.recordAttempt();
       if (error.message.includes('already registered')) {
         toast.error('This email is already registered. Please log in instead.');
       } else {
         toast.error(error.message);
       }
     } else {
+      signupLimiter.reset();
       toast.success('Account created successfully!');
       navigate('/');
     }
@@ -218,8 +273,10 @@ const Auth = () => {
                     </button>
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? (
+                  <Button type="submit" className="w-full" disabled={isSubmitting || loginLimiter.isLocked}>
+                    {loginLimiter.isLocked ? (
+                      `Locked (${loginLimiter.remainingSeconds}s)`
+                    ) : isSubmitting ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         Logging in...
@@ -330,8 +387,10 @@ const Auth = () => {
                     <p className="text-xs text-muted-foreground">At least 8 characters with uppercase, lowercase, and a number</p>
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? (
+                  <Button type="submit" className="w-full" disabled={isSubmitting || signupLimiter.isLocked}>
+                    {signupLimiter.isLocked ? (
+                      `Locked (${signupLimiter.remainingSeconds}s)`
+                    ) : isSubmitting ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         Creating account...
