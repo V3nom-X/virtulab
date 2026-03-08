@@ -147,6 +147,11 @@ const Auth = () => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (signupLimiter.isLocked) {
+      toast.error(`Too many attempts. Try again in ${signupLimiter.remainingSeconds}s.`);
+      return;
+    }
+    
     try {
       emailSchema.parse(signupEmail);
       passwordSchema.parse(signupPassword);
