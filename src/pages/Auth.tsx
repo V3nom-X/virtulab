@@ -84,6 +84,11 @@ const Auth = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (loginLimiter.isLocked) {
+      toast.error(`Too many attempts. Try again in ${loginLimiter.remainingSeconds}s.`);
+      return;
+    }
+    
     try {
       emailSchema.parse(loginEmail);
       passwordSchema.parse(loginPassword);
