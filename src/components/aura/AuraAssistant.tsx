@@ -392,7 +392,6 @@ export function AuraAssistant() {
             className="flex-1 bg-muted rounded-full px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
             disabled={isLoading}
           />
-          />
           <Button type="submit" size="icon" className="rounded-full h-9 w-9" disabled={isLoading || !input.trim()}>
             <Send className="w-4 h-4" />
           </Button>
