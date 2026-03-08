@@ -104,12 +104,14 @@ const Auth = () => {
     const { error } = await signIn(loginEmail, loginPassword);
     
     if (error) {
+      loginLimiter.recordAttempt();
       if (error.message.includes('Invalid login credentials')) {
         toast.error('Invalid email or password');
       } else {
         toast.error(error.message);
       }
     } else {
+      loginLimiter.reset();
       toast.success('Welcome back!');
       navigate('/');
     }
