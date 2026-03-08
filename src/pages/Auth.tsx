@@ -171,12 +171,14 @@ const Auth = () => {
     });
     
     if (error) {
+      signupLimiter.recordAttempt();
       if (error.message.includes('already registered')) {
         toast.error('This email is already registered. Please log in instead.');
       } else {
         toast.error(error.message);
       }
     } else {
+      signupLimiter.reset();
       toast.success('Account created successfully!');
       navigate('/');
     }
