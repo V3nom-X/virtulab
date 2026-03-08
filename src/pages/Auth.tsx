@@ -12,7 +12,7 @@ import { BackButton } from '@/components/layout/BackButton';
 import { z } from 'zod';
 
 const emailSchema = z.string().email('Please enter a valid email address');
-const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
+const passwordSchema = z.string().min(8, 'Password must be at least 8 characters').max(128, 'Password is too long').regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain uppercase, lowercase, and a number');
 const usernameSchema = z.string().min(3, 'Username must be at least 3 characters').optional();
 
 const Auth = () => {

@@ -267,12 +267,15 @@ export function AuraAssistant() {
   }, [voiceEnabled, playTTS]);
 
   const handleSend = async () => {
-    const text = input.trim();
+    const text = input.trim().slice(0, 2000); // Limit input length
     if (!text || isLoading) return;
+    if (text.length < 1) return;
     setInput('');
     const userMsg: Message = { role: 'user', content: text };
-    const newMessages = [...messages, userMsg];
-    setMessages(newMessages);
+    // Keep only last 20 messages to prevent payload bloat
+    const trimmedHistory = messages.slice(-19);
+    const newMessages = [...trimmedHistory, userMsg];
+    setMessages(prev => [...prev, userMsg]);
     await streamChat(newMessages);
   };
 
