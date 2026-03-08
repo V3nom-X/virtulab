@@ -387,8 +387,10 @@ const Auth = () => {
                     <p className="text-xs text-muted-foreground">At least 8 characters with uppercase, lowercase, and a number</p>
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? (
+                  <Button type="submit" className="w-full" disabled={isSubmitting || signupLimiter.isLocked}>
+                    {signupLimiter.isLocked ? (
+                      `Locked (${signupLimiter.remainingSeconds}s)`
+                    ) : isSubmitting ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         Creating account...
