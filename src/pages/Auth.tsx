@@ -273,8 +273,10 @@ const Auth = () => {
                     </button>
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? (
+                  <Button type="submit" className="w-full" disabled={isSubmitting || loginLimiter.isLocked}>
+                    {loginLimiter.isLocked ? (
+                      `Locked (${loginLimiter.remainingSeconds}s)`
+                    ) : isSubmitting ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         Logging in...
