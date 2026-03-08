@@ -61,6 +61,9 @@ const Auth = () => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [isResetting, setIsResetting] = useState(false);
+
+  const loginLimiter = useRateLimiter('login');
+  const signupLimiter = useRateLimiter('signup');
   
   // Login form
   const [loginEmail, setLoginEmail] = useState('');
