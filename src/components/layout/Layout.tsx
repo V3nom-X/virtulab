@@ -11,7 +11,7 @@ interface LayoutProps {
 
 export function Layout({ children, stickyNav = false, showNav = false, hideBackButton = false }: LayoutProps) {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
       {showNav ? (
         <>
           <Navbar sticky={stickyNav} />
