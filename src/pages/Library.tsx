@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Footer } from "@/components/home/Footer";
+import { ExperimentRequestBox } from "@/components/library/ExperimentRequestBox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -271,6 +272,9 @@ const Library = () => {
                 <PeriodicTable />
               </div>
             )}
+          </div>
+          <div className="container max-w-4xl">
+            <ExperimentRequestBox />
           </div>
         </section>
       </div>
