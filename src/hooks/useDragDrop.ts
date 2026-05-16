@@ -27,7 +27,7 @@ export function useDragDrop(options: UseDragDropOptions = {}) {
     longPressTriggered: false,
   });
   
-  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dragStartPos = useRef({ x: 0, y: 0 });
 
   // Clear long press timer
