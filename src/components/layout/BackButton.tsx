@@ -29,7 +29,7 @@ export function BackButton() {
   const navigate = useNavigate();
 
   return (
-    <div className="absolute top-4 left-4 z-50 flex items-center gap-2">
+    <div className="fixed top-3 left-3 sm:top-4 sm:left-4 z-50 flex items-center gap-2" style={{ paddingTop: "env(safe-area-inset-top)" }}>
       <Button
         variant="ghost"
         size="icon"

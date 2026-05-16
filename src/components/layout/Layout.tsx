@@ -20,7 +20,7 @@ export function Layout({ children, stickyNav = false, showNav = false, hideBackB
       ) : (
         <>
           {!hideBackButton && <BackButton />}
-          <main>{children}</main>
+          <main className={hideBackButton ? "" : "pt-20"}>{children}</main>
         </>
       )}
     </div>

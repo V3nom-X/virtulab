@@ -1,106 +1,47 @@
+# Plan: Verification, Mobile Optimization & Capacitor Setup
 
-# Plan: Reproductive System Enhancements, Shimmer Button Verification, and Force & Energy Testing
+## 1. Verification (browser testing in preview)
+- **Navbar scroll behavior**: Load `/`, scroll down, confirm navbar moves with page (no longer sticky).
+- **Auth rate limiting**: Go to `/auth`, submit 5 wrong logins rapidly, confirm "Locked (Xs)" countdown appears and button disables.
+- **Admin role flow**: Log in as `nexventuresofc@gmail.com` (admin), navigate to `/admin`, open User Role Management tab, change a test user's role, confirm RPC succeeds and UI updates.
 
-## Overview
-This plan covers four tasks: (1) adding a fertilization animation to the female reproductive simulation, (2) adding drag-and-drop labeling exercises to both male and female simulations, (3) verifying the shimmer button on the homepage, and (4) testing the Force and Energy module end-to-end.
+> Note: Login requires the user's password. I'll prompt for credentials or ask the user to log in themselves before I continue the admin test.
 
----
+## 2. Fix overlapping buttons & text
+- **BackButton vs page content**: `BackButton` is absolutely positioned `top-4 left-4` and overlaps page headers on many routes. Fix by:
+  - Adding consistent top padding (`pt-16` or `pt-20`) on pages that use `Layout` without `showNav`.
+  - Ensuring BackButton + Menu dropdown stay in a single flex container with proper gap and z-index above content.
+- **Navbar right-side icons**: On small viewports, Help/Admin/Theme/Menu icons can crowd the CTA. Hide non-essential icons (`Help`, `Admin`) behind the dropdown on mobile, keep only Theme + Menu visible.
+- **Audit pages with reported overlap**: Library toolbar, Workspace header, Builder toolbar, Reproductive/Excretory simulation headers — add safe-area top padding and `flex-wrap` to button rows.
 
-## Task 1: Fertilization Animation Component
+## 3. Ensure experiments + modules load correctly
+- Smoke-test each module route in the preview: `/library`, `/acids-bases-indicators`, `/force-and-energy`, `/separation-of-mixtures`, `/excretory-system`, `/reproductive-system`, plus one experiment per category.
+- Fix any runtime errors found (console + network checks). Common suspects: missing lazy-load fallbacks, broken image assets, data file imports.
 
-Create a new component `src/components/reproductive/FertilizationAnimation.tsx` that renders a canvas-based animation showing:
+## 4. Mobile-friendly optimization
+- **Global**:
+  - Set viewport meta to include `viewport-fit=cover` and add safe-area insets in `index.css`.
+  - Add a `useIsMobile`-driven layout switch where current layouts break under 768px.
+- **Home (`Index.tsx`)**: Reduce hero font sizes on mobile, stack `CategoryTiles` to single column, hide decorative shader on very small screens (perf).
+- **Navbar (`CardNav`)**: Already has mobile styles; tighten paddings, ensure hamburger menu is reachable, hide CTA on <360px.
+- **Simulations**: Wrap controls in `MobileParametersDrawer`-style drawers where they currently render as sidebars (Reproductive, Excretory, Force/Energy, Acids/Bases).
+- **Tables/admin**: Use horizontal scroll wrappers for wide tables.
+- **Touch targets**: Enforce min 44x44px on all icon buttons.
 
-- **Scene**: A cross-section of the fallopian tube with the egg (large pink circle) stationary near the tube's center
-- **Sperm swarm**: 8-12 animated sperm cells swimming toward the egg with wiggling tails, varying speeds
-- **Fertilization event**: When a "Start Fertilization" button is clicked, the leading sperm penetrates the egg membrane, triggering:
-  - A flash/glow effect on the egg
-  - The remaining sperm bouncing off (zona reaction)
-  - The egg transforms color to indicate a zygote
-- **Molecular overlay toggle**: Shows a split-view with:
-  - Sperm acrosome releasing enzymes (small particles)
-  - Zona pellucida layer around the egg
-  - Pronuclei merging animation inside the fertilized egg
-- **Controls**: Start/Reset button, speed slider, molecular view toggle
-- **Info panel**: Displays current stage description (e.g., "Capacitation", "Acrosome reaction", "Cortical reaction", "Pronuclei fusion")
+## 5. Add Capacitor for iOS & Android
+- Install: `@capacitor/core`, `@capacitor/cli` (dev), `@capacitor/ios`, `@capacitor/android`.
+- Run `npx cap init` with:
+  - appId: `app.lovable.0be945b1b30f44028e2c9da4a7630623`
+  - appName: `VirtuLab`
+- Create `capacitor.config.ts` including hot-reload server pointing at the sandbox preview URL (`https://0be945b1-b30f-4402-8e2c-9da4a7630623.lovableproject.com?forceHideBadge=true`, `cleartext: true`).
+- Provide the user with step-by-step manual instructions (export to GitHub → `npm install` → `npx cap add ios/android` → `npm run build` → `npx cap sync` → `npx cap run ios/android`), noting Xcode (Mac) / Android Studio requirements.
+- Link to the Lovable Capacitor blog post at the end.
 
-**Integration**: Add a "Fertilization" toggle/switch in the existing `ReproductiveSystemSimulation.tsx` component that appears only when `system === "female"`. When enabled, it renders the `FertilizationAnimation` component below the main canvas.
+## Technical Notes
+- No backend/schema changes required.
+- Files likely touched: `src/components/layout/BackButton.tsx`, `src/components/layout/Layout.tsx`, `src/components/layout/Navbar.tsx`, `src/index.css`, `index.html`, several `src/pages/*.tsx` for padding, simulation components for drawer wrapping, new `capacitor.config.ts`, `package.json`.
+- Capacitor native folders (`ios/`, `android/`) are generated by the user locally after export; not committed from the sandbox.
 
----
-
-## Task 2: Drag-and-Drop Labeling Exercise
-
-Create a new component `src/components/reproductive/LabelingExercise.tsx`:
-
-- **Layout**: Shows the reproductive system diagram (reuses organ positions from the simulation) with blank label slots next to each organ
-- **Label bank**: A row of draggable label chips at the bottom (shuffled organ names)
-- **Drag mechanics**: Uses HTML5 drag-and-drop API (onDragStart/onDragOver/onDrop) for desktop, with touch event handlers for mobile
-- **Feedback**:
-  - Correct placement: Label snaps into place with green highlight
-  - Incorrect placement: Label bounces back to the bank with red flash
-  - Score counter: "5/7 correct" display
-- **Completion**: When all labels are correctly placed, show a congratulations message and mark the exercise complete
-- **Props**: Accepts `system: "male" | "female"` to load appropriate organ data
-
-**Integration**: Add a new tab "Labeling" in `ReproductiveExperiment.tsx` TabsList, rendering `<LabelingExercise system={systemType} />`.
-
----
-
-## Task 3: Shimmer Button Verification
-
-The shimmer button is already implemented correctly:
-- `src/components/ui/shimmer-button.tsx` exists with proper CSS variable-based shimmer animation
-- `tailwind.config.ts` has both `shimmer-slide` and `spin-around` keyframes and animations configured
-- `HeroSection.tsx` uses `ShimmerButton` for both "Start Exploring" and "Try Demo Experiment" buttons
-
-**Action**: Use browser tools to navigate to `/` and visually verify both buttons display the shimmer effect.
-
----
-
-## Task 4: Force & Energy Module Testing
-
-**Action**: Use browser tools to:
-1. Navigate to `/force-and-energy`
-2. Click into each of the 3 experiments
-3. Test simulation interactions (sliders, toggles)
-4. Complete quizzes for each experiment
-5. Return to hub and verify progress shows 3/3
-
----
-
-## Technical Details
-
-### New Files
-| File | Purpose |
-|------|---------|
-| `src/components/reproductive/FertilizationAnimation.tsx` | Canvas-based fertilization simulation with molecular view |
-| `src/components/reproductive/LabelingExercise.tsx` | Drag-and-drop organ labeling exercise |
-
-### Modified Files
-| File | Change |
-|------|--------|
-| `src/components/reproductive/ReproductiveSystemSimulation.tsx` | Add fertilization toggle (female only) |
-| `src/pages/ReproductiveExperiment.tsx` | Add "Labeling" tab with LabelingExercise component |
-
-### Fertilization Animation Stages
-```text
-Stage 1: Sperm Approach
-  - Multiple sperm swim toward egg in fallopian tube
-  
-Stage 2: Acrosome Reaction  
-  - Leading sperm releases enzymes to penetrate zona pellucida
-
-Stage 3: Cortical Reaction
-  - Egg membrane hardens, blocking other sperm
-
-Stage 4: Pronuclei Fusion
-  - Male and female genetic material merge to form zygote
-```
-
-### Labeling Exercise Data Flow
-```text
-Organ positions (from existing data) --> Render blank slots on diagram
-Shuffled organ names --> Draggable label chips
-User drags label --> Drop zone checks organ.id match
-Correct? --> Snap + green glow + increment score
-All correct? --> Show completion badge
-```
+## Out of Scope
+- Publishing to App Store / Play Store.
+- Backend/RLS changes (already hardened in prior turn).
