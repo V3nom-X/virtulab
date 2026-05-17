@@ -234,64 +234,64 @@ const Analytics = () => {
         <div className="container py-8">
           {/* Stats Grid */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div className="bg-card rounded-xl border p-5">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <div className="bg-card rounded-xl border p-5 min-w-0 overflow-hidden">
+              <div className="flex items-center gap-3 mb-3 min-w-0">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                   <Beaker className="w-5 h-5 text-primary" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.experimentsCompleted}</p>
-                  <p className="text-sm text-muted-foreground">Experiments Completed</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-2xl font-bold truncate" title={String(stats.experimentsCompleted)}>{stats.experimentsCompleted}</p>
+                  <p className="text-sm text-muted-foreground break-words leading-snug">Experiments Completed</p>
                 </div>
               </div>
-              <div className="flex items-center gap-1 text-sm text-success">
-                <TrendingUp className="w-4 h-4" />
-                <span>+{stats.weeklyExperiments} this week</span>
+              <div className="flex items-center gap-1 text-sm text-success flex-wrap min-w-0">
+                <TrendingUp className="w-4 h-4 shrink-0" />
+                <span className="truncate">+{stats.weeklyExperiments} this week</span>
               </div>
             </div>
 
-            <div className="bg-card rounded-xl border p-5">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <div className="bg-card rounded-xl border p-5 min-w-0 overflow-hidden">
+              <div className="flex items-center gap-3 mb-3 min-w-0">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                   <Clock className="w-5 h-5 text-primary" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{formatTotalTime(stats.totalTimeSeconds)}</p>
-                  <p className="text-sm text-muted-foreground">Total Learning Time</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-2xl font-bold truncate" title={formatTotalTime(stats.totalTimeSeconds)}>{formatTotalTime(stats.totalTimeSeconds)}</p>
+                  <p className="text-sm text-muted-foreground break-words leading-snug">Total Learning Time</p>
                 </div>
               </div>
-              <div className="flex items-center gap-1 text-sm text-success">
-                <TrendingUp className="w-4 h-4" />
-                <span>+{formatTotalTime(stats.weeklyTime)} this week</span>
+              <div className="flex items-center gap-1 text-sm text-success flex-wrap min-w-0">
+                <TrendingUp className="w-4 h-4 shrink-0" />
+                <span className="truncate">+{formatTotalTime(stats.weeklyTime)} this week</span>
               </div>
             </div>
 
-            <div className="bg-card rounded-xl border p-5">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <div className="bg-card rounded-xl border p-5 min-w-0 overflow-hidden">
+              <div className="flex items-center gap-3 mb-3 min-w-0">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                   <Target className="w-5 h-5 text-primary" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.averageScore}%</p>
-                  <p className="text-sm text-muted-foreground">Average Quiz Score</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-2xl font-bold truncate" title={`${stats.averageScore}%`}>{stats.averageScore}%</p>
+                  <p className="text-sm text-muted-foreground break-words leading-snug">Average Quiz Score</p>
                 </div>
               </div>
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+              <div className="text-sm text-muted-foreground truncate">
                 Based on {stats.experimentsCompleted} quizzes
               </div>
             </div>
 
-            <div className="bg-card rounded-xl border p-5">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <div className="bg-card rounded-xl border p-5 min-w-0 overflow-hidden">
+              <div className="flex items-center gap-3 mb-3 min-w-0">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                   <Award className="w-5 h-5 text-primary" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.badgesEarned}</p>
-                  <p className="text-sm text-muted-foreground">Badges Earned</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-2xl font-bold truncate" title={String(stats.badgesEarned)}>{stats.badgesEarned}</p>
+                  <p className="text-sm text-muted-foreground break-words leading-snug">Badges Earned</p>
                 </div>
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-muted-foreground truncate">
                 {badges.length - stats.badgesEarned} more to unlock
               </div>
             </div>
@@ -299,19 +299,19 @@ const Analytics = () => {
 
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Progress by Category */}
-            <div className="lg:col-span-2 space-y-6">
-              <div className="bg-card rounded-xl border p-6">
+            <div className="lg:col-span-2 space-y-6 min-w-0">
+              <div className="bg-card rounded-xl border p-6 min-w-0 overflow-hidden">
                 <h3 className="font-semibold mb-6 flex items-center gap-2">
-                  <BookOpen className="w-5 h-5" />
-                  Progress by Category
+                  <BookOpen className="w-5 h-5 shrink-0" />
+                  <span className="truncate">Progress by Category</span>
                 </h3>
                 <div className="space-y-5">
                   {categoryProgress.map((cat) => (
-                    <div key={cat.name}>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium">{cat.name}</span>
-                        <span className="text-sm text-muted-foreground">
-                          {cat.completed}/{cat.total} experiments
+                    <div key={cat.name} className="min-w-0">
+                      <div className="flex items-center justify-between gap-3 mb-2 min-w-0">
+                        <span className="text-sm font-medium truncate">{cat.name}</span>
+                        <span className="text-sm text-muted-foreground shrink-0 whitespace-nowrap">
+                          {cat.completed}/{cat.total}
                         </span>
                       </div>
                       <Progress value={(cat.completed / cat.total) * 100} className="h-2" />
@@ -321,25 +321,25 @@ const Analytics = () => {
               </div>
 
               {/* Recent Activity */}
-              <div className="bg-card rounded-xl border p-6">
+              <div className="bg-card rounded-xl border p-6 min-w-0 overflow-hidden">
                 <h3 className="font-semibold mb-6 flex items-center gap-2">
-                  <Calendar className="w-5 h-5" />
-                  Recent Activity
+                  <Calendar className="w-5 h-5 shrink-0" />
+                  <span className="truncate">Recent Activity</span>
                 </h3>
                 <div className="space-y-4">
                   {recentActivity.length === 0 ? (
                     <p className="text-muted-foreground text-sm">No recent activity</p>
                   ) : (
                     recentActivity.map((activity) => (
-                      <div key={activity.id} className="flex items-center gap-4 p-3 rounded-lg bg-muted/50">
-                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <div key={activity.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 min-w-0">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                           <Beaker className="w-5 h-5 text-primary" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm">{activity.title}</p>
-                          <p className="text-xs text-muted-foreground">{activity.date} • {activity.duration}</p>
+                          <p className="font-medium text-sm truncate">{activity.title}</p>
+                          <p className="text-xs text-muted-foreground truncate">{activity.date} • {activity.duration}</p>
                         </div>
-                        <Badge variant={activity.status === "Completed" ? "default" : "secondary"}>
+                        <Badge variant={activity.status === "Completed" ? "default" : "secondary"} className="shrink-0">
                           {activity.status === "Completed" && <CheckCircle2 className="w-3 h-3 mr-1" />}
                           {activity.status}
                         </Badge>
