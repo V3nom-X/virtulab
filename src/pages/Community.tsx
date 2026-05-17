@@ -243,9 +243,10 @@ const Community = () => {
                   Discover, share, and collaborate on experiments with the VirtuLab community
                 </p>
               </div>
-              <Button className="gap-2">
+              <Button className="gap-2" disabled>
                 <Upload className="w-4 h-4" />
-                Upload Experiment
+                Build an Experiment
+                <Badge variant="secondary" className="ml-1 text-[10px]">Coming Soon</Badge>
               </Button>
             </div>
           </div>
@@ -439,28 +440,12 @@ const Community = () => {
               </div>
 
               {/* Challenges */}
-              <div className="bg-card rounded-xl border p-5">
-                <h3 className="font-semibold mb-4">Active Challenges</h3>
-                <div className="space-y-3">
-                  {challenges.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No active challenges</p>
-                  ) : (
-                    challenges.map((challenge) => (
-                      <div key={challenge.id} className="p-3 bg-accent/50 rounded-lg">
-                        <h4 className="font-medium text-sm mb-1">{challenge.title}</h4>
-                        <p className="text-xs text-muted-foreground mb-2">{challenge.description}</p>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary" className="text-xs">
-                            {getDaysLeft(challenge.end_date)} days left
-                          </Badge>
-                          <Badge variant="outline" className="text-xs">
-                            +{challenge.points} pts
-                          </Badge>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
+              <div className="bg-card rounded-xl border p-5 relative overflow-hidden">
+                <h3 className="font-semibold mb-2">Active Challenges</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Compete in weekly science challenges and earn points.
+                </p>
+                <Badge variant="secondary" className="text-xs">Coming Soon</Badge>
               </div>
             </div>
           </div>
