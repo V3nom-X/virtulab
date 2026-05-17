@@ -1,6 +1,6 @@
-import { ArrowRight, Play, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 
 export function HeroSection() {
@@ -40,7 +40,7 @@ export function HeroSection() {
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-slide-up stagger-2" data-tour="hero-cta">
+          <div className="flex items-center justify-center gap-4 animate-slide-up stagger-2" data-tour="hero-cta">
             <Link to="/library">
               <ShimmerButton
                 shimmerColor="hsl(162, 77%, 46%)"
@@ -50,17 +50,6 @@ export function HeroSection() {
               >
                 Start Exploring
                 <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-              </ShimmerButton>
-            </Link>
-            <Link to="/workspace">
-              <ShimmerButton
-                shimmerColor="hsl(var(--foreground))"
-                background="hsl(var(--card))"
-                borderRadius="12px"
-                className="gap-2 text-base font-semibold h-12 px-10 !text-foreground !border-border"
-              >
-                <Play className="w-5 h-5" />
-                Try Demo Experiment
               </ShimmerButton>
             </Link>
           </div>
