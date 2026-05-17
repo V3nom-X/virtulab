@@ -15,6 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { UserRoleManagement } from "@/components/admin/UserRoleManagement";
 import { ExperimentModeration } from "@/components/admin/ExperimentModeration";
+import { ExperimentRequestsManagement } from "@/components/admin/ExperimentRequestsManagement";
 
 import { 
   Users, 
@@ -33,7 +34,8 @@ import {
   Download,
   Search,
   UserCog,
-  FlaskConical
+  FlaskConical,
+  Inbox
 } from "lucide-react";
 import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell } from "recharts";
@@ -380,7 +382,7 @@ const Admin = () => {
 
           {/* Main Content Tabs */}
           <Tabs defaultValue="analytics" className="space-y-6">
-            <TabsList className="bg-muted/50 border border-midnight/20">
+            <TabsList className="bg-muted/50 border border-midnight/20 flex w-full overflow-x-auto md:w-auto">
               <TabsTrigger value="analytics" className="flex items-center gap-2">
                 <BarChart3 className="w-4 h-4" />
                 Analytics
@@ -396,6 +398,10 @@ const Admin = () => {
               <TabsTrigger value="experiments" className="flex items-center gap-2">
                 <FlaskConical className="w-4 h-4" />
                 Experiments
+              </TabsTrigger>
+              <TabsTrigger value="requests" className="flex items-center gap-2">
+                <Inbox className="w-4 h-4" />
+                Requests
               </TabsTrigger>
               <TabsTrigger value="system" className="flex items-center gap-2">
                 <Database className="w-4 h-4" />
@@ -590,6 +596,10 @@ const Admin = () => {
               <ExperimentModeration />
             </TabsContent>
 
+            {/* Requests Tab */}
+            <TabsContent value="requests" className="space-y-6">
+              <ExperimentRequestsManagement />
+            </TabsContent>
 
             {/* System Tab */}
             <TabsContent value="system" className="space-y-6">
