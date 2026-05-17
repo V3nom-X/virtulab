@@ -84,7 +84,7 @@ export function OnboardingTour() {
       scrollOffset={80}
       floaterProps={{ disableAnimation: reduced }}
       callback={handleCallback}
-      styles={{
+      styles={{ ...({
         options: {
           arrowColor: "hsl(var(--card))",
           backgroundColor: "hsl(var(--card))",
