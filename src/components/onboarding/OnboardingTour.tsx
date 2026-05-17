@@ -1,37 +1,59 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Joyride, STATUS } from "react-joyride";
+import { useReducedMotion } from "@/hooks/useAccessibility";
 
 const STORAGE_KEY = "virtulab-onboarding-completed-v1";
 
-const steps: any[] = [
-  {
-    target: "body",
-    content: "Welcome to VirtuLab! Let's take a quick tour of the key features.",
-    placement: "center",
-  },
-  {
-    target: '[data-tour="hero-cta"]',
-    content: "Start exploring experiments right from here.",
-  },
-  {
-    target: '[data-tour="categories"]',
-    content: "Browse science modules — physics, chemistry, biology and more.",
-  },
-  {
-    target: '[data-tour="nav-menu"]',
-    content: "Use this menu to jump between Library, Builder, Community and Videos.",
-  },
-  {
-    target: "body",
-    content: "That's it! Dive in and start your first experiment. You can revisit Help anytime.",
-    placement: "center",
-  },
-];
+function buildSteps(isMobile: boolean): any[] {
+  const placement = isMobile ? "bottom" : "auto";
+  return [
+    {
+      target: "body",
+      content: "Welcome to VirtuLab! Let's take a quick tour of the key features.",
+      placement: "center",
+      disableBeacon: true,
+    },
+    {
+      target: '[data-tour="hero-cta"]',
+      content: "Start exploring experiments right from here.",
+      placement,
+      disableBeacon: true,
+    },
+    {
+      target: '[data-tour="categories"]',
+      content: "Browse science modules — physics, chemistry, biology and more.",
+      placement,
+      disableBeacon: true,
+    },
+    {
+      target: '[data-tour="nav-menu"]',
+      content: "Use this menu to jump between Library, Builder, Community and Videos.",
+      placement,
+      disableBeacon: true,
+    },
+    {
+      target: "body",
+      content: "That's it! Dive in and start your first experiment. You can revisit Help anytime.",
+      placement: "center",
+      disableBeacon: true,
+    },
+  ];
+}
 
 export function OnboardingTour() {
   const location = useLocation();
+  const reduced = useReducedMotion();
   const [run, setRun] = useState(false);
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth < 640 : false,
+  );
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -53,27 +75,48 @@ export function OnboardingTour() {
 
   return (
     <Joyride
-      steps={steps}
+      steps={buildSteps(isMobile)}
       run={run}
       continuous
-      onEvent={handleCallback}
-      options={{
-        showSkipButton: true,
-        showProgress: true,
-        disableScrollParentFix: true,
-        disableBeacon: true,
-        styles: {
-          tooltip: {
-            maxWidth: "min(92vw, 360px)",
-            borderRadius: 12,
-            padding: 16,
-            fontSize: 14,
-            backgroundColor: "hsl(var(--card))",
-            color: "hsl(var(--foreground))",
-          },
-          overlay: { backgroundColor: "rgba(0,0,0,0.55)" },
+      showSkipButton
+      showProgress
+      disableScrollParentFix
+      scrollOffset={80}
+      floaterProps={{ disableAnimation: reduced }}
+      callback={handleCallback}
+      styles={{
+        options: {
+          arrowColor: "hsl(var(--card))",
+          backgroundColor: "hsl(var(--card))",
+          textColor: "hsl(var(--foreground))",
+          primaryColor: "hsl(var(--primary))",
+          overlayColor: "rgba(0,0,0,0.55)",
+          zIndex: 10000,
         },
-      } as any}
+        tooltip: {
+          maxWidth: "min(92vw, 360px)",
+          borderRadius: 12,
+          padding: 16,
+          fontSize: 14,
+        },
+        tooltipContainer: { textAlign: "left" },
+        buttonNext: {
+          minHeight: 44,
+          paddingInline: 16,
+          borderRadius: 10,
+          fontSize: 14,
+        },
+        buttonBack: {
+          minHeight: 44,
+          paddingInline: 12,
+          fontSize: 14,
+        },
+        buttonSkip: {
+          minHeight: 44,
+          paddingInline: 12,
+          fontSize: 14,
+        },
+      }}
     />
   );
 }
