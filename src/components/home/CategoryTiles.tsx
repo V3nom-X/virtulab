@@ -52,7 +52,7 @@ export function CategoryTiles() {
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6" data-tour="categories">
           {categories.map((category, idx) => {
             const Icon = category.icon;
             return (
