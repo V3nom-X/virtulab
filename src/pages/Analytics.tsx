@@ -360,14 +360,14 @@ const Analytics = () => {
                 {badges.slice(0, 9).map((badge) => (
                   <div
                     key={badge.id}
-                    className={`aspect-square rounded-xl flex flex-col items-center justify-center p-2 transition-all ${
+                    className={`min-h-[92px] rounded-xl flex flex-col items-center justify-center gap-1 p-2.5 text-center overflow-hidden min-w-0 transition-all ${
                       badge.earned 
                         ? "bg-primary/10 border border-primary/20" 
                         : "bg-muted/50 opacity-50 grayscale"
                     }`}
                   >
-                    <span className="text-2xl mb-1">{badge.icon}</span>
-                    <span className="text-[10px] text-center font-medium leading-tight">{badge.name}</span>
+                    <span className="text-2xl shrink-0 leading-none">{badge.icon}</span>
+                    <span className="text-[10px] font-medium leading-tight break-words line-clamp-2 w-full px-0.5">{badge.name}</span>
                   </div>
                 ))}
               </div>
