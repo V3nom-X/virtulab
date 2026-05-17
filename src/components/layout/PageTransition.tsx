@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FlipFadeText } from "@/components/ui/FlipFadeText";
 
-const LOADING_DURATION = 4000;
+const LOADING_DURATION = 1200;
 
 interface PageTransitionProps {
   children: ReactNode;
@@ -11,23 +11,23 @@ interface PageTransitionProps {
 
 export function PageTransition({ children }: PageTransitionProps) {
   const location = useLocation();
-  const [isLoading, setIsLoading] = useState(false);
-  const [showContent, setShowContent] = useState(true);
   const prevKeyRef = useRef(location.key);
+  // Compute loading state synchronously on the same render the route changes,
+  // so the loader paints before any new page content can flash.
+  const routeChanged = prevKeyRef.current !== location.key;
+  const [isLoading, setIsLoading] = useState(routeChanged);
+
+  if (routeChanged && !isLoading) {
+    setIsLoading(true);
+  }
 
   useEffect(() => {
-    if (prevKeyRef.current === location.key) return;
+    if (prevKeyRef.current === location.key && !isLoading) return;
     prevKeyRef.current = location.key;
-
-    setShowContent(false);
     setIsLoading(true);
-
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-      setShowContent(true);
-    }, LOADING_DURATION);
-
+    const timer = setTimeout(() => setIsLoading(false), LOADING_DURATION);
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.key]);
 
   return (
@@ -36,21 +36,21 @@ export function PageTransition({ children }: PageTransitionProps) {
         {isLoading && (
           <motion.div
             key="loader"
-            initial={{ opacity: 0 }}
+            initial={{ opacity: 1 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.2 }}
             className="fixed inset-0 z-[100] flex items-center justify-center bg-background"
           >
             <FlipFadeText
               words={["LOADING", "PREPARING", "BUILDING", "RENDERING", "READY"]}
-              interval={800}
+              interval={300}
             />
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div style={{ display: showContent ? 'block' : 'none' }}>
+      <div style={{ visibility: isLoading ? "hidden" : "visible" }}>
         {children}
       </div>
     </>
