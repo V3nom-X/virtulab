@@ -41,6 +41,7 @@ interface Preferences {
   high_contrast: boolean;
   color_blind_mode: boolean;
   parallax_enabled: boolean;
+  cinematic_video_enabled: boolean;
   email_notifications: boolean;
   new_experiments_notifications: boolean;
   community_updates_notifications: boolean;
@@ -63,6 +64,7 @@ const Settings = () => {
     high_contrast: false,
     color_blind_mode: false,
     parallax_enabled: true,
+    cinematic_video_enabled: true,
     email_notifications: true,
     new_experiments_notifications: true,
     community_updates_notifications: false
@@ -104,6 +106,7 @@ const Settings = () => {
         high_contrast: data.high_contrast || false,
         color_blind_mode: data.color_blind_mode || false,
         parallax_enabled: (data as any).parallax_enabled !== false,
+        cinematic_video_enabled: (data as any).cinematic_video_enabled !== false,
         email_notifications: data.email_notifications ?? true,
         new_experiments_notifications: data.new_experiments_notifications ?? true,
         community_updates_notifications: data.community_updates_notifications || false
@@ -375,6 +378,22 @@ const Settings = () => {
                     checked={preferences.parallax_enabled && !preferences.reduce_motion}
                     disabled={preferences.reduce_motion}
                     onCheckedChange={(checked) => savePreferences({ parallax_enabled: checked })}
+                  />
+                </div>
+                <Separator />
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm">Cinematic Video Motion</p>
+                    <p className="text-sm text-muted-foreground break-words">
+                      Autoplay the cinematic lab background video on the home page. {preferences.reduce_motion && "Disabled while Reduce Motion is on."}
+                    </p>
+                  </div>
+                  <Switch
+                    className="shrink-0"
+                    aria-label="Cinematic video motion"
+                    checked={preferences.cinematic_video_enabled && !preferences.reduce_motion}
+                    disabled={preferences.reduce_motion}
+                    onCheckedChange={(checked) => savePreferences({ cinematic_video_enabled: checked })}
                   />
                 </div>
                 <Separator />
