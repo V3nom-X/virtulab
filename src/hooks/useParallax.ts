@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { useScroll, useTransform, MotionValue } from "framer-motion";
-import { useReducedMotion } from "@/hooks/useAccessibility";
+import { useReducedMotion, useParallaxEnabled } from "@/hooks/useAccessibility";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ParallaxOptions {
@@ -18,6 +18,7 @@ interface ParallaxOptions {
 export function useParallax({ speed = 0.2, enableOnMobile = false }: ParallaxOptions = {}) {
   const ref = useRef<HTMLElement | null>(null);
   const reduced = useReducedMotion();
+  const parallaxOn = useParallaxEnabled();
   const isMobile = useIsMobile();
 
   const { scrollYProgress } = useScroll({
@@ -33,7 +34,7 @@ export function useParallax({ speed = 0.2, enableOnMobile = false }: ParallaxOpt
     [range, -range],
   );
 
-  const disabled = reduced || (isMobile && !enableOnMobile);
+  const disabled = reduced || !parallaxOn || (isMobile && !enableOnMobile);
 
   return { ref, y, disabled } as const;
 }
