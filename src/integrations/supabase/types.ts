@@ -522,6 +522,7 @@ export type Database = {
           high_contrast: boolean | null
           id: string
           new_experiments_notifications: boolean | null
+          parallax_enabled: boolean
           reduce_motion: boolean | null
           theme: string | null
           updated_at: string | null
@@ -535,6 +536,7 @@ export type Database = {
           high_contrast?: boolean | null
           id?: string
           new_experiments_notifications?: boolean | null
+          parallax_enabled?: boolean
           reduce_motion?: boolean | null
           theme?: string | null
           updated_at?: string | null
@@ -548,6 +550,7 @@ export type Database = {
           high_contrast?: boolean | null
           id?: string
           new_experiments_notifications?: boolean | null
+          parallax_enabled?: boolean
           reduce_motion?: boolean | null
           theme?: string | null
           updated_at?: string | null
