@@ -515,6 +515,7 @@ export type Database = {
       }
       user_preferences: {
         Row: {
+          cinematic_video_enabled: boolean
           color_blind_mode: boolean | null
           community_updates_notifications: boolean | null
           created_at: string | null
@@ -529,6 +530,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          cinematic_video_enabled?: boolean
           color_blind_mode?: boolean | null
           community_updates_notifications?: boolean | null
           created_at?: string | null
@@ -543,6 +545,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          cinematic_video_enabled?: boolean
           color_blind_mode?: boolean | null
           community_updates_notifications?: boolean | null
           created_at?: string | null
