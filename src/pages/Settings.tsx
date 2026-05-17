@@ -40,6 +40,7 @@ interface Preferences {
   reduce_motion: boolean;
   high_contrast: boolean;
   color_blind_mode: boolean;
+  parallax_enabled: boolean;
   email_notifications: boolean;
   new_experiments_notifications: boolean;
   community_updates_notifications: boolean;
@@ -61,6 +62,7 @@ const Settings = () => {
     reduce_motion: false,
     high_contrast: false,
     color_blind_mode: false,
+    parallax_enabled: true,
     email_notifications: true,
     new_experiments_notifications: true,
     community_updates_notifications: false
@@ -101,6 +103,7 @@ const Settings = () => {
         reduce_motion: data.reduce_motion || false,
         high_contrast: data.high_contrast || false,
         color_blind_mode: data.color_blind_mode || false,
+        parallax_enabled: (data as any).parallax_enabled !== false,
         email_notifications: data.email_notifications ?? true,
         new_experiments_notifications: data.new_experiments_notifications ?? true,
         community_updates_notifications: data.community_updates_notifications || false
@@ -346,34 +349,56 @@ const Settings = () => {
                 <h2 className="font-semibold">Accessibility</h2>
               </div>
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0 flex-1">
                     <p className="font-medium text-sm">Reduce Motion</p>
-                    <p className="text-sm text-muted-foreground">Minimize animations</p>
+                    <p className="text-sm text-muted-foreground break-words">Minimize animations across the app</p>
                   </div>
                   <Switch 
+                    className="shrink-0"
+                    aria-label="Reduce motion"
                     checked={preferences.reduce_motion}
                     onCheckedChange={(checked) => savePreferences({ reduce_motion: checked })}
                   />
                 </div>
                 <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-sm">High Contrast</p>
-                    <p className="text-sm text-muted-foreground">Increase color contrast</p>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm">Parallax Effects</p>
+                    <p className="text-sm text-muted-foreground break-words">
+                      Subtle scroll-driven motion. {preferences.reduce_motion && "Disabled while Reduce Motion is on."}
+                    </p>
                   </div>
                   <Switch 
+                    className="shrink-0"
+                    aria-label="Parallax effects"
+                    checked={preferences.parallax_enabled && !preferences.reduce_motion}
+                    disabled={preferences.reduce_motion}
+                    onCheckedChange={(checked) => savePreferences({ parallax_enabled: checked })}
+                  />
+                </div>
+                <Separator />
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm">High Contrast</p>
+                    <p className="text-sm text-muted-foreground break-words">Increase color contrast</p>
+                  </div>
+                  <Switch 
+                    className="shrink-0"
+                    aria-label="High contrast"
                     checked={preferences.high_contrast}
                     onCheckedChange={(checked) => savePreferences({ high_contrast: checked })}
                   />
                 </div>
                 <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0 flex-1">
                     <p className="font-medium text-sm">Color Blind Mode</p>
-                    <p className="text-sm text-muted-foreground">Adjust colors for color blindness</p>
+                    <p className="text-sm text-muted-foreground break-words">Adjust colors for color blindness</p>
                   </div>
                   <Switch 
+                    className="shrink-0"
+                    aria-label="Color blind mode"
                     checked={preferences.color_blind_mode}
                     onCheckedChange={(checked) => savePreferences({ color_blind_mode: checked })}
                   />
@@ -391,37 +416,28 @@ const Settings = () => {
                 </span>
               </div>
               <div className="space-y-4 pointer-events-none">
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0 flex-1">
                     <p className="font-medium text-sm">Email Notifications</p>
-                    <p className="text-sm text-muted-foreground">Receive updates via email</p>
+                    <p className="text-sm text-muted-foreground break-words">Receive updates via email</p>
                   </div>
-                  <Switch 
-                    checked={preferences.email_notifications}
-                    disabled
-                  />
+                  <Switch className="shrink-0" aria-label="Email notifications" checked={preferences.email_notifications} disabled />
                 </div>
                 <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0 flex-1">
                     <p className="font-medium text-sm">New Experiments</p>
-                    <p className="text-sm text-muted-foreground">Get notified about new content</p>
+                    <p className="text-sm text-muted-foreground break-words">Get notified about new content</p>
                   </div>
-                  <Switch 
-                    checked={preferences.new_experiments_notifications}
-                    disabled
-                  />
+                  <Switch className="shrink-0" aria-label="New experiments notifications" checked={preferences.new_experiments_notifications} disabled />
                 </div>
                 <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0 flex-1">
                     <p className="font-medium text-sm">Community Updates</p>
-                    <p className="text-sm text-muted-foreground">Activity from people you follow</p>
+                    <p className="text-sm text-muted-foreground break-words">Activity from people you follow</p>
                   </div>
-                  <Switch 
-                    checked={preferences.community_updates_notifications}
-                    disabled
-                  />
+                  <Switch className="shrink-0" aria-label="Community updates notifications" checked={preferences.community_updates_notifications} disabled />
                 </div>
               </div>
               <p className="text-xs text-muted-foreground mt-4 text-center">

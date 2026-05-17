@@ -6,9 +6,9 @@ interface AccessibilityPreferences {
   reduce_motion: boolean;
   high_contrast: boolean;
   color_blind_mode: boolean;
+  parallax_enabled: boolean;
 }
 
-// Track system preference so it can be combined with the stored user setting.
 function getSystemReducedMotion(): boolean {
   if (typeof window === 'undefined' || !window.matchMedia) return false;
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -20,6 +20,7 @@ export function useAccessibility() {
     reduce_motion: false,
     high_contrast: false,
     color_blind_mode: false,
+    parallax_enabled: true,
   });
   const [systemReduce, setSystemReduce] = useState<boolean>(getSystemReducedMotion());
 
@@ -38,13 +39,14 @@ export function useAccessibility() {
           reduce_motion: false,
           high_contrast: false,
           color_blind_mode: false,
+          parallax_enabled: true,
         });
         return;
       }
 
       const { data } = await supabase
         .from('user_preferences')
-        .select('reduce_motion, high_contrast, color_blind_mode')
+        .select('reduce_motion, high_contrast, color_blind_mode, parallax_enabled')
         .eq('user_id', user.id)
         .single();
 
@@ -53,6 +55,7 @@ export function useAccessibility() {
           reduce_motion: data.reduce_motion || false,
           high_contrast: data.high_contrast || false,
           color_blind_mode: data.color_blind_mode || false,
+          parallax_enabled: data.parallax_enabled !== false,
         });
       }
     };
@@ -76,6 +79,7 @@ export function useAccessibility() {
               reduce_motion: newData.reduce_motion || false,
               high_contrast: newData.high_contrast || false,
               color_blind_mode: newData.color_blind_mode || false,
+              parallax_enabled: newData.parallax_enabled !== false,
             });
           }
         }
@@ -87,10 +91,9 @@ export function useAccessibility() {
     };
   }, [user]);
 
-  // Combine system preference with user preference.
   const effectiveReduceMotion = preferences.reduce_motion || systemReduce;
+  const parallaxOff = !preferences.parallax_enabled || effectiveReduceMotion;
 
-  // Apply preferences to document
   useEffect(() => {
     const html = document.documentElement;
 
@@ -102,16 +105,14 @@ export function useAccessibility() {
 
     if (preferences.color_blind_mode) html.classList.add('color-blind-mode');
     else html.classList.remove('color-blind-mode');
-  }, [preferences, effectiveReduceMotion]);
+
+    if (parallaxOff) html.classList.add('parallax-off');
+    else html.classList.remove('parallax-off');
+  }, [preferences, effectiveReduceMotion, parallaxOff]);
 
   return { ...preferences, reduce_motion: effectiveReduceMotion };
 }
 
-/**
- * Lightweight subscriber for components that only need the reduced-motion flag.
- * Listens to the system media query AND the global `.reduce-motion` class
- * (which the main hook sets when the logged-in user toggles the pref).
- */
 export function useReducedMotion(): boolean {
   const [reduced, setReduced] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
@@ -132,7 +133,6 @@ export function useReducedMotion(): boolean {
     recompute();
     mql?.addEventListener?.('change', recompute);
 
-    // Observe class changes on <html> so user-toggle updates propagate.
     const observer = new MutationObserver(recompute);
     observer.observe(document.documentElement, {
       attributes: true,
@@ -146,4 +146,31 @@ export function useReducedMotion(): boolean {
   }, []);
 
   return reduced;
+}
+
+/**
+ * True when parallax should run (user opted in AND motion not reduced).
+ * Driven by the `.parallax-off` class set by `useAccessibility`.
+ */
+export function useParallaxEnabled(): boolean {
+  const [enabled, setEnabled] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    return !document.documentElement.classList.contains('parallax-off');
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const recompute = () => {
+      setEnabled(!document.documentElement.classList.contains('parallax-off'));
+    };
+    recompute();
+    const observer = new MutationObserver(recompute);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+    return () => observer.disconnect();
+  }, []);
+
+  return enabled;
 }

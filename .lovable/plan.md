@@ -1,68 +1,76 @@
-## Reduced motion + parallax + onboarding QA
+## Reduced motion + parallax toggle + Analytics polish + Settings switch fix
 
-### 1. Reduced motion mode (extend existing `reduce-motion` class)
+### 1. Database: add `parallax_enabled` to `user_preferences`
 
-The `useAccessibility` hook already toggles `.reduce-motion` on `<html>` based on a stored user preference. Extend it to:
+Migration adds nullable boolean column `parallax_enabled` (default `true`) to `public.user_preferences`. RLS already exists. No new policies.
 
-- Also auto-enable when `window.matchMedia('(prefers-reduced-motion: reduce)')` matches (system preference), unioned with the user toggle.
-- Expose a small helper `useReducedMotion()` (same file) that returns the current boolean for components to gate JS-driven animations (Framer Motion, GSAP, parallax).
+### 2. Parallax preference plumbing
 
-In `src/index.css`, expand the `.reduce-motion` rule to:
+- `useAccessibility.ts` — extend `Preferences` to include `parallax_enabled`, default `true`, fetch + realtime updates, expose on return value.
+- New helper `useParallaxEnabled()` (same file) returns `(parallax_enabled !== false) && !reduceMotion`. Subscribes to `<html>` class changes and a CustomEvent (`virtulab:parallax-pref`) for instant cross-component updates.
+- `useParallax.ts` — combine: `disabled = reduced || (!parallaxEnabled) || (isMobile && !enableOnMobile)`.
+- `useAccessibility` toggles a `.parallax-off` class on `<html>` so CSS hides `[data-parallax-decor]` even if a component bypasses the hook.
+- `src/index.css` — add `.parallax-off [data-parallax]{transform:none!important}` and `.parallax-off [data-parallax-decor]{display:none!important}`.
 
-- Force `animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important;` on `*, *::before, *::after`.
-- Disable known heavy effects: `.shimmer-button` keyframes, `ShaderBackground` (`canvas[data-shader]` → `display:none`, fallback gradient), `CustomLoader` 5-dot bounce → static dots, `FlipFadeText` flip → simple fade.
-- Hide decorative parallax layers (`[data-parallax]`).
+### 3. Settings page
 
-In `PageTransition.tsx`: when reduced motion is on, skip the 1200 ms loader entirely (set `LOADING_DURATION = 0`, no `FlipFadeText`, no `motion.div` opacity fade) — render children immediately on route change. Keep current behavior otherwise.
+- Add a new **Motion & Parallax** card (between Appearance and Accessibility) with two switches:
+  - **Reduce Motion** (moved here from Accessibility, kept canonical there too via prop) — actually, leave Reduce Motion in Accessibility; add only **Parallax Effects** in the new card with a description "Subtle scroll-driven motion. Disables automatically on Reduce Motion."
+  - Disable the Parallax switch when `preferences.reduce_motion` is true and show a small note.
+- Fix the switch rendering on mobile: shadcn `<Switch>` ships fine on mobile; the issue is the parent `flex items-center justify-between` clipping it when the label text is long. Wrap the left text in `min-w-0 flex-1 pr-4` and add `shrink-0` to each `<Switch>` across all toggles in Settings. Also add `aria-label` so screen readers don't depend on the adjacent paragraph.
+- Settings save handler already calls `upsert` — extend `Preferences` type with `parallax_enabled` and pipe through.
 
-In `OnboardingTour.tsx`: pass `disableOverlayAnimation` and shorter spotlight transition; if reduced motion is on, set `spotlightPadding: 4` and `disableScrolling: true`.
+### 4. Analytics grid containment pass
 
-### 2. Parallax motion
+Apply the same wrap/clamp/contain pattern already used for the badges grid to other tiles in `src/pages/Analytics.tsx`:
 
-Add a lightweight parallax system (no new heavy deps — use Framer Motion which is already installed):
+- Stats grid (`grid sm:grid-cols-2 lg:grid-cols-4`): each tile gets `min-w-0 overflow-hidden`; inner `<p className="text-2xl font-bold">` becomes `truncate` with `title={value}`; descriptive `<p>` gets `break-words leading-snug`. The bottom helper row (`+x this week`) gets `flex-wrap min-w-0`.
+- Category Progress rows: name + count row uses `min-w-0`, name `truncate`, count `shrink-0`.
+- Recent Activity items: container `min-w-0`; title `truncate`; meta line `truncate`; status badge `shrink-0`.
+- All cards inside `.lg:col-span-2` get `min-w-0` so the right Badges column never gets pushed.
 
-- New `src/hooks/useParallax.ts`: returns a `MotionValue<number>` driven by `useScroll` + `useTransform`. Accepts `{ speed, axis }`. Returns `{ y }` or `{ x }` style object. **Disabled when `useReducedMotion()` is true** (returns static 0).
-- New `src/components/ui/Parallax.tsx`: wrapper `<motion.div data-parallax style={{ y }}>` with `will-change: transform`.
+### 5. Parallax FPS / jank debug overlay
 
-Apply parallax in 3 high-impact places (kept subtle, GPU transform only):
+New component `src/components/dev/ParallaxPerfOverlay.tsx`:
 
-1. **`HeroSection.tsx`** — background plasma `ShaderBackground` translates `y` at speed `0.3` (slower than scroll); foreground headline at speed `-0.1` (slight counter-drift); CTA stays static.
-2. **`CategoryTiles.tsx`** — tile grid container shifts `y` at `0.08` for a gentle depth offset behind a static section header.
-3. **`FeaturedExperiments.tsx`** — decorative blob/glow div (new, `pointer-events-none absolute -z-10`) parallaxes at `0.15`; cards untouched.
+- Fixed-positioned (bottom-left, `pointer-events-none`, tiny font, z-[200]).
+- Uses `requestAnimationFrame` loop to compute rolling-1s FPS, max frame time, and total long-frame count (>50ms).
+- Listens to `scroll` to mark "scrolling" vs idle so we can flag FPS drops only during scroll.
+- Shows current parallax state (enabled / disabled-mobile / reduced-motion / user-off).
+- Mounted globally in `App.tsx`, gated by:
+  1. URL contains `?perf=1`, OR
+  2. `localStorage.getItem('virtulab-perf-overlay') === '1'`.
+- A keyboard shortcut `Shift+P` toggles the localStorage flag.
+- Zero impact for normal users (component returns `null` unless flag set).
 
-Constraints:
-- Only translate, no scale/rotate (avoids layout thrash).
-- Wrap parallax containers in `overflow-hidden` so transforms don't introduce horizontal scrollbars on mobile.
-- No parallax on `<768px` unless user opts in — mobile defaults to static (avoids janky scroll on low-end devices and respects the existing mobile-first responsiveness rule).
+### 6. Cross-viewport onboarding QA
 
-### 3. Onboarding tour QA on mobile
+Use `browser--navigate_to_sandbox` + `browser--screenshot` at **320×568**, **375×812**, **414×896**, **768×1024**:
 
-Add per-step responsive options (no code changes to step content):
+For each width:
+1. Clear `localStorage.virtulab-onboarding-completed-v1` and reload.
+2. Step through tour (`Next` via `browser--act`) and screenshot each step.
+3. Verify: no tooltip clipped horizontally, no overlap with anchor element, buttons (Skip/Back/Next) keep 44px tap target.
+4. Also verify with `prefers-reduced-motion` toggled on (set via `matchMedia` emulation through `browser--act` evaluating a script): canvases hidden, parallax decor hidden, page transitions skip loader.
 
-- Set `floaterProps={{ disableAnimation: prefersReducedMotion }}`.
-- Add `scrollOffset: 80` so anchored steps don't sit under the navbar.
-- For each step targeting an element (`hero-cta`, `categories`, `nav-menu`), set `placement: "auto"` and `placement: window.innerWidth < 640 ? 'bottom' : 'auto'` fallback — Joyride re-positions if clipped.
-- Tooltip styles already cap at `min(92vw, 360px)`; add `arrowColor: 'hsl(var(--card))'` and pad action buttons (`buttonNext`, `buttonBack`) with `min-height: 44px` for tap-target compliance.
-- Verify visually at three sandbox viewport widths: **320 (small)**, **375 (iPhone SE/12 mini)**, **414 (large phone)**. Use `browser--navigate_to_sandbox` + `browser--screenshot` to confirm:
-  - Welcome step centered, not clipped.
-  - Hero-CTA tooltip doesn't overlap the headline.
-  - Nav-menu tooltip doesn't extend past viewport right edge.
-  - Buttons (Skip / Back / Next) don't wrap awkwardly.
-- Since the tour only runs once and is gated by `localStorage`, the QA pass will clear `virtulab-onboarding-completed-v1` before each screenshot.
+QA notes recorded in the final response (no source changes unless a viewport breaks layout — then fix Joyride `placement` per step).
+
+### 7. Video placeholder (no upload yet)
+
+User said the video is coming. Don't add anything now beyond a note in the plan: when they upload, drop the file into `public/videos/parallax-hero.mp4`, and we'll wire a `<video autoPlay muted loop playsInline preload="metadata">` inside a new `Parallax` wrapper on the home page (likely between Hero and Categories). Will revisit on next turn when file is provided.
 
 ### Files
 
 **Created**
-- `src/hooks/useParallax.ts`
-- `src/components/ui/Parallax.tsx`
+- `src/components/dev/ParallaxPerfOverlay.tsx`
+- New migration for `parallax_enabled` column.
 
 **Edited**
-- `src/hooks/useAccessibility.ts` — system-pref union + export `useReducedMotion`.
-- `src/index.css` — expanded `.reduce-motion` rules.
-- `src/components/layout/PageTransition.tsx` — skip loader on reduced motion.
-- `src/components/onboarding/OnboardingTour.tsx` — mobile placements, tap targets, reduced-motion gating.
-- `src/components/home/HeroSection.tsx` — parallax on shader + headline.
-- `src/components/home/CategoryTiles.tsx` — parallax on grid.
-- `src/components/home/FeaturedExperiments.tsx` — parallax decorative layer.
+- `src/hooks/useAccessibility.ts` — add `parallax_enabled`, expose helper, set/remove `.parallax-off`.
+- `src/hooks/useParallax.ts` — gate on parallax pref.
+- `src/index.css` — `.parallax-off` rules; ensure `[data-parallax-decor]` hides cleanly.
+- `src/pages/Settings.tsx` — new Parallax toggle, switch wrap fixes, `min-w-0` + `shrink-0`.
+- `src/pages/Analytics.tsx` — apply wrap/clamp/contain to stats, progress, activity.
+- `src/App.tsx` — mount `ParallaxPerfOverlay`.
 
-No backend, no DB, no new dependencies.
+No backend logic beyond the column addition. No new dependencies.

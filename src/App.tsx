@@ -13,6 +13,7 @@ import NotFound from "./pages/NotFound";
 import { AuraAssistant } from "./components/aura/AuraAssistant";
 import { PageTransition } from "./components/layout/PageTransition";
 import { OnboardingTour } from "./components/onboarding/OnboardingTour";
+import { ParallaxPerfOverlay } from "./components/dev/ParallaxPerfOverlay";
 
 // Lazy-loaded routes for faster initial load
 const Library = lazy(() => import("./pages/Library"));
@@ -90,6 +91,7 @@ const App = () => (
               </PageTransition>
               <OnboardingTour />
               <AuraAssistant />
+              <ParallaxPerfOverlay />
             </BrowserRouter>
           </TooltipProvider>
         </AccessibilityProvider>

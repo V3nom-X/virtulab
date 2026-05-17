@@ -327,6 +327,14 @@
   animation: none !important;
 }
 
+/* User-toggled parallax off (independent from reduce-motion) */
+.parallax-off [data-parallax-decor] {
+  display: none !important;
+}
+.parallax-off [data-parallax] {
+  transform: none !important;
+}
+
 /* Accessibility: High Contrast */
 .high-contrast {
   --background: 0 0% 0%;
