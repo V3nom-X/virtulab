@@ -55,24 +55,24 @@ export function OnboardingTour() {
     <Joyride
       steps={steps}
       run={run}
-      callback={handleCallback}
+      continuous
+      onEvent={handleCallback}
       options={{
-        continuous: true,
         showSkipButton: true,
         showProgress: true,
         disableScrollParentFix: true,
         disableBeacon: true,
-      } as any}
-      styles={{
-        tooltip: {
-          maxWidth: "min(92vw, 360px)",
-          borderRadius: 12,
-          padding: 16,
-          fontSize: 14,
-          backgroundColor: "hsl(var(--card))",
-          color: "hsl(var(--foreground))",
+        styles: {
+          tooltip: {
+            maxWidth: "min(92vw, 360px)",
+            borderRadius: 12,
+            padding: 16,
+            fontSize: 14,
+            backgroundColor: "hsl(var(--card))",
+            color: "hsl(var(--foreground))",
+          },
+          overlay: { backgroundColor: "rgba(0,0,0,0.55)" },
         },
-        overlay: { backgroundColor: "rgba(0,0,0,0.55)" },
       } as any}
     />
   );
