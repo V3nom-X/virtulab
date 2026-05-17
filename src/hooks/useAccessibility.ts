@@ -7,6 +7,7 @@ interface AccessibilityPreferences {
   high_contrast: boolean;
   color_blind_mode: boolean;
   parallax_enabled: boolean;
+  cinematic_video_enabled: boolean;
 }
 
 function getSystemReducedMotion(): boolean {
@@ -21,6 +22,7 @@ export function useAccessibility() {
     high_contrast: false,
     color_blind_mode: false,
     parallax_enabled: true,
+    cinematic_video_enabled: true,
   });
   const [systemReduce, setSystemReduce] = useState<boolean>(getSystemReducedMotion());
 
@@ -40,13 +42,14 @@ export function useAccessibility() {
           high_contrast: false,
           color_blind_mode: false,
           parallax_enabled: true,
+          cinematic_video_enabled: true,
         });
         return;
       }
 
       const { data } = await supabase
         .from('user_preferences')
-        .select('reduce_motion, high_contrast, color_blind_mode, parallax_enabled')
+        .select('reduce_motion, high_contrast, color_blind_mode, parallax_enabled, cinematic_video_enabled')
         .eq('user_id', user.id)
         .single();
 
@@ -56,6 +59,7 @@ export function useAccessibility() {
           high_contrast: data.high_contrast || false,
           color_blind_mode: data.color_blind_mode || false,
           parallax_enabled: data.parallax_enabled !== false,
+          cinematic_video_enabled: (data as any).cinematic_video_enabled !== false,
         });
       }
     };
@@ -80,6 +84,7 @@ export function useAccessibility() {
               high_contrast: newData.high_contrast || false,
               color_blind_mode: newData.color_blind_mode || false,
               parallax_enabled: newData.parallax_enabled !== false,
+              cinematic_video_enabled: newData.cinematic_video_enabled !== false,
             });
           }
         }
@@ -173,4 +178,52 @@ export function useParallaxEnabled(): boolean {
   }, []);
 
   return enabled;
+}
+
+/**
+ * True when cinematic background videos may autoplay
+ * (user opted in AND motion not reduced).
+ */
+export function useCinematicVideoEnabled(): boolean {
+  const { user } = useAuth();
+  const reduced = useReducedMotion();
+  const [enabled, setEnabled] = useState<boolean>(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!user) {
+      setEnabled(true);
+      return;
+    }
+    supabase
+      .from('user_preferences')
+      .select('cinematic_video_enabled')
+      .eq('user_id', user.id)
+      .single()
+      .then(({ data }) => {
+        if (!cancelled && data) {
+          setEnabled((data as any).cinematic_video_enabled !== false);
+        }
+      });
+
+    const channel = supabase
+      .channel('cinematic-video-pref')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'user_preferences', filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          if (payload.new) {
+            setEnabled((payload.new as any).cinematic_video_enabled !== false);
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  return enabled && !reduced;
 }
