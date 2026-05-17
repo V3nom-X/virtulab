@@ -69,24 +69,16 @@ export function OnboardingTour() {
       disableScrollParentFix
       callback={handleCallback}
       styles={{
-        options: {
-          primaryColor: "hsl(162, 77%, 46%)",
-          zIndex: 10000,
-          arrowColor: "hsl(var(--card))",
-          backgroundColor: "hsl(var(--card))",
-          textColor: "hsl(var(--foreground))",
-          overlayColor: "rgba(0,0,0,0.55)",
-        },
         tooltip: {
           maxWidth: "min(92vw, 360px)",
           borderRadius: 12,
           padding: 16,
           fontSize: 14,
+          backgroundColor: "hsl(var(--card))",
+          color: "hsl(var(--foreground))",
         },
-        buttonNext: { borderRadius: 8, padding: "8px 14px" },
-        buttonBack: { color: "hsl(var(--muted-foreground))" },
-        buttonSkip: { color: "hsl(var(--muted-foreground))" },
-      }}
+        overlay: { backgroundColor: "rgba(0,0,0,0.55)" },
+      } as any}
     />
   );
 }
