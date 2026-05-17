@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FlipFadeText } from "@/components/ui/FlipFadeText";
+import { useReducedMotion } from "@/hooks/useAccessibility";
 
 const LOADING_DURATION = 1200;
 
@@ -11,29 +12,33 @@ interface PageTransitionProps {
 
 export function PageTransition({ children }: PageTransitionProps) {
   const location = useLocation();
+  const reduced = useReducedMotion();
   const prevKeyRef = useRef(location.key);
-  // Compute loading state synchronously on the same render the route changes,
-  // so the loader paints before any new page content can flash.
   const routeChanged = prevKeyRef.current !== location.key;
-  const [isLoading, setIsLoading] = useState(routeChanged);
+  // Reduced motion: skip the loader entirely.
+  const [isLoading, setIsLoading] = useState(reduced ? false : routeChanged);
 
-  if (routeChanged && !isLoading) {
+  if (routeChanged && !isLoading && !reduced) {
     setIsLoading(true);
   }
 
   useEffect(() => {
     if (prevKeyRef.current === location.key && !isLoading) return;
     prevKeyRef.current = location.key;
+    if (reduced) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     const timer = setTimeout(() => setIsLoading(false), LOADING_DURATION);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.key]);
+  }, [location.key, reduced]);
 
   return (
     <>
       <AnimatePresence>
-        {isLoading && (
+        {isLoading && !reduced && (
           <motion.div
             key="loader"
             initial={{ opacity: 1 }}
@@ -50,7 +55,7 @@ export function PageTransition({ children }: PageTransitionProps) {
         )}
       </AnimatePresence>
 
-      <div style={{ visibility: isLoading ? "hidden" : "visible" }}>
+      <div style={{ visibility: isLoading && !reduced ? "hidden" : "visible" }}>
         {children}
       </div>
     </>
