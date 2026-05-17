@@ -84,7 +84,7 @@ export function OnboardingTour() {
       scrollOffset={80}
       floaterProps={{ disableAnimation: reduced }}
       callback={handleCallback}
-      styles={{ ...({
+      styles={{
         options: {
           arrowColor: "hsl(var(--card))",
           backgroundColor: "hsl(var(--card))",
@@ -100,23 +100,10 @@ export function OnboardingTour() {
           fontSize: 14,
         },
         tooltipContainer: { textAlign: "left" },
-        buttonNext: {
-          minHeight: 44,
-          paddingInline: 16,
-          borderRadius: 10,
-          fontSize: 14,
-        },
-        buttonBack: {
-          minHeight: 44,
-          paddingInline: 12,
-          fontSize: 14,
-        },
-        buttonSkip: {
-          minHeight: 44,
-          paddingInline: 12,
-          fontSize: 14,
-        },
-      }}
+        buttonNext: { minHeight: 44, paddingInline: 16, borderRadius: 10, fontSize: 14 },
+        buttonBack: { minHeight: 44, paddingInline: 12, fontSize: 14 },
+        buttonSkip: { minHeight: 44, paddingInline: 12, fontSize: 14 },
+      } as any}
     />
   );
 }
