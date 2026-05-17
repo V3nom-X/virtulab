@@ -34,6 +34,7 @@ import ReproductiveSystem from "./pages/ReproductiveSystem";
 import ReproductiveExperiment from "./pages/ReproductiveExperiment";
 import { AuraAssistant } from "./components/aura/AuraAssistant";
 import { PageTransition } from "./components/layout/PageTransition";
+import { OnboardingTour } from "./components/onboarding/OnboardingTour";
 
 // Accessibility wrapper component
 function AccessibilityProvider({ children }: { children: React.ReactNode }) {
@@ -83,6 +84,7 @@ const App = () => (
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </PageTransition>
+              <OnboardingTour />
               <AuraAssistant />
             </BrowserRouter>
           </TooltipProvider>
