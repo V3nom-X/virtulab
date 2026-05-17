@@ -1,5 +1,6 @@
 import { Layout } from "@/components/layout/Layout";
 import { HeroSection } from "@/components/home/HeroSection";
+import { ParallaxVideoSection } from "@/components/home/ParallaxVideoSection";
 import { FeaturedExperiments } from "@/components/home/FeaturedExperiments";
 import { CategoryTiles } from "@/components/home/CategoryTiles";
 import { FeaturesSection } from "@/components/home/FeaturesSection";
@@ -12,7 +13,7 @@ const Index = () => {
     <Layout showNav>
       <ShaderBackground />
       <HeroSection />
-      
+      <ParallaxVideoSection />
       <CategoryTiles />
       <FeaturesSection />
       <TechLogos />
