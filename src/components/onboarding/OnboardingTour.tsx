@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import Joyride, { CallBackProps, STATUS, Step } from "react-joyride";
+import { Joyride, STATUS } from "react-joyride";
+type Step = any;
+type CallBackProps = any;
 
 const STORAGE_KEY = "virtulab-onboarding-completed-v1";
 
