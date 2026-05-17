@@ -78,31 +78,37 @@ export function OnboardingTour() {
       steps={buildSteps(isMobile)}
       run={run}
       continuous
-      showSkipButton
-      showProgress
-      disableScrollParentFix
-      scrollOffset={80}
-      floaterProps={{ disableAnimation: reduced }}
-      callback={handleCallback}
-      styles={{
-        options: {
-          arrowColor: "hsl(var(--card))",
-          backgroundColor: "hsl(var(--card))",
-          textColor: "hsl(var(--foreground))",
-          primaryColor: "hsl(var(--primary))",
-          overlayColor: "rgba(0,0,0,0.55)",
-          zIndex: 10000,
+      onEvent={handleCallback}
+      options={{
+        showSkipButton: true,
+        showProgress: true,
+        disableScrollParentFix: true,
+        disableBeacon: true,
+        scrollOffset: 80,
+        floaterProps: { disableAnimation: reduced },
+        styles: {
+          options: {
+            arrowColor: "hsl(var(--card))",
+            backgroundColor: "hsl(var(--card))",
+            textColor: "hsl(var(--foreground))",
+            primaryColor: "hsl(var(--primary))",
+            overlayColor: "rgba(0,0,0,0.55)",
+            zIndex: 10000,
+          },
+          tooltip: {
+            maxWidth: "min(92vw, 360px)",
+            borderRadius: 12,
+            padding: 16,
+            fontSize: 14,
+            backgroundColor: "hsl(var(--card))",
+            color: "hsl(var(--foreground))",
+          },
+          tooltipContainer: { textAlign: "left" },
+          buttonNext: { minHeight: 44, paddingInline: 16, borderRadius: 10, fontSize: 14 },
+          buttonBack: { minHeight: 44, paddingInline: 12, fontSize: 14 },
+          buttonSkip: { minHeight: 44, paddingInline: 12, fontSize: 14 },
+          overlay: { backgroundColor: "rgba(0,0,0,0.55)" },
         },
-        tooltip: {
-          maxWidth: "min(92vw, 360px)",
-          borderRadius: 12,
-          padding: 16,
-          fontSize: 14,
-        },
-        tooltipContainer: { textAlign: "left" },
-        buttonNext: { minHeight: 44, paddingInline: 16, borderRadius: 10, fontSize: 14 },
-        buttonBack: { minHeight: 44, paddingInline: 12, fontSize: 14 },
-        buttonSkip: { minHeight: 44, paddingInline: 12, fontSize: 14 },
       } as any}
     />
   );
