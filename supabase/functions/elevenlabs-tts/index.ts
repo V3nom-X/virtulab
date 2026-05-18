@@ -1,9 +1,17 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+const MAX_BODY_BYTES = 16 * 1024;
+
+const BodySchema = z.object({
+  text: z.string().min(1).max(5000),
+  voiceId: z.string().regex(/^[A-Za-z0-9]{8,40}$/, "Invalid voice id").optional(),
+});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -11,9 +19,32 @@ serve(async (req) => {
   }
 
   try {
-    const { text, voiceId } = await req.json();
-    const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
+    const raw = await req.text();
+    if (raw.length > MAX_BODY_BYTES) {
+      return new Response(JSON.stringify({ error: "Payload too large" }), {
+        status: 413,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      return new Response(JSON.stringify({ error: "Invalid JSON" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const result = BodySchema.safeParse(parsed);
+    if (!result.success) {
+      return new Response(JSON.stringify({ error: "Invalid request", details: result.error.flatten() }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { text, voiceId } = result.data;
 
+    const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
     if (!ELEVENLABS_API_KEY) {
       return new Response(JSON.stringify({ error: "ElevenLabs API key not configured" }), {
         status: 500,
@@ -21,17 +52,6 @@ serve(async (req) => {
       });
     }
 
-    if (!text || text.trim().length === 0) {
-      return new Response(JSON.stringify({ error: "No text provided" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Truncate text to 5000 chars max
-    const truncatedText = text.slice(0, 5000);
-
-    // Use Sarah voice (female) by default for AURA
     const selectedVoice = voiceId || "EXAVITQu4vr4xnSDxMaL";
 
     const response = await fetch(
@@ -43,7 +63,7 @@ serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          text: truncatedText,
+          text,
           model_id: "eleven_turbo_v2_5",
           voice_settings: {
             stability: 0.5,

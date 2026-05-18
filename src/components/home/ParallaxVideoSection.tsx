@@ -5,6 +5,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import videoAsset from "../../../public/videos/parallax-hero.mp4.asset.json";
 import posterImg from "../../../public/videos/parallax-hero-poster.jpg";
 import { LoopQualityOverlay } from "@/components/dev/LoopQualityOverlay";
+import { trackVideoEvent } from "@/lib/analytics";
 
 /**
  * Detect a "low bandwidth" hint via the Network Information API.
@@ -37,11 +38,24 @@ export function ParallaxVideoSection() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const shouldAutoplay = !reduced && cinematicOn;
-  // Skip the heavy mp4 entirely on reduced-motion, the toggle off, or save-data/2-3G links.
   const shouldLoadVideo = shouldAutoplay && !lowBandwidth;
 
   const [nearViewport, setNearViewport] = useState(false);
   const [canPlay, setCanPlay] = useState(false);
+  const mountTimeRef = useRef<number>(Date.now());
+
+  // Emit a fallback-reason event as soon as we know we will NOT autoplay.
+  useEffect(() => {
+    if (shouldLoadVideo) return;
+    const reason = reduced
+      ? "reduced_motion"
+      : !cinematicOn
+        ? "user_pref_off"
+        : lowBandwidth
+          ? "low_bandwidth"
+          : "unknown";
+    trackVideoEvent("video_fallback_poster", { reason });
+  }, [shouldLoadVideo, reduced, cinematicOn, lowBandwidth]);
 
   // Preload only when the hero section is near the viewport.
   useEffect(() => {
@@ -61,17 +75,34 @@ export function ParallaxVideoSection() {
           }
         }
       },
-      // Start loading ~one viewport early so it's ready when we arrive.
       { rootMargin: "150% 0px 150% 0px" },
     );
     io.observe(el);
     return () => io.disconnect();
   }, [shouldLoadVideo]);
 
-  // Reset the fade state when the source changes (e.g. toggle flips).
   useEffect(() => {
     if (!shouldLoadVideo) setCanPlay(false);
   }, [shouldLoadVideo]);
+
+  // Attempt autoplay + capture timing
+  useEffect(() => {
+    if (!shouldLoadVideo || !nearViewport) return;
+    const v = videoRef.current;
+    if (!v) return;
+    trackVideoEvent("video_autoplay_attempt", {});
+    const onCanPlay = () => trackVideoEvent("video_canplay", { ms: Date.now() - mountTimeRef.current });
+    v.addEventListener("canplay", onCanPlay, { once: true });
+    const p = v.play();
+    if (p && typeof p.then === "function") {
+      p.then(() => trackVideoEvent("video_autoplay_success", {}))
+        .catch((err) => {
+          trackVideoEvent("video_autoplay_blocked", { error: String(err?.name || err) });
+          trackVideoEvent("video_fallback_poster", { reason: "autoplay_blocked" });
+        });
+    }
+    return () => v.removeEventListener("canplay", onCanPlay);
+  }, [shouldLoadVideo, nearViewport]);
 
   return (
     <section

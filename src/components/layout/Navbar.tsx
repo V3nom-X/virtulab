@@ -1,33 +1,11 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { HelpCircle, Shield, Menu } from "lucide-react";
+import { HelpCircle, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardNav } from "@/components/ui/card-nav";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import virtulabLogo from "@/assets/virtulab-logo.png";
 
-const allPages = [
-  { label: "Home", href: "/" },
-  { label: "Library", href: "/library" },
-  { label: "Videos", href: "/videos" },
-  { label: "Genius Bar", href: "/genius-bar" },
-  { label: "Workspace", href: "/workspace" },
-  { label: "Builder", href: "/builder" },
-  { label: "Community", href: "/community" },
-  { label: "Profile", href: "/profile" },
-  { label: "Analytics", href: "/analytics" },
-  { label: "Settings", href: "/settings" },
-  { label: "Admin", href: "/admin" },
-  { label: "Help", href: "/help" },
-];
 
 const navItems = [
   {
@@ -80,37 +58,18 @@ export function Navbar({ sticky = false }: { sticky?: boolean }) {
     <div className="flex items-center gap-1">
       <ThemeToggle />
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="text-muted-foreground" data-tour="nav-menu" aria-label="Open navigation menu">
-            <Menu className="w-5 h-5" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuLabel className="text-gold">Navigate</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {allPages.map((page) => (
-            <DropdownMenuItem key={page.href} asChild>
-              <Link to={page.href} className="w-full cursor-pointer">
-                {page.label}
-              </Link>
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-      
       <Button variant="ghost" size="icon" className="text-muted-foreground hidden sm:flex" asChild>
-        <Link to="/help">
+        <Link to="/help" aria-label="Help">
           <HelpCircle className="w-5 h-5" />
         </Link>
       </Button>
 
       <Button variant="ghost" size="icon" className="text-muted-foreground hidden sm:flex" asChild>
-        <Link to="/admin">
+        <Link to="/admin" aria-label="Admin">
           <Shield className="w-5 h-5" />
         </Link>
       </Button>
-      
+
     </div>
   );
 
