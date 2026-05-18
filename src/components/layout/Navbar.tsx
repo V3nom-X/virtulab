@@ -6,20 +6,6 @@ import { CardNav } from "@/components/ui/card-nav";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import virtulabLogo from "@/assets/virtulab-logo.png";
 
-const allPages = [
-  { label: "Home", href: "/" },
-  { label: "Library", href: "/library" },
-  { label: "Videos", href: "/videos" },
-  { label: "Genius Bar", href: "/genius-bar" },
-  { label: "Workspace", href: "/workspace" },
-  { label: "Builder", href: "/builder" },
-  { label: "Community", href: "/community" },
-  { label: "Profile", href: "/profile" },
-  { label: "Analytics", href: "/analytics" },
-  { label: "Settings", href: "/settings" },
-  { label: "Admin", href: "/admin" },
-  { label: "Help", href: "/help" },
-];
 
 const navItems = [
   {
