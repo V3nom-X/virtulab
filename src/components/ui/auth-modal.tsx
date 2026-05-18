@@ -25,10 +25,10 @@ const container = {
   show: {
     opacity: 1,
     scale: 1,
-    transition: { duration: 0.3, ease: "easeOut", staggerChildren: 0.05 },
+    transition: { duration: 0.3, ease: "easeOut" as const, staggerChildren: 0.05 },
   },
-};
-const item = { hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } };
+} as const;
+const item = { hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } } as const;
 
 function GoogleSvg() {
   return (
