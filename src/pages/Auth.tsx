@@ -69,13 +69,14 @@ const Auth = () => {
   const [forgotEmail, setForgotEmail] = useState("");
   const [isResetting, setIsResetting] = useState(false);
   const [mfaFactors, setMfaFactors] = useState<MfaFactor[]>([]);
+  const [isMfaPending, setIsMfaPending] = useState(false);
 
   const loginLimiter = useRateLimiter();
   const signupLimiter = useRateLimiter();
 
   useEffect(() => {
-    if (user) navigate("/");
-  }, [user, navigate]);
+    if (user && !isMfaPending && mfaFactors.length === 0) navigate("/");
+  }, [user, isMfaPending, mfaFactors.length, navigate]);
 
   const handleLogin = async (email: string, password: string) => {
     if (loginLimiter.isLocked) {
@@ -92,14 +93,17 @@ const Auth = () => {
       return;
     }
     setIsSubmitting(true);
+    setIsMfaPending(true);
     const { error, mfaRequired, factors } = await signIn(email, password);
     if (error) {
+      setIsMfaPending(false);
       loginLimiter.recordAttempt();
       toast.error(error.message.includes("Invalid login credentials") ? "Invalid email or password" : error.message);
     } else if (mfaRequired && factors?.length) {
       setMfaFactors(factors);
       toast.info("Enter your MFA code to finish signing in.");
     } else {
+      setIsMfaPending(false);
       loginLimiter.reset();
       toast.success("Welcome back!");
       navigate("/");
@@ -193,10 +197,14 @@ const Auth = () => {
           factors={mfaFactors}
           onVerified={() => {
             loginLimiter.reset();
+            setIsMfaPending(false);
             setMfaFactors([]);
             navigate("/");
           }}
-          onCancel={() => setMfaFactors([])}
+          onCancel={() => {
+            setIsMfaPending(false);
+            setMfaFactors([]);
+          }}
         />
       ) : showForgot ? (
         <Card className="w-full max-w-md relative z-10 bg-background/70 backdrop-blur-2xl border-border">
