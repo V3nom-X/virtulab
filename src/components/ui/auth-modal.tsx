@@ -64,7 +64,7 @@ export function AuthPanel({
       initial="hidden"
       animate="show"
       className={cn(
-        "relative w-full max-w-md rounded-3xl p-6 sm:p-8",
+        "relative z-10 w-full max-w-md rounded-3xl p-6 sm:p-8",
         "bg-background/70 backdrop-blur-2xl backdrop-saturate-150",
         "border border-border shadow-2xl shadow-foreground/10",
         className,
