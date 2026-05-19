@@ -27,7 +27,7 @@ const ROUTES: Array<{ id: string; label: string; href: string; Icon: React.Compo
   { id: "help", label: "Help", href: "/help", Icon: HelpCircle },
 ];
 
-export function AppDock() {
+export function AppDock({ underMainNav = false }: { underMainNav?: boolean }) {
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
@@ -43,13 +43,13 @@ export function AppDock() {
   return (
     <MagneticDock
       items={items}
-      iconSize={isMobile ? 36 : 48}
-      maxScale={isMobile ? 1.25 : 1.5}
-      magneticDistance={isMobile ? 80 : 150}
+      iconSize={underMainNav ? (isMobile ? 28 : 34) : isMobile ? 36 : 48}
+      maxScale={underMainNav ? 1.15 : isMobile ? 1.25 : 1.5}
+      magneticDistance={underMainNav ? 56 : isMobile ? 80 : 150}
       showLabels={!isMobile}
-      position="bottom"
+      position={underMainNav ? "top" : "bottom"}
       variant="glass"
-      className="bottom-3"
+      className={underMainNav ? "top-[5.25rem] max-w-[calc(100vw-2rem)] overflow-x-auto rounded-2xl p-2 z-40" : "bottom-20 md:bottom-3 max-w-[calc(100vw-2rem)] overflow-x-auto z-40"}
     />
   );
 }
