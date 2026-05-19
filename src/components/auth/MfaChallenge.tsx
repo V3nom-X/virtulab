@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { ShieldCheck, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,7 @@ export function MfaChallenge({ factors, onVerified, onCancel }: MfaChallengeProp
 
   const selectedFactor = factors.find((factor) => factor.id === selectedFactorId) ?? factors[0];
 
-  const handleVerify = async (event: React.FormEvent) => {
+  const handleVerify = async (event: FormEvent) => {
     event.preventDefault();
     const parsed = otpSchema.safeParse(code);
     if (!parsed.success || !selectedFactor) {
