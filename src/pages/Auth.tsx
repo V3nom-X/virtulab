@@ -10,8 +10,11 @@ import { Loader2, ArrowLeft } from "lucide-react";
 import { BackButton } from "@/components/layout/BackButton";
 import { MatrixRain } from "@/components/ui/matrix-rain";
 import { AuthPanel } from "@/components/ui/auth-modal";
+import { MfaChallenge } from "@/components/auth/MfaChallenge";
 import { z } from "zod";
 import { emailSchema, passwordSchema, usernameSchema, assertPayloadSize } from "@/lib/validation";
+
+type MfaFactor = { id: string; friendly_name?: string; factor_type: string };
 
 const MAX_ATTEMPTS = 3;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
@@ -65,13 +68,15 @@ const Auth = () => {
   const [showForgot, setShowForgot] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [isResetting, setIsResetting] = useState(false);
+  const [mfaFactors, setMfaFactors] = useState<MfaFactor[]>([]);
+  const [isMfaPending, setIsMfaPending] = useState(false);
 
   const loginLimiter = useRateLimiter();
   const signupLimiter = useRateLimiter();
 
   useEffect(() => {
-    if (user) navigate("/");
-  }, [user, navigate]);
+    if (user && !isMfaPending && mfaFactors.length === 0) navigate("/");
+  }, [user, isMfaPending, mfaFactors.length, navigate]);
 
   const handleLogin = async (email: string, password: string) => {
     if (loginLimiter.isLocked) {
@@ -88,11 +93,17 @@ const Auth = () => {
       return;
     }
     setIsSubmitting(true);
-    const { error } = await signIn(email, password);
+    setIsMfaPending(true);
+    const { error, mfaRequired, factors } = await signIn(email, password);
     if (error) {
+      setIsMfaPending(false);
       loginLimiter.recordAttempt();
       toast.error(error.message.includes("Invalid login credentials") ? "Invalid email or password" : error.message);
+    } else if (mfaRequired && factors?.length) {
+      setMfaFactors(factors);
+      toast.info("Enter your MFA code to finish signing in.");
     } else {
+      setIsMfaPending(false);
       loginLimiter.reset();
       toast.success("Welcome back!");
       navigate("/");
@@ -171,17 +182,31 @@ const Auth = () => {
       : null;
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen relative isolate overflow-hidden bg-background flex items-center justify-center p-4">
       {/* MatrixRain background shader */}
-      <div className="absolute inset-0 -z-10">
-        <MatrixRain className="w-full h-full" variant="default" fontSize={16} speed={0.05} />
+      <div className="absolute inset-0 z-0 opacity-80">
+        <MatrixRain className="w-full h-full" variant="default" fontSize={16} speed={0.08} />
       </div>
       {/* Soft veil for readability */}
-      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-background/40 via-background/60 to-background/80 pointer-events-none" />
+      <div className="absolute inset-0 z-0 bg-gradient-to-b from-background/35 via-background/55 to-background/90 pointer-events-none" />
 
       <BackButton />
 
-      {showForgot ? (
+      {mfaFactors.length > 0 ? (
+        <MfaChallenge
+          factors={mfaFactors}
+          onVerified={() => {
+            loginLimiter.reset();
+            setIsMfaPending(false);
+            setMfaFactors([]);
+            navigate("/");
+          }}
+          onCancel={() => {
+            setIsMfaPending(false);
+            setMfaFactors([]);
+          }}
+        />
+      ) : showForgot ? (
         <Card className="w-full max-w-md relative z-10 bg-background/70 backdrop-blur-2xl border-border">
           <CardHeader>
             <button onClick={() => setShowForgot(false)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-2">

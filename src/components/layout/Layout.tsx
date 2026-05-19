@@ -17,7 +17,7 @@ export function Layout({ children, stickyNav = false, showNav = false, hideBackB
       {showNav ? (
         <>
           <Navbar sticky={stickyNav} />
-          <main className={stickyNav ? "pt-24 pb-28" : "pb-28"}>{children}</main>
+          <main className={stickyNav ? "pt-36 pb-28" : "pt-16 pb-28"}>{children}</main>
         </>
       ) : (
         <>
@@ -25,7 +25,7 @@ export function Layout({ children, stickyNav = false, showNav = false, hideBackB
           <main className={hideBackButton ? "pb-28" : "pt-20 pb-28"}>{children}</main>
         </>
       )}
-      {!hideDock && <AppDock />}
+      {!hideDock && <AppDock underMainNav={showNav} />}
     </div>
   );
 }

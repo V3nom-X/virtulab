@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Footer } from "@/components/home/Footer";
+import { MfaSettings } from "@/components/settings/MfaSettings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -305,6 +306,8 @@ const Settings = () => {
                 </Button>
               </div>
             </div>
+
+            <MfaSettings />
 
             {/* Appearance */}
             <div className="bg-card rounded-xl border p-6">

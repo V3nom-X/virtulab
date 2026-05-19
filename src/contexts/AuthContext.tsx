@@ -17,7 +17,7 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   signUp: (email: string, password: string, metadata?: { username?: string; full_name?: string }) => Promise<{ error: Error | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: Error | null; mfaRequired?: boolean; factors?: Array<{ id: string; friendly_name?: string; factor_type: string }> }>;
   signInWithGoogle: () => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: Error | null }>;
@@ -108,6 +108,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       email,
       password
     });
+    
+    if (error) return { error: error as Error | null };
+
+    const { data: aalData, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aalError) return { error: aalError as Error | null };
+
+    if (aalData?.nextLevel === 'aal2' && aalData.currentLevel !== 'aal2') {
+      const { data: factorData, error: factorError } = await supabase.auth.mfa.listFactors();
+      if (factorError) return { error: factorError as Error | null };
+      return { error: null, mfaRequired: true, factors: factorData?.totp ?? [] };
+    }
     
     return { error: error as Error | null };
   };
