@@ -62,7 +62,7 @@ function formatRemaining(s: number) {
 
 const Auth = () => {
   const navigate = useNavigate();
-  const { user, signIn, signUp, signInWithGoogle, resetPassword, loading } = useAuth();
+  const { user, signIn, signUp, signInWithGoogle, signOut, resetPassword, loading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showForgot, setShowForgot] = useState(false);
@@ -74,9 +74,31 @@ const Auth = () => {
   const loginLimiter = useRateLimiter();
   const signupLimiter = useRateLimiter();
 
+  // On mount, if a session exists but AAL is below required level, surface the MFA challenge
+  // instead of bouncing to "/" or getting stuck. This handles page refresh during MFA.
   useEffect(() => {
-    if (user && !isMfaPending && mfaFactors.length === 0) navigate("/");
+    let cancelled = false;
+    (async () => {
+      if (!user) return;
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (cancelled) return;
+      if (aal?.nextLevel === "aal2" && aal.currentLevel !== "aal2") {
+        const { data: factorData } = await supabase.auth.mfa.listFactors();
+        const verified = (factorData?.totp ?? []).filter((f) => f.status === "verified");
+        if (verified.length) {
+          setMfaFactors(verified as MfaFactor[]);
+          setIsMfaPending(true);
+          return;
+        }
+      }
+      if (!isMfaPending && mfaFactors.length === 0) navigate("/");
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [user, isMfaPending, mfaFactors.length, navigate]);
+
 
   const handleLogin = async (email: string, password: string) => {
     if (loginLimiter.isLocked) {
@@ -206,7 +228,9 @@ const Auth = () => {
             setMfaFactors([]);
             navigate("/");
           }}
-          onCancel={() => {
+          onCancel={async () => {
+            // Don't leave the user in a half-authenticated aal1 state.
+            await signOut();
             setIsMfaPending(false);
             setMfaFactors([]);
           }}
