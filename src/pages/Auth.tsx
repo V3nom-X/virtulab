@@ -62,7 +62,7 @@ function formatRemaining(s: number) {
 
 const Auth = () => {
   const navigate = useNavigate();
-  const { user, signIn, signUp, signInWithGoogle, resetPassword, loading } = useAuth();
+  const { user, signIn, signUp, signInWithGoogle, signOut, resetPassword, loading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showForgot, setShowForgot] = useState(false);
@@ -74,9 +74,31 @@ const Auth = () => {
   const loginLimiter = useRateLimiter();
   const signupLimiter = useRateLimiter();
 
+  // On mount, if a session exists but AAL is below required level, surface the MFA challenge
+  // instead of bouncing to "/" or getting stuck. This handles page refresh during MFA.
   useEffect(() => {
-    if (user && !isMfaPending && mfaFactors.length === 0) navigate("/");
+    let cancelled = false;
+    (async () => {
+      if (!user) return;
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (cancelled) return;
+      if (aal?.nextLevel === "aal2" && aal.currentLevel !== "aal2") {
+        const { data: factorData } = await supabase.auth.mfa.listFactors();
+        const verified = (factorData?.totp ?? []).filter((f) => f.status === "verified");
+        if (verified.length) {
+          setMfaFactors(verified as MfaFactor[]);
+          setIsMfaPending(true);
+          return;
+        }
+      }
+      if (!isMfaPending && mfaFactors.length === 0) navigate("/");
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [user, isMfaPending, mfaFactors.length, navigate]);
+
 
   const handleLogin = async (email: string, password: string) => {
     if (loginLimiter.isLocked) {
@@ -182,13 +204,18 @@ const Auth = () => {
       : null;
 
   return (
-    <div className="min-h-screen relative isolate overflow-hidden bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen relative isolate overflow-hidden bg-black flex items-center justify-center p-4">
       {/* MatrixRain background shader */}
-      <div className="absolute inset-0 z-0 opacity-80">
-        <MatrixRain className="w-full h-full" variant="default" fontSize={16} speed={0.08} />
-      </div>
-      {/* Soft veil for readability */}
-      <div className="absolute inset-0 z-0 bg-gradient-to-b from-background/35 via-background/55 to-background/90 pointer-events-none" />
+      <MatrixRain
+        className="!fixed inset-0 z-0 h-screen w-screen"
+        variant="fixed"
+        fixedColor="#00ff9c"
+        fontSize={16}
+        speed={0.08}
+      />
+      {/* Soft radial veil for readability behind the panel */}
+      <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.55)_0%,rgba(0,0,0,0.15)_60%,transparent_100%)]" />
+
 
       <BackButton />
 
@@ -201,7 +228,9 @@ const Auth = () => {
             setMfaFactors([]);
             navigate("/");
           }}
-          onCancel={() => {
+          onCancel={async () => {
+            // Don't leave the user in a half-authenticated aal1 state.
+            await signOut();
             setIsMfaPending(false);
             setMfaFactors([]);
           }}

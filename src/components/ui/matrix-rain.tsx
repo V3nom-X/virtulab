@@ -20,12 +20,12 @@ const GLYPHS =
 
 function getThemeColors(variant: MatrixRainProps["variant"], fixedColor?: string) {
   if (variant === "fixed" && fixedColor) {
-    return { bg: "rgba(0,0,0,0.05)", fg: fixedColor };
+    return { bg: "rgba(0,0,0,0.08)", fg: fixedColor };
   }
   const isDark = document.documentElement.classList.contains("dark");
   return isDark
-    ? { bg: "rgba(0,0,0,0.08)", fg: "#00ff9c" }
-    : { bg: "rgba(255,255,255,0.10)", fg: "#0b7a3b" };
+    ? { bg: "rgba(0,0,0,0.12)", fg: "#00ff9c" }
+    : { bg: "rgba(255,255,255,0.18)", fg: "#00cc66" };
 }
 
 export function MatrixRain({
@@ -106,7 +106,7 @@ export function MatrixRain({
       ref={canvasRef}
       aria-hidden="true"
       data-shader
-      className={cn("size-full block rounded-[inherit] bg-background", className)}
+      className={cn("size-full block rounded-[inherit] bg-black", className)}
       style={{ width, height }}
     />
   );
