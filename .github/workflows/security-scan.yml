@@ -8,6 +8,11 @@ on:
   schedule:
     - cron: "0 6 * * *" # daily 06:00 UTC
 
+# Block deployments when this workflow fails.
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   rls-and-graphql:
     runs-on: ubuntu-latest
@@ -17,14 +22,33 @@ jobs:
         with: { node-version: "20" }
       - run: npm install --no-audit --no-fund @supabase/supabase-js
 
+      # Supabase DB linter. We allow-list known-intentional warning codes
+      # (documented in security memory). Any NEW warning fails the job and
+      # therefore blocks the deploy pipeline that depends on it.
       - name: Supabase DB linter (RLS / GraphQL exposure)
         if: ${{ secrets.SUPABASE_ACCESS_TOKEN != '' && secrets.SUPABASE_PROJECT_REF != '' }}
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          # Linter codes intentionally accepted. Update with care.
+          ACCEPTED_LINTS: "0026_pg_graphql_anon_table_exposed,0027_pg_graphql_authenticated_table_exposed,0029_authenticated_security_definer_function_executable"
         run: |
+          set -o pipefail
           npx --yes supabase@latest db lint \
             --project-ref ${{ secrets.SUPABASE_PROJECT_REF }} \
-            --level warning
+            --level warning \
+            --output json | tee lint.json
+          node -e '
+            const fs=require("fs");
+            const accepted=new Set((process.env.ACCEPTED_LINTS||"").split(","));
+            const issues=JSON.parse(fs.readFileSync("lint.json","utf8"));
+            const blocking=issues.filter(i=>!accepted.has(i.name));
+            if(blocking.length){
+              console.error("Blocking lint issues:",blocking.length);
+              for(const b of blocking) console.error("-",b.level,b.name,b.title||"");
+              process.exit(1);
+            }
+            console.log("All remaining warnings are accepted.");
+          '
 
       - name: Role-based GraphQL visibility test
         env:
@@ -33,3 +57,12 @@ jobs:
           TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
           TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
         run: node scripts/test-graphql-visibility.mjs
+
+      - name: Avatar signed-URL access test
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+          OTHER_USER_AVATAR_PATH: ${{ secrets.OTHER_USER_AVATAR_PATH }}
+        run: node scripts/test-avatar-access.mjs
