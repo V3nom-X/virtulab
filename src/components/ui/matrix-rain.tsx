@@ -18,14 +18,15 @@ export interface MatrixRainProps {
 const GLYPHS =
   "ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ0123456789Z:・.\"=*+-<>¦｜çﾘｸ";
 
-function getThemeColors(variant: MatrixRainProps["variant"], fixedColor?: string) {
+function getThemeColors(variant: MatrixRainProps["variant"], fixedColor?: string, trailBoost = 1) {
+  // trailBoost < 1 means longer trails (less fade per frame). Larger screens get longer strips.
   if (variant === "fixed" && fixedColor) {
-    return { bg: "rgba(0,0,0,0.08)", fg: fixedColor };
+    return { bg: `rgba(0,0,0,${0.08 * trailBoost})`, fg: fixedColor };
   }
   const isDark = document.documentElement.classList.contains("dark");
   return isDark
-    ? { bg: "rgba(0,0,0,0.12)", fg: "#00ff9c" }
-    : { bg: "rgba(255,255,255,0.18)", fg: "#00cc66" };
+    ? { bg: `rgba(0,0,0,${0.12 * trailBoost})`, fg: "#00ff9c" }
+    : { bg: `rgba(255,255,255,${0.18 * trailBoost})`, fg: "#00cc66" };
 }
 
 export function MatrixRain({
@@ -52,6 +53,9 @@ export function MatrixRain({
     let raf = 0;
     let drops: number[] = [];
 
+    let trailBoost = 1;
+    let dropSpeedMul = 1;
+
     const sizeCanvas = () => {
       if (width) canvas.width = width;
       else canvas.width = canvas.offsetWidth || window.innerWidth;
@@ -60,6 +64,14 @@ export function MatrixRain({
 
       const columns = Math.floor(canvas.width / fontSize);
       drops = Array.from({ length: columns }, () => Math.random() * -20);
+
+      // Larger screens => longer drops & strips.
+      // Reduce per-frame background fade (smaller trailBoost) and slightly bump speed.
+      const w = canvas.width;
+      if (w >= 1920) { trailBoost = 0.45; dropSpeedMul = 1.35; }
+      else if (w >= 1280) { trailBoost = 0.6; dropSpeedMul = 1.2; }
+      else if (w >= 768) { trailBoost = 0.8; dropSpeedMul = 1.1; }
+      else { trailBoost = 1; dropSpeedMul = 1; }
     };
 
     sizeCanvas();
@@ -67,7 +79,7 @@ export function MatrixRain({
     ro.observe(canvas);
 
     const draw = () => {
-      const { bg, fg } = getThemeColors(variant, fixedColor);
+      const { bg, fg } = getThemeColors(variant, fixedColor, trailBoost);
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = fg;
@@ -79,7 +91,7 @@ export function MatrixRain({
         const y = drops[i] * fontSize;
         ctx.fillText(ch, x, y);
         if (y > canvas.height && Math.random() > 0.975) drops[i] = 0;
-        drops[i] += speed * 4;
+        drops[i] += speed * 4 * dropSpeedMul;
       }
     };
 
