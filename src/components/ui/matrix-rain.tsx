@@ -18,14 +18,15 @@ export interface MatrixRainProps {
 const GLYPHS =
   "ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ0123456789Z:・.\"=*+-<>¦｜çﾘｸ";
 
-function getThemeColors(variant: MatrixRainProps["variant"], fixedColor?: string) {
+function getThemeColors(variant: MatrixRainProps["variant"], fixedColor?: string, trailBoost = 1) {
+  // trailBoost < 1 means longer trails (less fade per frame). Larger screens get longer strips.
   if (variant === "fixed" && fixedColor) {
-    return { bg: "rgba(0,0,0,0.08)", fg: fixedColor };
+    return { bg: `rgba(0,0,0,${0.08 * trailBoost})`, fg: fixedColor };
   }
   const isDark = document.documentElement.classList.contains("dark");
   return isDark
-    ? { bg: "rgba(0,0,0,0.12)", fg: "#00ff9c" }
-    : { bg: "rgba(255,255,255,0.18)", fg: "#00cc66" };
+    ? { bg: `rgba(0,0,0,${0.12 * trailBoost})`, fg: "#00ff9c" }
+    : { bg: `rgba(255,255,255,${0.18 * trailBoost})`, fg: "#00cc66" };
 }
 
 export function MatrixRain({
