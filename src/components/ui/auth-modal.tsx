@@ -65,8 +65,12 @@ export function AuthPanel({
       animate="show"
       className={cn(
         "relative z-10 w-full max-w-md rounded-3xl p-6 sm:p-8",
-        "bg-background/70 backdrop-blur-2xl backdrop-saturate-150",
-        "border border-border shadow-2xl shadow-foreground/10",
+        // Glassmorphism: translucent surface lets matrix rain show through, frosted blur for legibility
+        "bg-background/20 dark:bg-background/25 backdrop-blur-xl backdrop-saturate-150",
+        "border border-white/15 dark:border-white/10",
+        "shadow-[0_8px_40px_-12px_rgba(0,0,0,0.6)] ring-1 ring-white/5",
+        "before:absolute before:inset-0 before:rounded-3xl before:pointer-events-none",
+        "before:bg-gradient-to-br before:from-white/10 before:via-white/0 before:to-white/5",
         className,
       )}
     >
