@@ -1,54 +1,31 @@
-## Plan
+# Experiment 101 Module — Six CBE-Aligned Experiments
 
-### 1. Remove MagneticDock permanently
+Add the six experiments from the Experiment 101 guide as a new module, following the exact structure already used by Force and Energy, Acids & Bases, and the other modules (module landing page, per-experiment page with tabs, interactive canvas simulation, quiz, localStorage progress).
 
-- Delete `src/components/layout/AppDock.tsx` and `src/components/ui/magnetic-dock.tsx`.
-- Remove `AppDock` import/usage and `hideDock` prop from `src/components/layout/Layout.tsx`.
-- Adjust main padding (`pb-28` → `pb-8`) now that there's no bottom/top dock.
-- Grep for any other `AppDock` / `MagneticDock` references and clean them up.
+## The six experiments
 
-### 2. Adjust and Fix Matrix Rain visibility on Auth page
+1. **Remote Sensing – Eyes in the Sky** (Earth & Space) — pick platform (satellite / aircraft / drone), sensor (optical / infrared / radar), altitude, spatial resolution, spectral band, cloud condition, revisit day. Canvas renders a stylised Kenyan region that sharpens/blurs with resolution, blocks optical capture under cloud while radar still works, and has an NDVI filter that recolours healthy vs stressed vegetation. Advancing the simulated calendar (30/60/90 days) shows seasonal change.
+2. **Curved Mirrors – The Physics of Reflection** (Physics) — concave/convex toggle, focal length, object distance and height sliders. Ray-diagram canvas draws principal rays, locates the image, and reports image distance, magnification, and real/virtual + upright/inverted status computed from the mirror formula.
+3. **Pure and Impure Substances** (Chemistry) — choose a substance and add a chosen level of impurity, then heat it: a live temperature-vs-time graph shows a sharp flat melting point for pure samples and a depressed, sloping range for impure ones. Includes a chromatography mode where a sample separates into spots with calculated Rf values.
+4. **Temporary and Permanent Changes** (Chemistry) — pick a process (melting ice, dissolving salt, boiling water, burning paper, rusting iron, cooking egg, ripening fruit), run it forward, then attempt to reverse it. Reversible processes return to the start state; permanent ones cannot, with a verdict panel explaining why.
+5. **Classes of Fire – Fighting Fire Safely** (Safety / Chemistry) — pick a fuel type (wood/paper, petrol, live electrical, reactive metal, cooking oil) and an extinguishing agent (water, foam, CO2, dry powder, wet chemical, fire blanket). Animated fire either dies down or flares dangerously, with a fire-triangle panel showing which element was removed and a class label (A–F).
+6. **Plant and Animal Cell** (Biology) — switchable plant/animal cell viewer with zoom, clickable organelles that show name + function, a comparison mode highlighting cell wall, chloroplasts, and vacuole differences, and a labelling exercise for self-testing.
 
-- Inspect `src/components/ui/matrix-rain.tsx` and `src/pages/Auth.tsx`.
-- Ensure the canvas is `position: fixed inset-0`, `z-0`, with parent `isolate` and no opaque background hiding it.
-- Make sure the auth panel uses a translucent background (`bg-background/60 backdrop-blur`) so rain shows through.
-- Force animation start on mount (don't gate behind reduced motion when user hasn't enabled it); verify canvas sizing on resize and devicePixelRatio.
+Each experiment page carries the guide's content: introduction and learning outcomes, how the simulation works, parameter table, step-by-step procedure, real-life Kenyan applications, advantages, summary, and the guide's quick-check questions as a scored quiz.
 
-### 3. Harden MFA flows (TOTP)
+## Landing page addition
 
-Audit `src/pages/Auth.tsx`, `src/contexts/AuthContext.tsx`, `src/components/auth/MfaChallenge.tsx`, `src/components/settings/MfaSettings.tsx`:
+A decorated strip on the home page (below the hero) announcing that **2–3 new experiments are added every week** — gold accent badge, pulsing indicator dot, and supporting line, using existing design tokens and respecting reduced motion.
 
-- **Enrollment**: confirm `supabase.auth.mfa.enroll({ factorType: 'totp' })` → render QR (`data.totp.qr_code`) + secret with copy button → `challenge` + `verify` to activate. Handle errors (already enrolled, network).
-- **Removal**: confirm `unenroll({ factorId })` with confirmation dialog; refresh factor list.
-- **Login**: when `signIn` returns `mfaRequired`, render `MfaChallenge`. Add a **Cancel** path that calls `supabase.auth.signOut()` so user isn't stuck in aal1 with pending challenge. Block navigation to `/` until aal2 reached.
-- **Edge cases**: invalid 6-digit code, expired challenge (re-issue), no factors found (force unenroll/sign out), page refresh during MFA (re-check AAL on mount).
+## Technical notes
 
-### 4. Storage: lock down `avatars` bucket
+- `src/data/experiment101Data.ts` — content for all six experiments, typed like `forceEnergyData.ts`.
+- `src/components/experiment101/` — six simulation components (`RemoteSensingSimulation`, `CurvedMirrorsSimulation`, `PuritySimulation`, `ChangesInSubstancesSimulation`, `ClassesOfFireSimulation`, `CellExplorerSimulation`), canvas/SVG based, params held in refs and updated via `useEffect`, with `ParamTooltip` on sliders and no persistent graphs in the workspace except the purity heating curve (which is the experiment's point).
+- `src/hooks/useExperiment101Progress.ts` — `virtulab-experiment101-progress` localStorage key, total 6.
+- `src/pages/Experiment101.tsx` and `src/pages/Experiment101Experiment.tsx`, lazy-loaded routes `/experiment-101` and `/experiment-101/:experimentId` in `App.tsx`, plus a module card in `src/pages/Library.tsx`.
+- `SimulationLoader` overlay on simulation mount; mobile-responsive layout (stacked controls, drawer-free single column under `md`).
+- Home page strip added as a small component rendered from `src/pages/Index.tsx`.
 
-Migration:
+## Verification pass
 
-- Set bucket `public = false`.
-- Drop the broad public SELECT policy on `storage.objects` for `avatars`.
-- Add RLS: users can INSERT/UPDATE/DELETE only their own folder (`auth.uid()::text = (storage.foldername(name))[1]`).
-- SELECT: allow only the owner; everyone else must go through signed URLs.
-- Update avatar fetch sites (`Profile`, `Navbar`, `AuraAssistant`, etc.) to use `supabase.storage.from('avatars').createSignedUrl(path, 3600)` and cache the URL.
-
-### 5. GraphQL / anon SELECT exposure
-
-- Run `supabase--linter` + `security--run_security_scan` to enumerate exposed tables.
-- Migration to `REVOKE SELECT ON ALL TABLES IN SCHEMA public FROM anon;` then re-`GRANT SELECT` only to tables intentionally public pre-auth (`badges`, `challenges`, `experiments`, `quizzes`, `profiles` if needed).
-- Tighten `profiles` "viewable by everyone" → authenticated-only (currently leaks usernames/avatars to anon GraphQL).
-- Tighten `experiment_comments` SELECT to authenticated.
-- Disable `pg_graphql` introspection for anon if still needed: `REVOKE USAGE ON SCHEMA graphql FROM anon;` (verify no public-facing GraphQL usage in client first — the app uses PostgREST, so this is safe).
-
-### 6. Re-scan and report
-
-- Re-run `supabase--linter` and `security--run_security_scan`.
-- Report remaining warnings (HIBP password protection toggle, leaked password protection, Postgres version, etc.) with one-line remediation each.
-
-### Technical notes
-
-- Files removed: `AppDock.tsx`, `magnetic-dock.tsx`.
-- Files edited: `Layout.tsx`, `Auth.tsx`, `matrix-rain.tsx`, `AuthContext.tsx`, `MfaChallenge.tsx`, `MfaSettings.tsx`, avatar consumers.
-- Migrations: 1 for storage policies + bucket privacy, 1 for GraphQL/anon grants and profile RLS tightening.
-- No new dependencies.
+After building: typecheck, then drive the preview with Playwright to load `/experiment-101`, open each of the six experiments, exercise each simulation's controls, and check the console for errors — plus a spot check that the existing modules and `/library` still load cleanly. Fix anything the pass surfaces.
