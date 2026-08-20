@@ -183,6 +183,19 @@ const Library = () => {
                     </div>
                   </div>
                 </Link>
+                <Link to="/experiment-101" className="block group">
+                  <div className="rounded-xl overflow-hidden border hover-lift" style={{ background: "linear-gradient(135deg, hsl(220 60% 22%), hsl(45 70% 30%))" }}>
+                    <div className="p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center gap-4">
+                      <div className="text-4xl">🔬🛰️</div>
+                      <div className="flex-1 text-white min-w-0">
+                        <Badge className="bg-white/20 text-white border-white/30 mb-2">New</Badge>
+                        <h3 className="text-xl font-bold mb-1">Experiment 101</h3>
+                        <p className="text-white/70 text-sm break-words">6 standalone experiments: Remote Sensing, Curved Mirrors, Purity, Changes in Substances, Classes of Fire & Cell Explorer — each with its own quiz and progress</p>
+                      </div>
+                      <Button className="bg-black text-white hover:bg-black/80 shrink-0">Explore →</Button>
+                    </div>
+                  </div>
+                </Link>
               </div>
             )}
 
