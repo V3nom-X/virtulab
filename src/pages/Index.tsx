@@ -7,12 +7,14 @@ import { FeaturesSection } from "@/components/home/FeaturesSection";
 import { TechLogos } from "@/components/home/TechLogos";
 import { Footer } from "@/components/home/Footer";
 import ShaderBackground from "@/components/ui/ShaderBackground";
+import { WeeklyDropStrip } from "@/components/home/WeeklyDropStrip";
 
 const Index = () => {
   return (
     <Layout showNav>
       <ShaderBackground />
       <HeroSection />
+      <WeeklyDropStrip />
       <ParallaxVideoSection />
       <CategoryTiles />
       <FeaturesSection />
