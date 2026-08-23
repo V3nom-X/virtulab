@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { validateScript, runScriptInWorker } from '@/lib/scriptSandbox';
 
 interface MonacoScriptEditorProps {
   initialCode?: string;
@@ -99,56 +100,18 @@ export function MonacoScriptEditor({
   const [isValid, setIsValid] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
   const editorRef = useRef<any>(null);
-  const workerRef = useRef<Worker | null>(null);
-
-  // Allowlist of safe patterns for simulation scripts
-  const BLOCKED_PATTERNS = [
-    /\beval\s*\(/i,
-    /\bFunction\s*\(/i,
-    /\bsetTimeout\s*\(/i,
-    /\bsetInterval\s*\(/i,
-    /\bfetch\s*\(/i,
-    /\bXMLHttpRequest\b/i,
-    /\bimportScripts\s*\(/i,
-    /\bself\s*\./i,
-    /\bpostMessage\s*\(/i,
-    /\blocalStorage\b/i,
-    /\bsessionStorage\b/i,
-    /\bdocument\b/i,
-    /\bwindow\b/i,
-    /\bglobalThis\b/i,
-    /\bnew\s+Worker\s*\(/i,
-  ];
+  const cancelRef = useRef<(() => void) | null>(null);
 
   const validateCode = useCallback((codeToValidate: string) => {
-    try {
-      // Check for blocked patterns first
-      for (const pattern of BLOCKED_PATTERNS) {
-        if (pattern.test(codeToValidate)) {
-          const match = codeToValidate.match(pattern);
-          setError(`Blocked pattern detected: "${match?.[0]}". Only simulation-related code is allowed.`);
-          setIsValid(false);
-          return false;
-        }
-      }
-
-      // Code length limit to prevent DoS
-      if (codeToValidate.length > 10000) {
-        setError('Script exceeds maximum allowed length (10,000 characters).');
-        setIsValid(false);
-        return false;
-      }
-
-      // Basic syntax check (for syntax only, not execution)
-      new Function('vars', codeToValidate);
-      setError(null);
-      setIsValid(true);
-      return true;
-    } catch (e) {
-      setError((e as Error).message);
+    const result = validateScript(codeToValidate);
+    if (!result.valid) {
+      setError(result.error);
       setIsValid(false);
       return false;
     }
+    setError(null);
+    setIsValid(true);
+    return true;
   }, []);
 
   const handleEditorMount: OnMount = (editor, monaco) => {
@@ -214,65 +177,28 @@ export function MonacoScriptEditor({
     onCodeChange?.(newCode);
   };
 
-  const handleExecute = () => {
-    if (validateCode(code)) {
-      // Execute in Web Worker for safety with additional sandboxing
-      executeInWorker(code);
+  const handleExecute = async () => {
+    if (!validateCode(code)) {
+      toast.error('Script contains blocked patterns or is too long');
+      return;
+    }
+
+    // Cancel any in-flight run, then execute in a hardened, time-boxed worker.
+    cancelRef.current?.();
+    const { promise, cancel } = runScriptInWorker(code, variables);
+    cancelRef.current = cancel;
+
+    const outcome = await promise;
+    cancelRef.current = null;
+
+    if (outcome.success) {
+      onExecute?.(code);
+      toast.success('Script executed successfully');
     } else {
-      toast.error('Script has syntax errors or contains blocked patterns');
+      setError(outcome.error ?? 'Execution error');
+      setIsValid(false);
+      toast.error(outcome.error ?? 'Execution error');
     }
-  };
-
-  const executeInWorker = (scriptCode: string) => {
-    // Terminate existing worker
-    if (workerRef.current) {
-      workerRef.current.terminate();
-    }
-
-    const workerCode = `
-      self.onmessage = function(e) {
-        const { code, variables } = e.data;
-        try {
-          const vars = variables;
-          const fn = new Function('vars', code);
-          const result = fn(vars);
-          self.postMessage({ success: true, result });
-        } catch (error) {
-          self.postMessage({ success: false, error: error.message });
-        }
-      };
-    `;
-
-    const blob = new Blob([workerCode], { type: 'application/javascript' });
-    const worker = new Worker(URL.createObjectURL(blob));
-    workerRef.current = worker;
-
-    worker.onmessage = (e) => {
-      if (e.data.success) {
-        toast.success('Script executed successfully');
-        onExecute?.(code);
-      } else {
-        setError(e.data.error);
-        toast.error(`Execution error: ${e.data.error}`);
-      }
-      worker.terminate();
-    };
-
-    worker.onerror = (e) => {
-      setError(e.message);
-      toast.error('Worker error');
-      worker.terminate();
-    };
-
-    worker.postMessage({ code: scriptCode, variables });
-
-    // Timeout after 5 seconds
-    setTimeout(() => {
-      if (workerRef.current === worker) {
-        worker.terminate();
-        toast.error('Script execution timed out');
-      }
-    }, 5000);
   };
 
   const handleCopy = () => {
