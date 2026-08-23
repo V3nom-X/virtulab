@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
+import { validateScript, runScriptInWorker, MAX_SCRIPT_LENGTH } from '@/lib/scriptSandbox';
 
 interface ScriptEditorProps {
   initialCode?: string;
@@ -97,54 +98,16 @@ export function ScriptEditor({
   const [error, setError] = useState<string | null>(null);
   const [isValid, setIsValid] = useState(true);
 
-  // Allowlist of safe patterns for simulation scripts
-  const BLOCKED_PATTERNS = [
-    /\beval\s*\(/i,
-    /\bFunction\s*\(/i,
-    /\bsetTimeout\s*\(/i,
-    /\bsetInterval\s*\(/i,
-    /\bfetch\s*\(/i,
-    /\bXMLHttpRequest\b/i,
-    /\bimportScripts\s*\(/i,
-    /\bself\s*\./i,
-    /\bpostMessage\s*\(/i,
-    /\blocalStorage\b/i,
-    /\bsessionStorage\b/i,
-    /\bdocument\b/i,
-    /\bwindow\b/i,
-    /\bglobalThis\b/i,
-    /\bnew\s+Worker\s*\(/i,
-  ];
-
   const validateCode = useCallback((codeToValidate: string) => {
-    try {
-      // Check for blocked patterns first
-      for (const pattern of BLOCKED_PATTERNS) {
-        if (pattern.test(codeToValidate)) {
-          const match = codeToValidate.match(pattern);
-          setError(`Blocked pattern detected: "${match?.[0]}". Only simulation-related code is allowed.`);
-          setIsValid(false);
-          return false;
-        }
-      }
-
-      // Code length limit to prevent DoS
-      if (codeToValidate.length > 10000) {
-        setError('Script exceeds maximum allowed length (10,000 characters).');
-        setIsValid(false);
-        return false;
-      }
-
-      // Basic syntax check using Function constructor (for syntax only)
-      new Function('vars', codeToValidate);
-      setError(null);
-      setIsValid(true);
-      return true;
-    } catch (e) {
-      setError((e as Error).message);
+    const result = validateScript(codeToValidate);
+    if (!result.valid) {
+      setError(result.error);
       setIsValid(false);
       return false;
     }
+    setError(null);
+    setIsValid(true);
+    return true;
   }, []);
 
   const handleCodeChange = (newCode: string) => {
@@ -153,12 +116,21 @@ export function ScriptEditor({
     onCodeChange?.(newCode);
   };
 
-  const handleExecute = () => {
-    if (validateCode(code)) {
+  const handleExecute = async () => {
+    if (!validateCode(code)) {
+      toast.error('Script contains blocked patterns or is too long');
+      return;
+    }
+    // Execute in an isolated, time-boxed worker sandbox.
+    const { promise } = runScriptInWorker(code, variables);
+    const outcome = await promise;
+    if (outcome.success) {
       onExecute?.(code);
       toast.success('Script executed successfully');
     } else {
-      toast.error('Script has syntax errors or contains blocked patterns');
+      setError(outcome.error ?? 'Execution error');
+      setIsValid(false);
+      toast.error(outcome.error ?? 'Execution error');
     }
   };
 
@@ -222,6 +194,7 @@ export function ScriptEditor({
           <textarea
             value={code}
             onChange={(e) => handleCodeChange(e.target.value)}
+            maxLength={MAX_SCRIPT_LENGTH}
             className="w-full h-48 p-3 font-mono text-xs bg-muted/50 border border-border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-ring"
             spellCheck={false}
           />

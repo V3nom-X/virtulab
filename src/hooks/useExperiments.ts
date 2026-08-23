@@ -107,50 +107,32 @@ export const useUpdateProgress = () => {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ 
-      experimentId, 
-      timeSpent, 
-      completed, 
-      score 
-    }: { 
-      experimentId: string; 
-      timeSpent?: number; 
+    mutationFn: async ({
+      experimentId,
+      timeSpent,
+      completed,
+    }: {
+      experimentId: string;
+      timeSpent?: number;
       completed?: boolean;
       score?: number;
     }) => {
       if (!user) throw new Error('Not authenticated');
 
-      const { data: existing } = await supabase
-        .from('user_progress')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('experiment_id', experimentId)
-        .single();
-
-      if (existing) {
-        const { error } = await supabase
-          .from('user_progress')
-          .update({
-            time_spent_seconds: (existing.time_spent_seconds || 0) + (timeSpent || 0),
-            completed: completed ?? existing.completed,
-            score: score ?? existing.score,
-            last_accessed_at: new Date().toISOString(),
-            completed_at: completed ? new Date().toISOString() : existing.completed_at
-          })
-          .eq('id', existing.id);
-
+      // Progress is recorded server-side only: the client can never set
+      // `completed` or `score` directly (see complete_experiment RPC).
+      if (timeSpent && timeSpent > 0) {
+        const { error } = await supabase.rpc('record_experiment_time', {
+          _experiment_id: experimentId,
+          _seconds: Math.min(Math.round(timeSpent), 86400),
+        });
         if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('user_progress')
-          .insert({
-            user_id: user.id,
-            experiment_id: experimentId,
-            time_spent_seconds: timeSpent || 0,
-            completed: completed || false,
-            score: score
-          });
+      }
 
+      if (completed) {
+        const { error } = await supabase.rpc('complete_experiment', {
+          _experiment_id: experimentId,
+        });
         if (error) throw error;
       }
     },
@@ -159,6 +141,29 @@ export const useUpdateProgress = () => {
     }
   });
 };
+
+/**
+ * Submit quiz answers for server-side grading. The score is computed in the
+ * database from the stored questions, so it can't be forged by the client.
+ */
+export const useSubmitQuiz = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ quizId, answers }: { quizId: string; answers: number[] }) => {
+      const { data, error } = await supabase.rpc('grade_quiz', {
+        _quiz_id: quizId,
+        _answers: answers,
+      });
+      if (error) throw error;
+      return data?.[0] ?? null;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-progress'] });
+    }
+  });
+};
+
 
 export const useBadges = () => {
   return useQuery({

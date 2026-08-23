@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
@@ -13,12 +14,29 @@ const BodySchema = z.object({
   voiceId: z.string().regex(/^[A-Za-z0-9]{8,40}$/, "Invalid voice id").optional(),
 });
 
+const unauthorized = () =>
+  new Response(JSON.stringify({ error: "Unauthorized" }), {
+    status: 401,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // Require an authenticated caller so paid TTS credits can't be drained anonymously.
+    const token = req.headers.get("Authorization")?.replace("Bearer ", "").trim();
+    if (!token) return unauthorized();
+    const authClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+    );
+    const { data: { user }, error: authError } = await authClient.auth.getUser(token);
+    if (authError || !user) return unauthorized();
+
+
     const raw = await req.text();
     if (raw.length > MAX_BODY_BYTES) {
       return new Response(JSON.stringify({ error: "Payload too large" }), {

@@ -3,6 +3,7 @@ import { X, Send, Sparkles, Loader2, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -12,9 +13,16 @@ interface Message {
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/aura-chat`;
 const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts`;
 
+/** AI/TTS endpoints require a signed-in user session, not the publishable key. */
+async function getAccessToken(): Promise<string | null> {
+  const { data } = await supabase.auth.getSession();
+  return data.session?.access_token ?? null;
+}
+
 function stripMarkdown(text: string): string {
   return text.replace(/[#*_`~>\[\]()]/g, '').slice(0, 2000).trim();
 }
+
 
 function useDraggable(initialPos: { x: number; y: number }) {
   const [pos, setPos] = useState(initialPos);
@@ -156,6 +164,12 @@ export function AuraAssistant() {
     stopAudio();
     setSpeakingIdx(idx);
     try {
+      const token = await getAccessToken();
+      if (!token) {
+        playNativeTTS(text, idx);
+        return;
+      }
+
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 8000);
 
@@ -163,7 +177,7 @@ export function AuraAssistant() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ text: stripMarkdown(text) }),
         signal: controller.signal,
@@ -210,11 +224,18 @@ export function AuraAssistant() {
     };
 
     try {
+      const token = await getAccessToken();
+      if (!token) {
+        upsert('Please sign in to chat with AURA. 🔬');
+        setIsLoading(false);
+        return;
+      }
+
       const resp = await fetch(CHAT_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ messages: allMessages }),
       });

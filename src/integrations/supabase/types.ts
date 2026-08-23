@@ -626,6 +626,17 @@ export type Database = {
     }
     Functions: {
       award_badge_secure: { Args: { _badge_name: string }; Returns: boolean }
+      complete_experiment: {
+        Args: { _experiment_id: string }
+        Returns: boolean
+      }
+      grade_quiz: {
+        Args: { _answers: Json; _quiz_id: string }
+        Returns: {
+          passed: boolean
+          score: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -634,6 +645,11 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      is_room_participant: { Args: { _room_id: string }; Returns: boolean }
+      record_experiment_time: {
+        Args: { _experiment_id: string; _seconds: number }
+        Returns: undefined
+      }
       update_user_role: {
         Args: {
           _new_role: Database["public"]["Enums"]["app_role"]
