@@ -1,28 +1,48 @@
 import { ReactNode } from "react";
 import { Navbar } from "./Navbar";
 import { BackButton } from "./BackButton";
+import { AppDock } from "./AppDock";
 
 interface LayoutProps {
   children: ReactNode;
   stickyNav?: boolean;
   showNav?: boolean;
   hideBackButton?: boolean;
-  /** @deprecated retained for backwards compatibility; dock has been removed */
+  /** Hide the magnetic dock on pages that need every pixel of vertical space. */
   hideDock?: boolean;
 }
 
-export function Layout({ children, stickyNav = false, showNav = false, hideBackButton = false }: LayoutProps) {
+export function Layout({
+  children,
+  stickyNav = false,
+  showNav = false,
+  hideBackButton = false,
+  hideDock = false,
+}: LayoutProps) {
   return (
     <div className="min-h-screen bg-background relative">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
+      >
+        Skip to main content
+      </a>
+
       {showNav ? (
         <>
           <Navbar sticky={stickyNav} />
-          <main className={stickyNav ? "pt-36 pb-8" : "pt-16 pb-8"}>{children}</main>
+          {!hideDock && <AppDock />}
+          <main id="main-content" className={stickyNav ? "pt-36 pb-8" : "pt-16 pb-8"}>
+            {children}
+          </main>
         </>
       ) : (
         <>
           {!hideBackButton && <BackButton />}
-          <main className={hideBackButton ? "pb-8" : "pt-20 pb-8"}>{children}</main>
+          {!hideDock && <AppDock className="pt-16" />}
+          <main id="main-content" className="pb-8">
+            {children}
+          </main>
         </>
       )}
     </div>
