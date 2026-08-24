@@ -1,0 +1,31 @@
+{
+  "name": "VirtuLab — Virtual Science Laboratory",
+  "short_name": "VirtuLab",
+  "description": "Free, ad-free virtual science laboratory with interactive physics, chemistry and biology experiments.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#16c79a",
+  "icons": [
+    {
+      "src": "/virtulab-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/virtulab-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/virtulab-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
