@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "next-themes";
 import { useAccessibility } from "@/hooks/useAccessibility";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -100,6 +101,7 @@ const App = () => (
           </TooltipProvider>
         </AccessibilityProvider>
       </AuthProvider>
+      <SpeedInsights />
     </ThemeProvider>
   </QueryClientProvider>
 );
