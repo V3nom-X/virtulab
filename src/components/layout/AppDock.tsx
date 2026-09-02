@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, useMotionValue } from "framer-motion";
 import {
@@ -18,13 +18,15 @@ interface DockItem {
   label: string;
   to: string;
   icon: typeof Home;
+  /** Primary destinations stay visible on small screens. */
+  primary?: boolean;
 }
 
 const DOCK_ITEMS: DockItem[] = [
-  { label: "Home", to: "/", icon: Home },
-  { label: "Library", to: "/library", icon: Library },
-  { label: "Experiment 101", to: "/experiment-101", icon: FlaskConical },
-  { label: "Builder", to: "/builder", icon: Hammer },
+  { label: "Home", to: "/", icon: Home, primary: true },
+  { label: "Library", to: "/library", icon: Library, primary: true },
+  { label: "Experiment 101", to: "/experiment-101", icon: FlaskConical, primary: true },
+  { label: "Builder", to: "/builder", icon: Hammer, primary: true },
   { label: "Videos", to: "/videos", icon: Video },
   { label: "Community", to: "/community", icon: Users },
   { label: "Analytics", to: "/analytics", icon: BarChart3 },
@@ -34,6 +36,7 @@ const DOCK_ITEMS: DockItem[] = [
 const BASE = 44; // px — meets the 44x44 minimum tap target
 const MAX_SCALE = 1.45;
 const INFLUENCE = 110; // px of horizontal magnetic influence
+
 
 function DockButton({
   item,
@@ -52,21 +55,27 @@ function DockButton({
 
   // Magnetic scaling is driven from the parent's pointermove; touch devices and
   // reduced-motion users get a plain, statically sized row.
-  const updateScale = () => {
-    if (!magnetic || !ref.current) return;
-    const x = pointerX.get();
-    if (x === null) {
+  useEffect(() => {
+    if (!magnetic) {
       setScale(1);
       return;
     }
-    const rect = ref.current.getBoundingClientRect();
-    const center = rect.left + rect.width / 2;
-    const distance = Math.abs(center - x);
-    const t = Math.max(0, 1 - distance / INFLUENCE);
-    setScale(1 + (MAX_SCALE - 1) * t * t);
-  };
+    const update = (x: number | null) => {
+      if (!ref.current) return;
+      if (x === null) {
+        setScale(1);
+        return;
+      }
+      const rect = ref.current.getBoundingClientRect();
+      const center = rect.left + rect.width / 2;
+      const distance = Math.abs(center - x);
+      const t = Math.max(0, 1 - distance / INFLUENCE);
+      setScale(1 + (MAX_SCALE - 1) * t * t);
+    };
+    update(pointerX.get());
+    return pointerX.on("change", update);
+  }, [magnetic, pointerX]);
 
-  pointerX.on?.("change", updateScale);
 
   return (
     <motion.div
@@ -133,7 +142,7 @@ export function AppDock({ className }: { className?: string }) {
     >
       <ul className="mx-auto flex w-max items-center gap-2 rounded-2xl border border-border/60 bg-background/70 p-1.5 backdrop-blur-md">
         {DOCK_ITEMS.map((item) => (
-          <li key={item.to} className="flex">
+          <li key={item.to} className={item.primary ? "flex" : "hidden md:flex"}>
             <DockButton
               item={item}
               active={
