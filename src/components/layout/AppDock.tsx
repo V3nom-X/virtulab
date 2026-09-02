@@ -55,21 +55,27 @@ function DockButton({
 
   // Magnetic scaling is driven from the parent's pointermove; touch devices and
   // reduced-motion users get a plain, statically sized row.
-  const updateScale = () => {
-    if (!magnetic || !ref.current) return;
-    const x = pointerX.get();
-    if (x === null) {
+  useEffect(() => {
+    if (!magnetic) {
       setScale(1);
       return;
     }
-    const rect = ref.current.getBoundingClientRect();
-    const center = rect.left + rect.width / 2;
-    const distance = Math.abs(center - x);
-    const t = Math.max(0, 1 - distance / INFLUENCE);
-    setScale(1 + (MAX_SCALE - 1) * t * t);
-  };
+    const update = (x: number | null) => {
+      if (!ref.current) return;
+      if (x === null) {
+        setScale(1);
+        return;
+      }
+      const rect = ref.current.getBoundingClientRect();
+      const center = rect.left + rect.width / 2;
+      const distance = Math.abs(center - x);
+      const t = Math.max(0, 1 - distance / INFLUENCE);
+      setScale(1 + (MAX_SCALE - 1) * t * t);
+    };
+    update(pointerX.get());
+    return pointerX.on("change", update);
+  }, [magnetic, pointerX]);
 
-  pointerX.on?.("change", updateScale);
 
   return (
     <motion.div
