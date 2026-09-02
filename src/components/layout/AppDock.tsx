@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, useMotionValue } from "framer-motion";
 import {
@@ -18,13 +18,15 @@ interface DockItem {
   label: string;
   to: string;
   icon: typeof Home;
+  /** Primary destinations stay visible on small screens. */
+  primary?: boolean;
 }
 
 const DOCK_ITEMS: DockItem[] = [
-  { label: "Home", to: "/", icon: Home },
-  { label: "Library", to: "/library", icon: Library },
-  { label: "Experiment 101", to: "/experiment-101", icon: FlaskConical },
-  { label: "Builder", to: "/builder", icon: Hammer },
+  { label: "Home", to: "/", icon: Home, primary: true },
+  { label: "Library", to: "/library", icon: Library, primary: true },
+  { label: "Experiment 101", to: "/experiment-101", icon: FlaskConical, primary: true },
+  { label: "Builder", to: "/builder", icon: Hammer, primary: true },
   { label: "Videos", to: "/videos", icon: Video },
   { label: "Community", to: "/community", icon: Users },
   { label: "Analytics", to: "/analytics", icon: BarChart3 },
@@ -34,6 +36,7 @@ const DOCK_ITEMS: DockItem[] = [
 const BASE = 44; // px — meets the 44x44 minimum tap target
 const MAX_SCALE = 1.45;
 const INFLUENCE = 110; // px of horizontal magnetic influence
+
 
 function DockButton({
   item,
