@@ -142,7 +142,7 @@ export function AppDock({ className }: { className?: string }) {
     >
       <ul className="mx-auto flex w-max items-center gap-2 rounded-2xl border border-border/60 bg-background/70 p-1.5 backdrop-blur-md">
         {DOCK_ITEMS.map((item) => (
-          <li key={item.to} className="flex">
+          <li key={item.to} className={item.primary ? "flex" : "hidden md:flex"}>
             <DockButton
               item={item}
               active={
