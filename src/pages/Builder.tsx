@@ -323,12 +323,14 @@ const Builder = () => {
 
   const handleOpenVlb = async (file: File) => {
     const result = await readVlbFile(file);
-    if (!result.ok) {
-      toast.error(result.error);
+    const doc = result.file;
+    if (!result.ok || !doc) {
+      toast.error(result.error ?? "This file could not be opened.");
       return;
     }
 
-    const { file: doc, warnings } = result;
+    const warnings = result.warnings;
+
     setExperimentName(doc.metadata.title);
     setCanvasMode(doc.canvasMode);
     resetBuilderState({
