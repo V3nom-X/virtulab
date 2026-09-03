@@ -33,8 +33,7 @@ import {
   Menu,
   Settings2,
   FileDown,
-  FolderOpen,
-  RotateCcw
+  FolderOpen
 } from "lucide-react";
 import { MobileBuilderSheet } from "@/components/builder/MobileBuilderSheet";
 import { toast } from "sonner";
