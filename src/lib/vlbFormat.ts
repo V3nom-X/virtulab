@@ -119,9 +119,16 @@ export function vlbFileName(title: string): string {
   return `${slug}${VLB_EXTENSION}`;
 }
 
-export type VlbParseResult =
-  | { ok: true; file: VlbFile; warnings: string[] }
-  | { ok: false; error: string };
+export interface VlbParseResult {
+  ok: boolean;
+  /** Present when `ok` is true. */
+  file?: VlbFile;
+  /** Non-fatal notes, e.g. a stripped unsafe script. */
+  warnings: string[];
+  /** Present when `ok` is false. */
+  error?: string;
+}
+
 
 /** Forward-migrate older documents to the current shape. */
 function migrate(raw: Record<string, unknown>): Record<string, unknown> {
@@ -142,23 +149,24 @@ function migrate(raw: Record<string, unknown>): Record<string, unknown> {
 
 export function parseVlb(text: string): VlbParseResult {
   if (text.length > 5_000_000) {
-    return { ok: false, error: "This .vlb file is too large to open (limit 5 MB)." };
+    return { ok: false, warnings: [], error: "This .vlb file is too large to open (limit 5 MB)." };
   }
 
   let raw: unknown;
   try {
     raw = JSON.parse(text);
   } catch {
-    return { ok: false, error: "This file isn't valid .vlb — the JSON could not be read." };
+    return { ok: false, warnings: [], error: "This file isn't valid .vlb — the JSON could not be read." };
   }
   if (!raw || typeof raw !== "object") {
-    return { ok: false, error: "This file isn't a VirtuLab experiment." };
+    return { ok: false, warnings: [], error: "This file isn't a VirtuLab experiment." };
   }
 
   const migrated = migrate(raw as Record<string, unknown>);
   if (Number(migrated.formatVersion) > VLB_FORMAT_VERSION) {
     return {
       ok: false,
+      warnings: [],
       error: `This experiment was saved by a newer version of VirtuLab (format v${migrated.formatVersion}). Update the app to open it.`,
     };
   }
@@ -168,6 +176,7 @@ export function parseVlb(text: string): VlbParseResult {
     const first = parsed.error.issues[0];
     return {
       ok: false,
+      warnings: [],
       error: `This .vlb file is malformed: ${first?.path.join(".") || "document"} — ${first?.message ?? "unexpected shape"}.`,
     };
   }
@@ -207,6 +216,6 @@ export async function readVlbFile(file: File): Promise<VlbParseResult> {
   try {
     return parseVlb(await file.text());
   } catch {
-    return { ok: false, error: "The file could not be read." };
+    return { ok: false, warnings: [], error: "The file could not be read." };
   }
 }

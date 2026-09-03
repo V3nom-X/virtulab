@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { experiment101List } from "@/data/experiment101Data";
 import { useExperiment101Records } from "@/hooks/useExperiment101Progress";
+import { ReportDownload } from "@/components/experiment101/ReportDownload";
+
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 
 const ids = experiment101List.map((e) => e.id);
@@ -37,12 +39,16 @@ const Experiment101 = () => {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3 max-w-md">
-              <Progress value={progress} className="flex-1" />
-              <span className="text-sm font-medium shrink-0">
-                {completedCount}/{total}
-              </span>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-3 w-full max-w-md">
+                <Progress value={progress} className="flex-1" />
+                <span className="text-sm font-medium shrink-0">
+                  {completedCount}/{total}
+                </span>
+              </div>
+              <ReportDownload />
             </div>
+
           </div>
         </section>
 

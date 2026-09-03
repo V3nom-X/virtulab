@@ -1,5 +1,6 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
+
 import { Layout } from "@/components/layout/Layout";
 import { Footer } from "@/components/home/Footer";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,9 @@ import {
   Box,
   Layers,
   Menu,
-  Settings2
+  Settings2,
+  FileDown,
+  FolderOpen
 } from "lucide-react";
 import { MobileBuilderSheet } from "@/components/builder/MobileBuilderSheet";
 import { toast } from "sonner";
@@ -49,7 +52,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUndoRedo } from "@/hooks/useUndoRedo";
 import { physicsPresets } from "@/data/physicsPresets";
-import { ComingSoonOverlay } from "@/components/ui/ComingSoonOverlay";
+import { downloadVlb, readVlbFile, VLB_EXTENSION } from "@/lib/vlbFormat";
+
 
 interface BuilderState {
   components: CanvasComponent[];
@@ -301,6 +305,81 @@ const Builder = () => {
     toast.success("Share link copied to clipboard!");
   };
 
+  // ---- .vlb file format ------------------------------------------------
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExportVlb = () => {
+    downloadVlb({
+      title: experimentName,
+      author: (user?.user_metadata?.full_name as string | undefined) || user?.email,
+      canvasMode,
+      components,
+      connections,
+      variables,
+      scripts: scriptCode.trim() ? { main: scriptCode } : {},
+    });
+    toast.success(`Exported ${experimentName}${VLB_EXTENSION}`);
+  };
+
+  const handleOpenVlb = async (file: File) => {
+    const result = await readVlbFile(file);
+    const doc = result.file;
+    if (!result.ok || !doc) {
+      toast.error(result.error ?? "This file could not be opened.");
+      return;
+    }
+
+    const warnings = result.warnings;
+
+    setExperimentName(doc.metadata.title);
+    setCanvasMode(doc.canvasMode);
+    resetBuilderState({
+      components: doc.components as unknown as CanvasComponent[],
+      connections: doc.connections as unknown as Connection[],
+    });
+    setVariables(doc.variables as Variable[]);
+    // Scripts are loaded into the editor only — nothing runs until Preview.
+    setScriptCode(doc.scripts.main ?? Object.values(doc.scripts)[0] ?? "");
+    setDataPoints([]);
+    setIsPreviewing(false);
+    setIsRecording(false);
+    setSelectedComponent(null);
+    setExperimentId(null);
+
+    toast.success(`Opened "${doc.metadata.title}"`);
+    warnings.forEach((warning) => toast.warning(warning));
+  };
+
+  // Builder keyboard shortcuts
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && /^(INPUT|TEXTAREA)$/.test(target.tagName)) return;
+      if (target?.isContentEditable) return;
+      if (!(e.ctrlKey || e.metaKey)) return;
+
+      const key = e.key.toLowerCase();
+      if (key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      } else if (key === "y" || (key === "z" && e.shiftKey)) {
+        e.preventDefault();
+        redo();
+      } else if (key === "s") {
+        e.preventDefault();
+        void handleSave();
+      } else if (key === "o") {
+        e.preventDefault();
+        fileInputRef.current?.click();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [undo, redo]);
+
+
+
   if (isLoading) {
     return (
       <Layout>
@@ -314,11 +393,19 @@ const Builder = () => {
   return (
     <Layout>
       <div className="min-h-screen flex flex-col relative">
-        {/* Coming Soon Overlay */}
-        <ComingSoonOverlay 
-          title="Experiment Builder" 
-          description="The custom experiment builder is coming soon! Build 2D and 3D physics simulations with drag-and-drop components."
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={VLB_EXTENSION + ",application/json"}
+          className="sr-only"
+          aria-label="Open a VirtuLab experiment file"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.target.value = "";
+            if (file) void handleOpenVlb(file);
+          }}
         />
+
         {/* Mobile-responsive layout */}
         <div className="flex-1 flex flex-col lg:flex-row">
         {/* Left Panel - Hidden on mobile, shown via sheet */}
@@ -601,10 +688,31 @@ const Builder = () => {
                 </>
               )}
               
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 hidden sm:inline-flex"
+                onClick={() => fileInputRef.current?.click()}
+                title="Open a .vlb experiment file (Ctrl+O)"
+              >
+                <FolderOpen className="w-4 h-4 sm:mr-1" />
+                <span className="hidden lg:inline">Open</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 hidden sm:inline-flex"
+                onClick={handleExportVlb}
+                title="Export this experiment as a .vlb file"
+              >
+                <FileDown className="w-4 h-4 sm:mr-1" />
+                <span className="hidden lg:inline">Export .vlb</span>
+              </Button>
               <Button variant="outline" size="sm" className="h-8 hidden md:inline-flex" onClick={handleShare} disabled={!experimentId}>
                 <Link2 className="w-4 h-4 mr-1" />
                 Share
               </Button>
+
               <Button size="sm" className="h-8" onClick={handleSave} disabled={isSaving}>
                 {isSaving ? <Loader2 className="w-4 h-4 sm:mr-1 animate-spin" /> : <Save className="w-4 h-4 sm:mr-1" />}
                 <span className="hidden sm:inline">Save</span>
