@@ -57,7 +57,13 @@ export async function pendingCount(): Promise<number> {
   return (await readQueue()).length;
 }
 
-export async function enqueue(entry: Omit<OutboxEntry, "id" | "queuedAt">): Promise<void> {
+type NewEntry = OutboxEntry extends infer E
+  ? E extends OutboxEntry
+    ? Omit<E, "id" | "queuedAt">
+    : never
+  : never;
+
+export async function enqueue(entry: NewEntry): Promise<void> {
   const queue = await readQueue();
   queue.push({
     ...entry,
