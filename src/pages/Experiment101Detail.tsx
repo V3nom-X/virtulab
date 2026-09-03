@@ -15,7 +15,10 @@ import { PuritySimulation } from "@/components/experiment101/PuritySimulation";
 import { ChangesInSubstancesSimulation } from "@/components/experiment101/ChangesInSubstancesSimulation";
 import { ClassesOfFireSimulation } from "@/components/experiment101/ClassesOfFireSimulation";
 import { CellExplorerSimulation } from "@/components/experiment101/CellExplorerSimulation";
+import { ReportDownload } from "@/components/experiment101/ReportDownload";
+import { enqueue, flushOutbox } from "@/lib/offlineOutbox";
 import { ArrowLeft, BookOpen, CheckCircle2, FlaskConical, Globe, Trophy } from "lucide-react";
+
 
 const getSimulation = (id: string) => {
   switch (id) {
@@ -34,6 +37,7 @@ const Experiment101Detail = () => {
   const experiment = experiment101List.find((e) => e.id === experimentId);
   const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
+  const [pendingSync, setPendingSync] = useState(false);
   const { record, saveResult } = useExperiment101Progress(experimentId);
 
   if (!experiment) {
@@ -55,6 +59,29 @@ const Experiment101Detail = () => {
 
   const currentIndex = experiment101List.findIndex((e) => e.id === experiment.id);
   const nextExperiment = experiment101List[currentIndex + 1];
+
+  const handleSubmitQuiz = () => {
+    setQuizSubmitted(true);
+    const score = experiment.quizQuestions.reduce(
+      (acc, q, i) => acc + (quizAnswers[i] === q.correctIndex ? 1 : 0),
+      0,
+    );
+    const passed = score >= passMark;
+    if (passed || score > record.quizScore) {
+      // Local record first so progress survives with no network at all.
+      saveResult(score, totalQuestions, passed || record.completed);
+    }
+    // Queue the cloud write; the outbox replays it on reconnect.
+    void enqueue({
+      kind: "progress",
+      experimentId: experiment.id,
+      completed: passed,
+    })
+      .then(() => flushOutbox())
+      .then((result) => setPendingSync(result.remaining > 0))
+      .catch(() => setPendingSync(true));
+  };
+
 
   return (
     <Layout>
