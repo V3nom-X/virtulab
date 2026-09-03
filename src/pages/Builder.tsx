@@ -1,5 +1,6 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
+
 import { Layout } from "@/components/layout/Layout";
 import { Footer } from "@/components/home/Footer";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,10 @@ import {
   Box,
   Layers,
   Menu,
-  Settings2
+  Settings2,
+  FileDown,
+  FolderOpen,
+  RotateCcw
 } from "lucide-react";
 import { MobileBuilderSheet } from "@/components/builder/MobileBuilderSheet";
 import { toast } from "sonner";
@@ -49,7 +53,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUndoRedo } from "@/hooks/useUndoRedo";
 import { physicsPresets } from "@/data/physicsPresets";
-import { ComingSoonOverlay } from "@/components/ui/ComingSoonOverlay";
+import { downloadVlb, readVlbFile, VLB_EXTENSION } from "@/lib/vlbFormat";
+
 
 interface BuilderState {
   components: CanvasComponent[];
