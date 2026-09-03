@@ -205,52 +205,85 @@ const Experiment101Detail = () => {
                   </div>
                   <div className="space-y-6">
                     {experiment.quizQuestions.map((q, qi) => (
-                      <div key={qi} className="min-w-0">
-                        <p className="font-medium mb-2 break-words">{qi + 1}. {q.question}</p>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <fieldset key={qi} className="min-w-0 border-0 p-0 m-0">
+                        <legend className="font-medium mb-2 break-words">
+                          {qi + 1}. {q.question}
+                        </legend>
+                        <div
+                          role="radiogroup"
+                          aria-label={`Question ${qi + 1}: ${q.question}`}
+                          className="grid grid-cols-1 sm:grid-cols-2 gap-2"
+                        >
                           {q.options.map((opt, oi) => {
                             const selected = quizAnswers[qi] === oi;
                             const correct = quizSubmitted && oi === q.correctIndex;
                             const wrong = quizSubmitted && selected && oi !== q.correctIndex;
+                            // Roving tabindex: one stop per question, arrows move within it.
+                            const isTabStop = selected || (quizAnswers[qi] === undefined && oi === 0);
                             return (
                               <button
                                 key={oi}
+                                type="button"
+                                role="radio"
+                                aria-checked={selected}
+                                tabIndex={isTabStop ? 0 : -1}
                                 data-testid={`q${qi}-opt${oi}`}
-                                onClick={() => !quizSubmitted && setQuizAnswers((p) => ({ ...p, [qi]: oi }))}
+                                onClick={() =>
+                                  !quizSubmitted && setQuizAnswers((p) => ({ ...p, [qi]: oi }))
+                                }
+                                onKeyDown={(e) => {
+                                  if (quizSubmitted) return;
+                                  const keys = ["ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp"];
+                                  if (!keys.includes(e.key)) return;
+                                  e.preventDefault();
+                                  const step = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : -1;
+                                  const next =
+                                    (oi + step + q.options.length) % q.options.length;
+                                  setQuizAnswers((p) => ({ ...p, [qi]: next }));
+                                  const group = e.currentTarget.parentElement;
+                                  const target = group?.querySelectorAll<HTMLButtonElement>(
+                                    '[role="radio"]',
+                                  )[next];
+                                  target?.focus();
+                                }}
                                 disabled={quizSubmitted}
-                                className={`text-left p-3 rounded-lg border text-sm break-words transition-colors ${correct ? "bg-green-100 dark:bg-green-900/30 border-green-500" : wrong ? "bg-red-100 dark:bg-red-900/30 border-red-500" : selected ? "bg-primary/10 border-primary" : "hover:bg-muted/50"}`}
+                                className={`text-left p-3 min-h-11 rounded-lg border text-sm break-words transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${correct ? "bg-green-100 dark:bg-green-900/30 border-green-500" : wrong ? "bg-red-100 dark:bg-red-900/30 border-red-500" : selected ? "bg-primary/10 border-primary" : "hover:bg-muted/50"}`}
                               >
-                                {opt}
+                                <span className="flex items-start gap-2">
+                                  <span aria-hidden="true" className="shrink-0 font-semibold">
+                                    {String.fromCharCode(65 + oi)}.
+                                  </span>
+                                  <span className="min-w-0">{opt}</span>
+                                  {quizSubmitted && (correct || wrong) && (
+                                    <span className="sr-only">
+                                      {correct ? " (correct answer)" : " (your answer, incorrect)"}
+                                    </span>
+                                  )}
+                                </span>
                               </button>
                             );
                           })}
                         </div>
-                      </div>
+                      </fieldset>
                     ))}
                   </div>
 
                   {!quizSubmitted ? (
                     <Button
                       className="mt-4 w-full sm:w-auto"
-                      onClick={() => {
-                        setQuizSubmitted(true);
-                        const score = experiment.quizQuestions.reduce(
-                          (acc, q, i) => acc + (quizAnswers[i] === q.correctIndex ? 1 : 0),
-                          0
-                        );
-                        const passed = score >= passMark;
-                        if (passed || score > record.quizScore) {
-                          saveResult(score, totalQuestions, passed || record.completed);
-                        }
-                      }}
+                      onClick={handleSubmitQuiz}
                       disabled={Object.keys(quizAnswers).length < totalQuestions}
                     >
                       Submit Answers
                     </Button>
                   ) : (
-                    <div className="mt-4 space-y-3">
+                    <div className="mt-4 space-y-3" role="status" aria-live="polite">
                       <div className="flex items-center gap-3">
-                        <Progress value={(quizScore / totalQuestions) * 100} className="flex-1" />
+                        <Progress
+                          value={(quizScore / totalQuestions) * 100}
+                          aria-label="Quiz score"
+                          className="flex-1"
+                        />
                         <span className="font-semibold shrink-0">{quizScore}/{totalQuestions}</span>
                       </div>
                       <p data-testid="quiz-result" className="text-sm text-muted-foreground">
@@ -258,6 +291,11 @@ const Experiment101Detail = () => {
                           ? "Passed — this experiment is marked complete."
                           : `You need at least ${passMark} correct to complete this experiment.`}
                       </p>
+                      {pendingSync && (
+                        <p className="text-xs text-muted-foreground">
+                          Saved offline — your result will sync when you reconnect.
+                        </p>
+                      )}
                       {quizScore === totalQuestions && (
                         <Badge className="bg-primary text-primary-foreground">🏆 Perfect Score!</Badge>
                       )}
@@ -273,6 +311,7 @@ const Experiment101Detail = () => {
                       </div>
                     </div>
                   )}
+
                 </div>
               </TabsContent>
             </Tabs>
