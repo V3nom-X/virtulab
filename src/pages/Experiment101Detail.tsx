@@ -101,8 +101,12 @@ const Experiment101Detail = () => {
                   )}
                 </div>
                 <p className="text-muted-foreground text-sm md:text-base break-words">{experiment.description}</p>
+                <div className="mt-3">
+                  <ReportDownload />
+                </div>
               </div>
             </div>
+
           </div>
         </section>
 
