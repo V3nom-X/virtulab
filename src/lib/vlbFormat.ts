@@ -119,9 +119,16 @@ export function vlbFileName(title: string): string {
   return `${slug}${VLB_EXTENSION}`;
 }
 
-export type VlbParseResult =
-  | { ok: true; file: VlbFile; warnings: string[] }
-  | { ok: false; error: string };
+export interface VlbParseResult {
+  ok: boolean;
+  /** Present when `ok` is true. */
+  file?: VlbFile;
+  /** Non-fatal notes, e.g. a stripped unsafe script. */
+  warnings: string[];
+  /** Present when `ok` is false. */
+  error?: string;
+}
+
 
 /** Forward-migrate older documents to the current shape. */
 function migrate(raw: Record<string, unknown>): Record<string, unknown> {
