@@ -306,6 +306,79 @@ const Builder = () => {
     toast.success("Share link copied to clipboard!");
   };
 
+  // ---- .vlb file format ------------------------------------------------
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExportVlb = () => {
+    downloadVlb({
+      title: experimentName,
+      author: (user?.user_metadata?.full_name as string | undefined) || user?.email,
+      canvasMode,
+      components,
+      connections,
+      variables,
+      scripts: scriptCode.trim() ? { main: scriptCode } : {},
+    });
+    toast.success(`Exported ${experimentName}${VLB_EXTENSION}`);
+  };
+
+  const handleOpenVlb = async (file: File) => {
+    const result = await readVlbFile(file);
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
+    }
+
+    const { file: doc, warnings } = result;
+    setExperimentName(doc.metadata.title);
+    setCanvasMode(doc.canvasMode);
+    resetBuilderState({
+      components: doc.components as unknown as CanvasComponent[],
+      connections: doc.connections as unknown as Connection[],
+    });
+    setVariables(doc.variables as Variable[]);
+    // Scripts are loaded into the editor only — nothing runs until Preview.
+    setScriptCode(doc.scripts.main ?? Object.values(doc.scripts)[0] ?? "");
+    setDataPoints([]);
+    setIsPreviewing(false);
+    setIsRecording(false);
+    setSelectedComponent(null);
+    setExperimentId(null);
+
+    toast.success(`Opened "${doc.metadata.title}"`);
+    warnings.forEach((warning) => toast.warning(warning));
+  };
+
+  // Builder keyboard shortcuts
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && /^(INPUT|TEXTAREA)$/.test(target.tagName)) return;
+      if (target?.isContentEditable) return;
+      if (!(e.ctrlKey || e.metaKey)) return;
+
+      const key = e.key.toLowerCase();
+      if (key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      } else if (key === "y" || (key === "z" && e.shiftKey)) {
+        e.preventDefault();
+        redo();
+      } else if (key === "s") {
+        e.preventDefault();
+        void handleSave();
+      } else if (key === "o") {
+        e.preventDefault();
+        fileInputRef.current?.click();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [undo, redo]);
+
+
+
   if (isLoading) {
     return (
       <Layout>
