@@ -392,11 +392,19 @@ const Builder = () => {
   return (
     <Layout>
       <div className="min-h-screen flex flex-col relative">
-        {/* Coming Soon Overlay */}
-        <ComingSoonOverlay 
-          title="Experiment Builder" 
-          description="The custom experiment builder is coming soon! Build 2D and 3D physics simulations with drag-and-drop components."
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={VLB_EXTENSION + ",application/json"}
+          className="sr-only"
+          aria-label="Open a VirtuLab experiment file"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.target.value = "";
+            if (file) void handleOpenVlb(file);
+          }}
         />
+
         {/* Mobile-responsive layout */}
         <div className="flex-1 flex flex-col lg:flex-row">
         {/* Left Panel - Hidden on mobile, shown via sheet */}
