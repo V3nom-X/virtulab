@@ -687,10 +687,31 @@ const Builder = () => {
                 </>
               )}
               
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 hidden sm:inline-flex"
+                onClick={() => fileInputRef.current?.click()}
+                title="Open a .vlb experiment file (Ctrl+O)"
+              >
+                <FolderOpen className="w-4 h-4 sm:mr-1" />
+                <span className="hidden lg:inline">Open</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 hidden sm:inline-flex"
+                onClick={handleExportVlb}
+                title="Export this experiment as a .vlb file"
+              >
+                <FileDown className="w-4 h-4 sm:mr-1" />
+                <span className="hidden lg:inline">Export .vlb</span>
+              </Button>
               <Button variant="outline" size="sm" className="h-8 hidden md:inline-flex" onClick={handleShare} disabled={!experimentId}>
                 <Link2 className="w-4 h-4 mr-1" />
                 Share
               </Button>
+
               <Button size="sm" className="h-8" onClick={handleSave} disabled={isSaving}>
                 {isSaving ? <Loader2 className="w-4 h-4 sm:mr-1 animate-spin" /> : <Save className="w-4 h-4 sm:mr-1" />}
                 <span className="hidden sm:inline">Save</span>
