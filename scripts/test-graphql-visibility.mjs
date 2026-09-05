@@ -20,12 +20,13 @@ if (!URL || !KEY) {
 }
 
 // Intended exposure matrix. Update when intent changes.
-const ANON_ALLOW = ["badges", "challenges", "experiments", "quizzes", "profiles"];
+const ANON_ALLOW = ["badges", "challenges", "experiments"];
 const AUTH_EXTRA_ALLOW = [
   "user_badges", "user_progress", "user_preferences", "user_roles",
   "custom_experiments", "experiment_comments", "experiment_likes",
   "experiment_requests", "collaboration_rooms", "room_participants",
   "chat_messages", "favorite_channels", "quiz_results",
+  "quizzes", "profiles",
 ];
 
 const ALL_TABLES = [...ANON_ALLOW, ...AUTH_EXTRA_ALLOW];
