@@ -38,8 +38,10 @@ const ResetPassword = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (password.length < 6) {
-      toast.error('Password must be at least 6 characters');
+    // Reuse the signup strength policy so passwords can't be downgraded here.
+    const parsed = passwordSchema.safeParse(password);
+    if (!parsed.success) {
+      toast.error(parsed.error.errors[0].message);
       return;
     }
 
