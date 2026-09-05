@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { toast } from 'sonner';
 import { FlaskConical, Loader2, Lock, CheckCircle } from 'lucide-react';
 import { BackButton } from '@/components/layout/BackButton';
+import { passwordSchema } from '@/lib/validation';
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -38,8 +39,10 @@ const ResetPassword = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (password.length < 6) {
-      toast.error('Password must be at least 6 characters');
+    // Reuse the signup strength policy so passwords can't be downgraded here.
+    const parsed = passwordSchema.safeParse(password);
+    if (!parsed.success) {
+      toast.error(parsed.error.errors[0].message);
       return;
     }
 
@@ -161,7 +164,7 @@ const ResetPassword = () => {
                     required
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">At least 6 characters</p>
+                <p className="text-xs text-muted-foreground">At least 8 characters, with uppercase, lowercase, and a number</p>
               </div>
 
               <Button type="submit" className="w-full" disabled={isSubmitting}>

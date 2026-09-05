@@ -646,6 +646,7 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       is_room_participant: { Args: { _room_id: string }; Returns: boolean }
+      mfa_satisfied: { Args: never; Returns: boolean }
       record_experiment_time: {
         Args: { _experiment_id: string; _seconds: number }
         Returns: undefined

@@ -165,17 +165,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const deleteAccount = async () => {
     if (!user) return { error: new Error('Not authenticated') };
-    
-    // Delete user data from related tables
-    await supabase.from('user_progress').delete().eq('user_id', user.id);
-    await supabase.from('user_badges').delete().eq('user_id', user.id);
-    await supabase.from('custom_experiments').delete().eq('user_id', user.id);
-    await supabase.from('favorite_channels').delete().eq('user_id', user.id);
-    await supabase.from('profiles').delete().eq('user_id', user.id);
-    
-    // Sign out after deletion
+
+    // Account deletion must happen server-side: only a privileged function can
+    // remove the auth account itself and every owner-scoped row.
+    const { data, error } = await supabase.functions.invoke('delete-account', { body: {} });
+
+    if (error) {
+      return { error: new Error('Could not delete your account. Please try again.') };
+    }
+    if (data && typeof data === 'object' && 'error' in data && data.error) {
+      return { error: new Error(String((data as { error: unknown }).error)) };
+    }
+
     await signOut();
-    
+
     return { error: null };
   };
 
