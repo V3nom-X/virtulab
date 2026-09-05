@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { toast } from 'sonner';
 import { FlaskConical, Loader2, Lock, CheckCircle } from 'lucide-react';
 import { BackButton } from '@/components/layout/BackButton';
+import { passwordSchema } from '@/lib/validation';
 
 const ResetPassword = () => {
   const navigate = useNavigate();
