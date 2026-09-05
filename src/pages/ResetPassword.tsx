@@ -164,7 +164,7 @@ const ResetPassword = () => {
                     required
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">At least 6 characters</p>
+                <p className="text-xs text-muted-foreground">At least 8 characters, with uppercase, lowercase, and a number</p>
               </div>
 
               <Button type="submit" className="w-full" disabled={isSubmitting}>
