@@ -131,14 +131,16 @@ export function Builder3DCanvas({
     camera.lookAt(0, 0, 0);
     cameraRef.current = camera;
 
-    // Renderer setup
+    // Renderer setup — quality scales with the device tier
+    const startBudget = budgetRef.current;
     const renderer = new THREE.WebGLRenderer({
       canvas: canvasRef.current,
-      antialias: true,
+      antialias: startBudget.antialias,
+      powerPreference: 'high-performance',
     });
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
+    renderer.setPixelRatio(effectivePixelRatio(startBudget));
+    renderer.shadowMap.enabled = startBudget.shadows;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     rendererRef.current = renderer;
 
@@ -152,19 +154,27 @@ export function Builder3DCanvas({
     controlsRef.current = controls;
 
     // Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.55);
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.1);
     directionalLight.position.set(10, 15, 10);
-    directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.width = 2048;
-    directionalLight.shadow.mapSize.height = 2048;
+    directionalLight.castShadow = startBudget.shadows;
+    const shadowRes = startBudget.tier === 'high' ? 2048 : 1024;
+    directionalLight.shadow.mapSize.width = shadowRes;
+    directionalLight.shadow.mapSize.height = shadowRes;
     scene.add(directionalLight);
 
-    const pointLight = new THREE.PointLight(0x00d4aa, 0.5, 20);
-    pointLight.position.set(-5, 5, 5);
-    scene.add(pointLight);
+    if (startBudget.maxLights > 1) {
+      const pointLight = new THREE.PointLight(0x00d4aa, 0.5, 20);
+      pointLight.position.set(-5, 5, 5);
+      scene.add(pointLight);
+    }
+    if (startBudget.maxLights > 2) {
+      const fill = new THREE.DirectionalLight(0xbcd8ff, 0.35);
+      fill.position.set(-8, 6, -6);
+      scene.add(fill);
+    }
 
     // Grid helper
     const gridHelper = new THREE.GridHelper(20, 40, 0x444466, 0x333344);
@@ -181,17 +191,27 @@ export function Builder3DCanvas({
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
     ground.rotation.x = -Math.PI / 2;
     ground.position.y = -0.01;
-    ground.receiveShadow = true;
+    ground.receiveShadow = startBudget.shadows;
     ground.name = 'ground';
     scene.add(ground);
 
-    // Animation loop
-    const animate = () => {
+    // Animation loop, throttled to the tier's target frame rate and paused
+    // while the scene is off-screen, hidden, or frozen by the watchdog.
+    let last = 0;
+    const animate = (now: number) => {
       animationIdRef.current = requestAnimationFrame(animate);
+      const b = budgetRef.current;
+      const interval = 1000 / b.targetFps;
+      if (now - last < interval) return;
+      last = now;
+      if (pausedRef.current) return;
       controls.update();
+      renderer.setPixelRatio(effectivePixelRatio(b));
+      renderer.shadowMap.enabled = b.shadows;
       renderer.render(scene, camera);
     };
-    animate();
+    animationIdRef.current = requestAnimationFrame(animate);
+
 
     // Resize handler
     const handleResize = () => {
