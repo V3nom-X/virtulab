@@ -557,6 +557,14 @@ export function Builder3DCanvas({
           className="w-full h-full touch-manipulation"
         />
 
+        <PerformanceModeNotice
+          degraded={degraded}
+          tier={tier}
+          fps={fps}
+          onRestore={restore}
+        />
+
+
         {/* Transform Toolbar */}
         {selectedObjectId && (
           <TransformToolbar
