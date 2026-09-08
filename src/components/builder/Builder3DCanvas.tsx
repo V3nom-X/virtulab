@@ -7,6 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { TransformToolbar, TransformMode, useTransformControls } from './TransformGizmo';
+import { buildRealisticMesh, groundOffsetFor } from '@/lib/builder3DMeshes';
+import { useDeviceTier, useSceneVisible } from '@/hooks/useDeviceTier';
+import { effectivePixelRatio } from '@/lib/renderBudget';
 import { 
   ChevronLeft, 
   ChevronRight, 
