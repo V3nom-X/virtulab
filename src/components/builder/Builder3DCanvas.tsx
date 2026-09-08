@@ -297,14 +297,11 @@ export function Builder3DCanvas({
       const intersectionPoint = intersects[0].point;
       const snappedPosition = snapToGrid(intersectionPoint);
       
-      // Account for object height
-      if (componentData.primitiveConfig) {
-        snappedPosition.y = componentData.primitiveConfig.scale[1] / 2;
-      }
-
-      // Create the 3D object
+      // Create the 3D object, then rest it exactly on the ground plane
       const mesh = createMeshFromComponent(componentData);
+      snappedPosition.y = groundOffsetFor(mesh);
       mesh.position.copy(snappedPosition);
+
       sceneRef.current.add(mesh);
 
       // Create placed object record
