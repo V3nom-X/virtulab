@@ -490,11 +490,10 @@ export function Builder3DCanvas({
                                 const intersects = raycaster.intersectObject(ground);
                                 if (intersects.length > 0) {
                                   const pos = snapToGrid(intersects[0].point);
-                                  if (draggedComponent.primitiveConfig) {
-                                    pos.y = draggedComponent.primitiveConfig.scale[1] / 2;
-                                  }
                                   const mesh = createMeshFromComponent(draggedComponent);
+                                  pos.y = groundOffsetFor(mesh);
                                   mesh.position.copy(pos);
+
                                   sceneRef.current.add(mesh);
                                   const placedObject: PlacedObject = {
                                     id: `obj_${Date.now()}`,
