@@ -61,6 +61,16 @@ export function Builder3DCanvas({
   const [draggedComponent, setDraggedComponent] = useState<Builder3DComponent | null>(null);
   const [showGrid, setShowGrid] = useState(true);
   const [transformMode, setTransformMode] = useState<TransformMode>('translate');
+
+  // Device capability tier: caps pixel ratio, shadows, geometry detail and FPS.
+  const { budget, degraded, fps, tier, restore } = useDeviceTier();
+  const sceneVisible = useSceneVisible(containerRef);
+  const budgetRef = useRef(budget);
+  const pausedRef = useRef(false);
+  budgetRef.current = budget;
+  pausedRef.current = degraded || !sceneVisible;
+
+
   
   // Get selected object mesh
   const selectedObject = placedObjects.find(o => o.id === selectedObjectId);
