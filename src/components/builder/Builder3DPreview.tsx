@@ -3,6 +3,10 @@ import * as THREE from 'three';
 import { CanvasComponent } from './DragDropCanvas';
 import { Variable } from './VariableControls';
 import { Connection } from './BuilderPreview';
+import { buildRealisticMesh } from '@/lib/builder3DMeshes';
+import { useDeviceTier, useSceneVisible } from '@/hooks/useDeviceTier';
+import { effectivePixelRatio, segments } from '@/lib/renderBudget';
+import { PerformanceModeNotice } from '@/components/dev/PerformanceModeNotice';
 
 interface Builder3DPreviewProps {
   components: CanvasComponent[];
@@ -36,6 +40,14 @@ export function Builder3DPreview({
   const velocitiesRef = useRef<Map<string, THREE.Vector3>>(new Map());
   const startTimeRef = useRef<number>(0);
   const clockRef = useRef<THREE.Clock>(new THREE.Clock());
+
+  // Device capability tier drives resolution, shadows, geometry detail and FPS.
+  const { budget, degraded, tier, fps, restore } = useDeviceTier();
+  const sceneVisible = useSceneVisible(containerRef);
+  const budgetRef = useRef(budget);
+  const pausedRef = useRef(false);
+  budgetRef.current = budget;
+  pausedRef.current = degraded || !sceneVisible;
 
   // Get variable value by name
   const getVarValue = useCallback((name: string): number => {
@@ -156,37 +168,33 @@ export function Builder3DPreview({
         group.add(ramp);
         break;
       }
-      case 'beaker':
-      case 'flask': {
-        // Beaker/flask visualization
-        const geometry = new THREE.CylinderGeometry(0.3, 0.25, 0.8, 32, 1, true);
-        const material = new THREE.MeshPhongMaterial({ 
-          color: 0x88ccff, 
-          transparent: true, 
-          opacity: 0.5,
-          side: THREE.DoubleSide
-        });
-        const beaker = new THREE.Mesh(geometry, material);
-        group.add(beaker);
-        
-        // Liquid inside
-        const liquidGeometry = new THREE.CylinderGeometry(0.28, 0.23, 0.4, 32);
-        const liquidMaterial = new THREE.MeshPhongMaterial({ 
-          color: props.color || 0x00aaff, 
-          transparent: true, 
-          opacity: 0.7 
-        });
-        const liquid = new THREE.Mesh(liquidGeometry, liquidMaterial);
-        liquid.position.y = -0.2;
-        group.add(liquid);
-        break;
-      }
       default: {
-        // Generic component as box
-        const geometry = new THREE.BoxGeometry(0.6, 0.6, 0.6);
-        const material = new THREE.MeshPhongMaterial({ color: 0x475569, shininess: 30 });
-        const box = new THREE.Mesh(geometry, material);
-        group.add(box);
+        // Real laboratory geometry (glass beakers, flasks, burners, molecules,
+        // electronics) built from the shared realistic mesh library.
+        const realisticId = REALISTIC_IDS[comp.type];
+        const built = buildRealisticMesh(
+          realisticId ?? comp.type,
+          {
+            budget: budgetRef.current,
+            properties: {
+              fillLevel: props.fillLevel ?? (props.content ? 60 : 45),
+              liquidColor: props.liquidColor ?? props.color ?? '#4aa8ff',
+              temperature: props.temperature ?? 20,
+              voltage: props.voltage ?? 1.5,
+              resistance: props.resistance ?? 100,
+              color: props.color ?? '#4488ff',
+              active: props.active ?? false,
+              flameOn: props.active ?? false,
+              on: props.on ?? props.lit ?? false,
+              mass: props.mass ?? 1,
+              angle: props.angle ?? 30,
+              length: props.length ?? 1.2,
+            },
+          },
+          '#64748b',
+        );
+        built.position.y = -1.9; // rest on the preview ground plane
+        group.add(built);
       }
     }
 
@@ -214,10 +222,14 @@ export function Builder3DPreview({
     cameraRef.current = camera;
 
     // Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const startBudget = budgetRef.current;
+    const renderer = new THREE.WebGLRenderer({
+      antialias: startBudget.antialias,
+      powerPreference: 'high-performance',
+    });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.shadowMap.enabled = true;
+    renderer.setPixelRatio(effectivePixelRatio(startBudget));
+    renderer.shadowMap.enabled = startBudget.shadows;
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
@@ -353,10 +365,15 @@ export function Builder3DPreview({
     startTimeRef.current = Date.now();
     clock.start();
 
-    const animate = () => {
+    let last = 0;
+    const animate = (now: number) => {
       animationIdRef.current = requestAnimationFrame(animate);
-      
-      const delta = clock.getDelta();
+      const b = budgetRef.current;
+      if (now - last < 1000 / b.targetFps) return;
+      last = now;
+      if (pausedRef.current) return;
+
+      const delta = Math.min(clock.getDelta(), 0.05);
       const elapsed = clock.getElapsedTime();
 
       if (isRunning) {
@@ -391,17 +408,25 @@ export function Builder3DPreview({
                 velocitiesRef.current.set(id, velocity);
               }
               
-              // Apply gravity
-              velocity.y -= gravity * delta * 0.01;
-              
-              // Update position
+              // Gravity in real units, light quadratic air drag, and a bounce
+              // that loses energy — all frame-rate independent.
+              const drag = props.drag ?? 0.02;
+              const restitution = props.restitution ?? 0.62;
+              velocity.y -= gravity * delta * 0.25;
+              const speed = velocity.length();
+              if (speed > 0) {
+                const dragFactor = Math.exp(-drag * speed * delta);
+                velocity.multiplyScalar(dragFactor);
+              }
+
               object.position.x += velocity.x * delta;
               object.position.y += velocity.y * delta;
-              
-              // Ground collision
+
               if (object.position.y < -1.8) {
                 object.position.y = -1.8;
-                velocity.y = -velocity.y * 0.6; // Bounce with energy loss
+                velocity.y = Math.abs(velocity.y) * restitution;
+                velocity.x *= 0.92; // rolling friction on impact
+                if (Math.abs(velocity.y) < 0.05) velocity.y = 0;
               }
               break;
             }
@@ -421,12 +446,38 @@ export function Builder3DPreview({
               break;
             }
             case 'collision': {
-              // Simple oscillation between objects
+              // Real 1D collision: momentum is conserved, restitution decides
+              // how much kinetic energy survives the impact.
               const children = object.children;
-              if (children.length >= 2) {
-                children[0].position.x = -1 + Math.sin(elapsed * 2) * 0.5;
-                children[1].position.x = 1 - Math.sin(elapsed * 2) * 0.5;
+              if (children.length < 2) break;
+              const a = children[0];
+              const b = children[1];
+              const m1 = props.mass1 ?? props.mass ?? 1;
+              const m2 = props.mass2 ?? 1;
+              const e = props.elastic === false ? 0 : (props.restitution ?? 1);
+              const state = (object.userData.collision ??= { v1: 1.4, v2: -0.9 });
+
+              a.position.x += state.v1 * delta;
+              b.position.x += state.v2 * delta;
+
+              const rA = 0.2 + m1 * 0.1;
+              const rB = 0.2 + m2 * 0.1;
+              const gap = b.position.x - a.position.x;
+              const closing = state.v1 - state.v2;
+              if (gap <= rA + rB && closing > 0) {
+                const total = m1 + m2;
+                const v1 = (m1 * state.v1 + m2 * state.v2 - m2 * e * closing) / total;
+                const v2 = (m1 * state.v1 + m2 * state.v2 + m1 * e * closing) / total;
+                state.v1 = v1;
+                state.v2 = v2;
+                const overlap = rA + rB - gap;
+                a.position.x -= overlap / 2;
+                b.position.x += overlap / 2;
               }
+
+              // Track walls keep the demo on screen
+              if (a.position.x < -3) { a.position.x = -3; state.v1 = Math.abs(state.v1) * 0.9; }
+              if (b.position.x > 3) { b.position.x = 3; state.v2 = -Math.abs(state.v2) * 0.9; }
               break;
             }
           }
@@ -458,10 +509,11 @@ export function Builder3DPreview({
         camera.position.x = Math.sin(elapsed * 0.2) * 0.5;
       }
 
+      renderer.setPixelRatio(effectivePixelRatio(budgetRef.current));
       renderer.render(scene, camera);
     };
 
-    animate();
+    animationIdRef.current = requestAnimationFrame(animate);
 
     return () => {
       cancelAnimationFrame(animationIdRef.current);
@@ -470,9 +522,12 @@ export function Builder3DPreview({
   }, [isRunning, getVarValue, onDataPoint]);
 
   return (
-    <div 
-      ref={containerRef} 
-      className={`w-full h-full cursor-grab active:cursor-grabbing ${className}`}
-    />
+    <div className={`relative w-full h-full ${className}`}>
+      <div
+        ref={containerRef}
+        className="w-full h-full cursor-grab active:cursor-grabbing"
+      />
+      <PerformanceModeNotice degraded={degraded} tier={tier} fps={fps} onRestore={restore} />
+    </div>
   );
 }

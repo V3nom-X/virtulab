@@ -7,6 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { TransformToolbar, TransformMode, useTransformControls } from './TransformGizmo';
+import { buildRealisticMesh, groundOffsetFor } from '@/lib/builder3DMeshes';
+import { useDeviceTier, useSceneVisible } from '@/hooks/useDeviceTier';
+import { PerformanceModeNotice } from '@/components/dev/PerformanceModeNotice';
+import { effectivePixelRatio } from '@/lib/renderBudget';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -58,6 +62,16 @@ export function Builder3DCanvas({
   const [draggedComponent, setDraggedComponent] = useState<Builder3DComponent | null>(null);
   const [showGrid, setShowGrid] = useState(true);
   const [transformMode, setTransformMode] = useState<TransformMode>('translate');
+
+  // Device capability tier: caps pixel ratio, shadows, geometry detail and FPS.
+  const { budget, degraded, fps, tier, restore } = useDeviceTier();
+  const sceneVisible = useSceneVisible(containerRef);
+  const budgetRef = useRef(budget);
+  const pausedRef = useRef(false);
+  budgetRef.current = budget;
+  pausedRef.current = degraded || !sceneVisible;
+
+
   
   // Get selected object mesh
   const selectedObject = placedObjects.find(o => o.id === selectedObjectId);
@@ -85,56 +99,22 @@ export function Builder3DCanvas({
     }
   );
 
-  // Create geometry based on component config
-  const createGeometry = useCallback((config: Builder3DComponent['primitiveConfig']) => {
-    if (!config) return new THREE.BoxGeometry(1, 1, 1);
-    
-    switch (config.geometry) {
-      case 'box':
-        return new THREE.BoxGeometry(1, 1, 1);
-      case 'sphere':
-        return new THREE.SphereGeometry(0.5, 32, 32);
-      case 'cylinder':
-        return new THREE.CylinderGeometry(0.5, 0.5, 1, 32);
-      case 'cone':
-        return new THREE.ConeGeometry(0.5, 1, 32);
-      case 'torus':
-        return new THREE.TorusGeometry(0.5, 0.15, 16, 100);
-      case 'plane':
-        return new THREE.PlaneGeometry(1, 1);
-      default:
-        return new THREE.BoxGeometry(1, 1, 1);
-    }
-  }, []);
-
-  // Create mesh from component definition
+  // Create mesh from component definition — realistic lab geometry per type.
   const createMeshFromComponent = useCallback((component: Builder3DComponent): THREE.Object3D => {
-    const group = new THREE.Group();
-    
-    if (component.modelType === 'primitive' && component.primitiveConfig) {
-      const geometry = createGeometry(component.primitiveConfig);
-      const material = new THREE.MeshStandardMaterial({
-        color: new THREE.Color(component.primitiveConfig.color),
-        transparent: component.category === 'containers',
-        opacity: component.category === 'containers' ? 0.6 : 1,
-        roughness: 0.4,
-        metalness: 0.2,
-      });
-      
-      const mesh = new THREE.Mesh(geometry, material);
-      mesh.scale.set(
-        component.primitiveConfig.scale[0],
-        component.primitiveConfig.scale[1],
-        component.primitiveConfig.scale[2]
-      );
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-      group.add(mesh);
-    }
-    
+    const defaults = Object.fromEntries(
+      Object.entries(component.properties ?? {}).map(([key, prop]) => [key, prop.default]),
+    );
+
+    const group = buildRealisticMesh(
+      component.id,
+      { budget, properties: defaults },
+      component.primitiveConfig?.color ?? '#7f8b98',
+    );
+
     group.userData = { componentId: component.id, componentName: component.name };
     return group;
-  }, [createGeometry]);
+  }, [budget]);
+
 
   // Snap position to grid
   const snapToGrid = (position: THREE.Vector3): THREE.Vector3 => {
@@ -165,14 +145,16 @@ export function Builder3DCanvas({
     camera.lookAt(0, 0, 0);
     cameraRef.current = camera;
 
-    // Renderer setup
+    // Renderer setup — quality scales with the device tier
+    const startBudget = budgetRef.current;
     const renderer = new THREE.WebGLRenderer({
       canvas: canvasRef.current,
-      antialias: true,
+      antialias: startBudget.antialias,
+      powerPreference: 'high-performance',
     });
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
+    renderer.setPixelRatio(effectivePixelRatio(startBudget));
+    renderer.shadowMap.enabled = startBudget.shadows;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     rendererRef.current = renderer;
 
@@ -186,19 +168,27 @@ export function Builder3DCanvas({
     controlsRef.current = controls;
 
     // Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.55);
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.1);
     directionalLight.position.set(10, 15, 10);
-    directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.width = 2048;
-    directionalLight.shadow.mapSize.height = 2048;
+    directionalLight.castShadow = startBudget.shadows;
+    const shadowRes = startBudget.tier === 'high' ? 2048 : 1024;
+    directionalLight.shadow.mapSize.width = shadowRes;
+    directionalLight.shadow.mapSize.height = shadowRes;
     scene.add(directionalLight);
 
-    const pointLight = new THREE.PointLight(0x00d4aa, 0.5, 20);
-    pointLight.position.set(-5, 5, 5);
-    scene.add(pointLight);
+    if (startBudget.maxLights > 1) {
+      const pointLight = new THREE.PointLight(0x00d4aa, 0.5, 20);
+      pointLight.position.set(-5, 5, 5);
+      scene.add(pointLight);
+    }
+    if (startBudget.maxLights > 2) {
+      const fill = new THREE.DirectionalLight(0xbcd8ff, 0.35);
+      fill.position.set(-8, 6, -6);
+      scene.add(fill);
+    }
 
     // Grid helper
     const gridHelper = new THREE.GridHelper(20, 40, 0x444466, 0x333344);
@@ -215,17 +205,27 @@ export function Builder3DCanvas({
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
     ground.rotation.x = -Math.PI / 2;
     ground.position.y = -0.01;
-    ground.receiveShadow = true;
+    ground.receiveShadow = startBudget.shadows;
     ground.name = 'ground';
     scene.add(ground);
 
-    // Animation loop
-    const animate = () => {
+    // Animation loop, throttled to the tier's target frame rate and paused
+    // while the scene is off-screen, hidden, or frozen by the watchdog.
+    let last = 0;
+    const animate = (now: number) => {
       animationIdRef.current = requestAnimationFrame(animate);
+      const b = budgetRef.current;
+      const interval = 1000 / b.targetFps;
+      if (now - last < interval) return;
+      last = now;
+      if (pausedRef.current) return;
       controls.update();
+      renderer.setPixelRatio(effectivePixelRatio(b));
+      renderer.shadowMap.enabled = b.shadows;
       renderer.render(scene, camera);
     };
-    animate();
+    animationIdRef.current = requestAnimationFrame(animate);
+
 
     // Resize handler
     const handleResize = () => {
@@ -298,14 +298,11 @@ export function Builder3DCanvas({
       const intersectionPoint = intersects[0].point;
       const snappedPosition = snapToGrid(intersectionPoint);
       
-      // Account for object height
-      if (componentData.primitiveConfig) {
-        snappedPosition.y = componentData.primitiveConfig.scale[1] / 2;
-      }
-
-      // Create the 3D object
+      // Create the 3D object, then rest it exactly on the ground plane
       const mesh = createMeshFromComponent(componentData);
+      snappedPosition.y = groundOffsetFor(mesh);
       mesh.position.copy(snappedPosition);
+
       sceneRef.current.add(mesh);
 
       // Create placed object record
@@ -494,11 +491,10 @@ export function Builder3DCanvas({
                                 const intersects = raycaster.intersectObject(ground);
                                 if (intersects.length > 0) {
                                   const pos = snapToGrid(intersects[0].point);
-                                  if (draggedComponent.primitiveConfig) {
-                                    pos.y = draggedComponent.primitiveConfig.scale[1] / 2;
-                                  }
                                   const mesh = createMeshFromComponent(draggedComponent);
+                                  pos.y = groundOffsetFor(mesh);
                                   mesh.position.copy(pos);
+
                                   sceneRef.current.add(mesh);
                                   const placedObject: PlacedObject = {
                                     id: `obj_${Date.now()}`,
@@ -561,6 +557,14 @@ export function Builder3DCanvas({
           onClick={handleCanvasClick}
           className="w-full h-full touch-manipulation"
         />
+
+        <PerformanceModeNotice
+          degraded={degraded}
+          tier={tier}
+          fps={fps}
+          onRestore={restore}
+        />
+
 
         {/* Transform Toolbar */}
         {selectedObjectId && (
