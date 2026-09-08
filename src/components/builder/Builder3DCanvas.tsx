@@ -85,56 +85,22 @@ export function Builder3DCanvas({
     }
   );
 
-  // Create geometry based on component config
-  const createGeometry = useCallback((config: Builder3DComponent['primitiveConfig']) => {
-    if (!config) return new THREE.BoxGeometry(1, 1, 1);
-    
-    switch (config.geometry) {
-      case 'box':
-        return new THREE.BoxGeometry(1, 1, 1);
-      case 'sphere':
-        return new THREE.SphereGeometry(0.5, 32, 32);
-      case 'cylinder':
-        return new THREE.CylinderGeometry(0.5, 0.5, 1, 32);
-      case 'cone':
-        return new THREE.ConeGeometry(0.5, 1, 32);
-      case 'torus':
-        return new THREE.TorusGeometry(0.5, 0.15, 16, 100);
-      case 'plane':
-        return new THREE.PlaneGeometry(1, 1);
-      default:
-        return new THREE.BoxGeometry(1, 1, 1);
-    }
-  }, []);
-
-  // Create mesh from component definition
+  // Create mesh from component definition — realistic lab geometry per type.
   const createMeshFromComponent = useCallback((component: Builder3DComponent): THREE.Object3D => {
-    const group = new THREE.Group();
-    
-    if (component.modelType === 'primitive' && component.primitiveConfig) {
-      const geometry = createGeometry(component.primitiveConfig);
-      const material = new THREE.MeshStandardMaterial({
-        color: new THREE.Color(component.primitiveConfig.color),
-        transparent: component.category === 'containers',
-        opacity: component.category === 'containers' ? 0.6 : 1,
-        roughness: 0.4,
-        metalness: 0.2,
-      });
-      
-      const mesh = new THREE.Mesh(geometry, material);
-      mesh.scale.set(
-        component.primitiveConfig.scale[0],
-        component.primitiveConfig.scale[1],
-        component.primitiveConfig.scale[2]
-      );
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-      group.add(mesh);
-    }
-    
+    const defaults = Object.fromEntries(
+      Object.entries(component.properties ?? {}).map(([key, prop]) => [key, prop.default]),
+    );
+
+    const group = buildRealisticMesh(
+      component.id,
+      { budget, properties: defaults },
+      component.primitiveConfig?.color ?? '#7f8b98',
+    );
+
     group.userData = { componentId: component.id, componentName: component.name };
     return group;
-  }, [createGeometry]);
+  }, [budget]);
+
 
   // Snap position to grid
   const snapToGrid = (position: THREE.Vector3): THREE.Vector3 => {
