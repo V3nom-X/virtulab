@@ -2,6 +2,12 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { GripVertical, Settings, Trash2, Copy, Move } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import {
+  registerBuilderDropTarget,
+  subscribeBuilderDrag,
+  startBuilderDrag,
+  type BuilderDragState,
+} from '@/lib/builderDrag';
 
 export interface CanvasComponent {
   id: string;
@@ -52,9 +58,76 @@ export function DragDropCanvas({
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [connectingFrom, setConnectingFrom] = useState<{ id: string; port: 'in' | 'out' } | null>(null);
+  const [drag, setDrag] = useState<BuilderDragState>({ payload: null, x: 0, y: 0, moved: false });
+  const [keyboardPlacement, setKeyboardPlacement] = useState(false);
 
   // Snap to grid
   const snapToGrid = (value: number) => Math.round(value / gridSize) * gridSize;
+
+  // Convert a viewport point into snapped canvas coordinates.
+  const toCanvasPoint = useCallback((clientX: number, clientY: number) => {
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return null;
+    return {
+      inside:
+        clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom,
+      x: Math.max(0, snapToGrid(clientX - rect.left - panOffset.x - 75)),
+      y: Math.max(0, snapToGrid(clientY - rect.top - panOffset.y - 40)),
+    };
+  }, [panOffset, gridSize]);
+
+  const addComponentAt = useCallback((
+    data: { id: string; name: string; icon: string; defaultProps?: Record<string, any> },
+    x: number,
+    y: number,
+  ) => {
+    const newComponent: CanvasComponent = {
+      id: `comp_${Date.now()}`,
+      type: data.id,
+      name: data.name,
+      icon: data.icon,
+      x,
+      y,
+      width: 150,
+      height: 80,
+      properties: data.defaultProps || {},
+    };
+    onComponentsChange([...components, newComponent]);
+    onComponentSelect?.(newComponent);
+    toast.success(`Placed ${data.name}`);
+  }, [components, onComponentsChange, onComponentSelect]);
+
+  // Live pointer drag state (works for mouse, pen and touch).
+  useEffect(() => subscribeBuilderDrag(setDrag), []);
+
+  // Accept pointer drops that land inside the canvas.
+  useEffect(() => registerBuilderDropTarget((payload, clientX, clientY) => {
+    const point = toCanvasPoint(clientX, clientY);
+    if (!point?.inside) return;
+    addComponentAt(payload, point.x, point.y);
+  }), [toCanvasPoint, addComponentAt]);
+
+  // Keyboard placement: components queued from the palette land in the next
+  // free grid slot so the canvas is usable without a pointer.
+  useEffect(() => {
+    const onPlace = (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      if (!detail) return;
+      const column = components.length % 4;
+      const row = Math.floor(components.length / 4);
+      addComponentAt(detail, 40 + column * 170, 40 + row * 110);
+      setKeyboardPlacement(true);
+      window.setTimeout(() => setKeyboardPlacement(false), 2500);
+    };
+    window.addEventListener('builder:place-component', onPlace);
+    return () => window.removeEventListener('builder:place-component', onPlace);
+  }, [components.length, addComponentAt]);
+
+  const dropPreview = (() => {
+    if (!drag.payload || !drag.moved) return null;
+    const point = toCanvasPoint(drag.x, drag.y);
+    return point?.inside ? point : null;
+  })();
 
   // Handle drop from palette
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -68,27 +141,13 @@ export function DragDropCanvas({
       const rect = canvasRef.current?.getBoundingClientRect();
       if (!rect) return;
 
-      const x = snapToGrid(e.clientX - rect.left - panOffset.x - 75);
-      const y = snapToGrid(e.clientY - rect.top - panOffset.y - 40);
-
-      const newComponent: CanvasComponent = {
-        id: `comp_${Date.now()}`,
-        type: componentData.id,
-        name: componentData.name,
-        icon: componentData.icon,
-        x: Math.max(0, x),
-        y: Math.max(0, y),
-        width: 150,
-        height: 80,
-        properties: componentData.defaultProps || {}
-      };
-
-      onComponentsChange([...components, newComponent]);
-      toast.success(`Added ${componentData.name}`);
+      const x = Math.max(0, snapToGrid(e.clientX - rect.left - panOffset.x - 75));
+      const y = Math.max(0, snapToGrid(e.clientY - rect.top - panOffset.y - 40));
+      addComponentAt(componentData, x, y);
     } catch (err) {
       console.error('Failed to parse drop data:', err);
     }
-  }, [components, onComponentsChange, panOffset, gridSize]);
+  }, [addComponentAt, panOffset, gridSize]);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -97,8 +156,8 @@ export function DragDropCanvas({
   };
 
   // Handle component drag
-  const handleComponentMouseDown = (e: React.MouseEvent, comp: CanvasComponent) => {
-    if (e.button !== 0) return;
+  const handleComponentMouseDown = (e: React.PointerEvent, comp: CanvasComponent) => {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
     e.stopPropagation();
     
     const rect = (e.target as HTMLElement).closest('.canvas-component')?.getBoundingClientRect();
@@ -112,7 +171,7 @@ export function DragDropCanvas({
     onComponentSelect?.(comp);
   };
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
+  const handleMouseMove = useCallback((e: PointerEvent) => {
     if (dragging) {
       const rect = canvasRef.current?.getBoundingClientRect();
       if (!rect) return;
@@ -142,11 +201,13 @@ export function DragDropCanvas({
   }, []);
 
   useEffect(() => {
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('pointermove', handleMouseMove);
+    window.addEventListener('pointerup', handleMouseUp);
+    window.addEventListener('pointercancel', handleMouseUp);
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('pointermove', handleMouseMove);
+      window.removeEventListener('pointerup', handleMouseUp);
+      window.removeEventListener('pointercancel', handleMouseUp);
     };
   }, [handleMouseMove, handleMouseUp]);
 
@@ -220,7 +281,11 @@ export function DragDropCanvas({
   return (
     <div
       ref={canvasRef}
-      className={`relative overflow-hidden bg-[radial-gradient(circle,hsl(var(--border))_1px,transparent_1px)] bg-[size:20px_20px] cursor-default ${className}`}
+      role="application"
+      aria-label="Experiment canvas. Drag components from the palette, or press Enter on a palette item to place it here."
+      className={`relative overflow-hidden bg-[radial-gradient(circle,hsl(var(--border))_1px,transparent_1px)] bg-[size:20px_20px] cursor-default transition-shadow ${
+        dropPreview ? 'ring-2 ring-inset ring-primary' : ''
+      } ${className}`}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       onMouseDown={handleCanvasMouseDown}
@@ -287,7 +352,7 @@ export function DragDropCanvas({
               width: comp.width,
               minHeight: comp.height
             }}
-            onMouseDown={(e) => handleComponentMouseDown(e, comp)}
+            onPointerDown={(e) => handleComponentMouseDown(e, comp)}
           >
             {/* Header */}
             <div className="flex items-center gap-2 mb-2">
@@ -350,6 +415,25 @@ export function DragDropCanvas({
         ))}
       </div>
 
+      {/* Snapped drop preview */}
+      {dropPreview && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute rounded-xl border-2 border-dashed border-primary bg-primary/10"
+          style={{
+            left: dropPreview.x + panOffset.x,
+            top: dropPreview.y + panOffset.y,
+            width: 150,
+            height: 80,
+          }}
+        />
+      )}
+
+      {/* Live region for keyboard placement */}
+      <div role="status" aria-live="polite" className="sr-only">
+        {keyboardPlacement ? 'Component placed on the canvas.' : ''}
+      </div>
+
       {/* Empty state */}
       {components.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -359,7 +443,8 @@ export function DragDropCanvas({
             </div>
             <h3 className="text-xl font-semibold mb-2">Drag & Drop Components</h3>
             <p className="text-muted-foreground">
-              Drag components from the palette on the left, or click them to add to the canvas.
+              Drag a component from the palette and release it here. On a phone, press and hold a
+              component, then drag. With a keyboard, focus a palette item and press Enter.
             </p>
           </div>
         </div>
