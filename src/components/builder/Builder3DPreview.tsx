@@ -5,7 +5,7 @@ import { Variable } from './VariableControls';
 import { Connection } from './BuilderPreview';
 import { buildRealisticMesh } from '@/lib/builder3DMeshes';
 import { useDeviceTier, useSceneVisible } from '@/hooks/useDeviceTier';
-import { effectivePixelRatio, segments } from '@/lib/renderBudget';
+import { effectivePixelRatio } from '@/lib/renderBudget';
 import { PerformanceModeNotice } from '@/components/dev/PerformanceModeNotice';
 
 interface Builder3DPreviewProps {
@@ -16,6 +16,31 @@ interface Builder3DPreviewProps {
   onDataPoint?: (data: { time: number; [key: string]: number }) => void;
   className?: string;
 }
+
+// Maps builder component types onto the realistic lab mesh library ids.
+const REALISTIC_IDS: Record<string, string> = {
+  beaker: 'beaker',
+  flask: 'flask',
+  'test-tube': 'test-tube',
+  testtube: 'test-tube',
+  burner: 'bunsen-burner',
+  'bunsen-burner': 'bunsen-burner',
+  'hot-plate': 'hot-plate',
+  hotplate: 'hot-plate',
+  tripod: 'tripod',
+  thermometer: 'thermometer',
+  timer: 'timer',
+  battery: 'battery',
+  resistor: 'resistor',
+  led: 'led',
+  ball: 'ball',
+  mass: 'cube',
+  cube: 'cube',
+  block: 'cube',
+  water: 'molecule-h2o',
+  'molecule-h2o': 'molecule-h2o',
+  'molecule-co2': 'molecule-co2',
+};
 
 // CPK colors for atoms
 const atomColors: Record<string, number> = {

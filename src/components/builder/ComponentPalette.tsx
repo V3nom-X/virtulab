@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { Search, ChevronDown, ChevronRight, Plus } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Search, ChevronDown, ChevronRight, GripVertical } from 'lucide-react';
+import { startBuilderDrag } from '@/lib/builderDrag';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
@@ -62,7 +63,7 @@ const defaultComponents: PaletteComponent[] = [
   { id: 'ammeter', name: 'Ammeter', icon: 'A', category: 'Measurement', description: 'Current measurement', defaultProps: {} },
 ];
 
-export function ComponentPalette({ components = defaultComponents, className = '', onComponentClick }: ComponentPaletteProps) {
+export function ComponentPalette({ components = defaultComponents, className = '' }: ComponentPaletteProps) {
   const [search, setSearch] = useState('');
   const [expandedCategories, setExpandedCategories] = useState<string[]>(['Physics', 'Chemistry']);
 
@@ -96,8 +97,34 @@ export function ComponentPalette({ components = defaultComponents, className = '
     e.dataTransfer.effectAllowed = 'copy';
   };
 
-  const handleClick = (comp: PaletteComponent) => {
-    onComponentClick?.(comp);
+  // Press-and-hold (touch) or press-and-move (mouse/pen) starts a real drag.
+  const holdTimer = useRef<number | null>(null);
+
+  const beginDrag = (comp: PaletteComponent, x: number, y: number) => {
+    startBuilderDrag({ id: comp.id, name: comp.name, icon: comp.icon, defaultProps: comp.defaultProps }, x, y);
+  };
+
+  const handlePointerDown = (e: React.PointerEvent, comp: PaletteComponent) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (e.pointerType === 'touch') {
+      // Long-press so vertical list scrolling still works on phones.
+      const { clientX, clientY } = e;
+      holdTimer.current = window.setTimeout(() => beginDrag(comp, clientX, clientY), 220);
+      return;
+    }
+    beginDrag(comp, e.clientX, e.clientY);
+  };
+
+  const clearHold = () => {
+    if (holdTimer.current !== null) {
+      window.clearTimeout(holdTimer.current);
+      holdTimer.current = null;
+    }
+  };
+
+  // Keyboard route: Enter/Space places the component on the canvas.
+  const placeWithKeyboard = (comp: PaletteComponent) => {
+    window.dispatchEvent(new CustomEvent('builder:place-component', { detail: comp }));
   };
 
   return (
@@ -142,20 +169,33 @@ export function ComponentPalette({ components = defaultComponents, className = '
                   {comps.map(comp => (
                     <div
                       key={comp.id}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`${comp.name}. Drag onto the canvas, or press Enter to place it.`}
                       draggable
                       onDragStart={(e) => handleDragStart(e, comp)}
-                      onClick={() => handleClick(comp)}
-                      className="relative p-2 bg-muted/50 rounded-lg border border-transparent hover:border-primary/30 cursor-grab active:cursor-grabbing transition-all text-center group"
+                      onPointerDown={(e) => handlePointerDown(e, comp)}
+                      onPointerUp={clearHold}
+                      onPointerCancel={clearHold}
+                      onPointerLeave={clearHold}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          placeWithKeyboard(comp);
+                        }
+                      }}
+                      className="relative min-h-11 p-2 bg-muted/50 rounded-lg border border-transparent hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-grab active:cursor-grabbing transition-all text-center group touch-manipulation select-none"
                       title={comp.description}
                     >
                       <div className="text-xl mb-0.5">{comp.icon}</div>
                       <div className="text-[10px] font-medium text-muted-foreground group-hover:text-foreground transition-colors truncate">
                         {comp.name}
                       </div>
-                      {/* Click to add indicator */}
-                      <div className="absolute inset-0 flex items-center justify-center bg-primary/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                        <Plus className="w-4 h-4 text-primary" />
-                      </div>
+                      {/* Drag affordance */}
+                      <GripVertical
+                        aria-hidden="true"
+                        className="absolute right-0.5 top-0.5 w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                      />
                     </div>
                   ))}
                 </div>
@@ -174,7 +214,7 @@ export function ComponentPalette({ components = defaultComponents, className = '
       {/* Help text */}
       <div className="p-2 border-t border-border">
         <p className="text-[10px] text-muted-foreground text-center">
-          Drag to canvas or click to add
+          Drag onto the canvas · hold then drag on touch · Enter to place
         </p>
       </div>
     </div>
