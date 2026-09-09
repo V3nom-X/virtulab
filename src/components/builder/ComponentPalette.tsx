@@ -63,7 +63,7 @@ const defaultComponents: PaletteComponent[] = [
   { id: 'ammeter', name: 'Ammeter', icon: 'A', category: 'Measurement', description: 'Current measurement', defaultProps: {} },
 ];
 
-export function ComponentPalette({ components = defaultComponents, className = '', onComponentClick }: ComponentPaletteProps) {
+export function ComponentPalette({ components = defaultComponents, className = '' }: ComponentPaletteProps) {
   const [search, setSearch] = useState('');
   const [expandedCategories, setExpandedCategories] = useState<string[]>(['Physics', 'Chemistry']);
 

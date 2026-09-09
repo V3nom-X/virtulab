@@ -394,6 +394,7 @@ const Builder = () => {
   return (
     <Layout>
       <div className="min-h-screen flex flex-col relative">
+        <BuilderDragGhost />
         <input
           ref={fileInputRef}
           type="file"
