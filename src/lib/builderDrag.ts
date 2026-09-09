@@ -92,13 +92,17 @@ export function cancelBuilderDrag() {
 export function subscribeBuilderDrag(listener: (s: BuilderDragState) => void) {
   stateListeners.add(listener);
   listener(state);
-  return () => stateListeners.delete(listener);
+  return () => {
+    stateListeners.delete(listener);
+  };
 }
 
 /** Register a drop target. Handlers receive viewport coordinates. */
 export function registerBuilderDropTarget(handler: DropHandler) {
   dropHandlers.add(handler);
-  return () => dropHandlers.delete(handler);
+  return () => {
+    dropHandlers.delete(handler);
+  };
 }
 
 export function getBuilderDragState() {
