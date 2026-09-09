@@ -39,6 +39,7 @@ import { MobileBuilderSheet } from "@/components/builder/MobileBuilderSheet";
 import { toast } from "sonner";
 import { ComponentPalette, PaletteComponent } from "@/components/builder/ComponentPalette";
 import { DragDropCanvas, CanvasComponent } from "@/components/builder/DragDropCanvas";
+import { BuilderDragGhost } from "@/components/builder/BuilderDragGhost";
 import { PropertiesPanel } from "@/components/builder/PropertiesPanel";
 import { MonacoScriptEditor } from '@/components/builder/MonacoScriptEditor';
 import { VariableControls, Variable } from "@/components/builder/VariableControls";

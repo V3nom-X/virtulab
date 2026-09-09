@@ -125,7 +125,6 @@ export function ComponentPalette({ components = defaultComponents, className = '
   // Keyboard route: Enter/Space places the component on the canvas.
   const placeWithKeyboard = (comp: PaletteComponent) => {
     window.dispatchEvent(new CustomEvent('builder:place-component', { detail: comp }));
-    onComponentClick?.(comp);
   };
 
   return (
