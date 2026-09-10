@@ -414,6 +414,47 @@ export function Builder3DCanvas({
     onObjectsChange?.([]);
   };
 
+  // Rebuild the bench from a saved setup (e.g. an opened .vlb file).
+  useEffect(() => {
+    if (!hydrateToken || !sceneRef.current) return;
+    const scene = sceneRef.current;
+
+    setPlacedObjects((prev) => {
+      prev.forEach((obj) => scene.remove(obj.mesh));
+
+      const rebuilt: PlacedObject[] = [];
+      (hydrate ?? []).forEach((item, index) => {
+        const component = builder3DComponents.find((c) => c.id === item.componentId);
+        if (!component) return;
+
+        const mesh = createMeshFromComponent(component);
+        mesh.position.set(item.x, groundOffsetFor(mesh), item.z);
+        scene.add(mesh);
+
+        rebuilt.push({
+          id: `obj_${Date.now()}_${index}`,
+          componentId: component.id,
+          mesh,
+          position: mesh.position.clone(),
+          rotation: new THREE.Euler(),
+          scale: new THREE.Vector3(1, 1, 1),
+          properties:
+            item.properties ??
+            Object.fromEntries(
+              Object.entries(component.properties).map(([key, prop]) => [key, prop.default]),
+            ),
+        });
+      });
+
+      onObjectsChange?.(rebuilt);
+      return rebuilt;
+    });
+
+    setSelectedObjectId(null);
+    onObjectSelect?.(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrateToken]);
+
   // Get filtered components
   const filteredComponents = searchQuery 
     ? searchComponents(searchQuery)
