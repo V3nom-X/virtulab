@@ -47,7 +47,7 @@ import { DataOutput } from "@/components/builder/DataOutput";
 import { FormulaBuilder } from "@/components/builder/FormulaBuilder";
 import { BuilderPreview, Connection } from "@/components/builder/BuilderPreview";
 import { Builder3DPreview } from "@/components/builder/Builder3DPreview";
-import { Builder3DCanvas } from "@/components/builder/Builder3DCanvas";
+import { Builder3DCanvas, Placeable3D } from "@/components/builder/Builder3DCanvas";
 import { builderTemplates, ExperimentTemplate } from "@/data/builderTemplates";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -99,6 +99,10 @@ const Builder = () => {
     { id: 'friction', name: 'Friction', value: 0.3, min: 0, max: 1, step: 0.01 },
   ]);
   
+  // 3D bench items, kept in sync with the 3D canvas so they save and reopen.
+  const [bench3D, setBench3D] = useState<Placeable3D[]>([]);
+  const [hydrate3DToken, setHydrate3DToken] = useState(0);
+
   // Data output state
   const [dataPoints, setDataPoints] = useState<{ time: number; [key: string]: number }[]>([]);
 
@@ -317,6 +321,7 @@ const Builder = () => {
       components,
       connections,
       variables,
+      bench3D,
       scripts: scriptCode.trim() ? { main: scriptCode } : {},
     });
     toast.success(`Exported ${experimentName}${VLB_EXTENSION}`);
@@ -339,6 +344,8 @@ const Builder = () => {
       connections: doc.connections as unknown as Connection[],
     });
     setVariables(doc.variables as Variable[]);
+    setBench3D((doc.bench3D as unknown as Placeable3D[]) ?? []);
+    setHydrate3DToken((t) => t + 1);
     // Scripts are loaded into the editor only — nothing runs until Preview.
     setScriptCode(doc.scripts.main ?? Object.values(doc.scripts)[0] ?? "");
     setDataPoints([]);
@@ -746,6 +753,18 @@ const Builder = () => {
           ) : canvasMode === "3d" ? (
             <Builder3DCanvas
               className="flex-1"
+              hydrate={bench3D}
+              hydrateToken={hydrate3DToken}
+              onObjectsChange={(objs) =>
+                setBench3D(
+                  objs.map((o) => ({
+                    componentId: o.componentId,
+                    x: o.position.x,
+                    z: o.position.z,
+                    properties: o.properties,
+                  })),
+                )
+              }
               onObjectSelect={(obj) => {
                 if (obj) {
                   // Convert 3D object to canvas component format for properties panel
