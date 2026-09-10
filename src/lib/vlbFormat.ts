@@ -45,6 +45,8 @@ export const VlbFileSchema = z.object({
   connections: z.array(LooseRecord).max(1000).default([]),
   variables: z.array(VariableSchema).max(100).default([]),
   formulas: z.array(LooseRecord).max(200).default([]),
+  /** 3D bench items: { componentId, x, z, properties }. */
+  bench3D: z.array(LooseRecord).max(500).default([]),
   scripts: z.record(z.string().max(20000)).default({}),
 });
 
@@ -59,6 +61,7 @@ export interface VlbPayload {
   connections?: unknown[];
   variables?: VlbFile["variables"];
   formulas?: unknown[];
+  bench3D?: unknown[];
   scripts?: Record<string, string>;
 }
 
@@ -71,6 +74,7 @@ export function checksumOf(file: Omit<VlbFile, "checksum">): string {
     connections: file.connections,
     variables: file.variables,
     formulas: file.formulas,
+    bench3D: file.bench3D,
     scripts: file.scripts,
   });
 
@@ -100,6 +104,7 @@ export function createVlbFile(payload: VlbPayload): VlbFile {
     connections: (payload.connections ?? []) as Record<string, unknown>[],
     variables: payload.variables ?? [],
     formulas: (payload.formulas ?? []) as Record<string, unknown>[],
+    bench3D: (payload.bench3D ?? []) as Record<string, unknown>[],
     scripts: payload.scripts ?? {},
   };
   return { ...base, checksum: checksumOf(base) };

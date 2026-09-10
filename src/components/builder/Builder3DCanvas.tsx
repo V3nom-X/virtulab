@@ -33,10 +33,22 @@ export interface PlacedObject {
   properties: Record<string, any>;
 }
 
+/** A saved bench item, as stored in a `.vlb` file. */
+export interface Placeable3D {
+  componentId: string;
+  x: number;
+  z: number;
+  properties?: Record<string, any>;
+}
+
 interface Builder3DCanvasProps {
   className?: string;
   onObjectSelect?: (object: PlacedObject | null) => void;
   onObjectsChange?: (objects: PlacedObject[]) => void;
+  /** Bench items to rebuild the scene from (e.g. an opened `.vlb` file). */
+  hydrate?: Placeable3D[];
+  /** Bump this to re-apply `hydrate`; the scene is cleared first. */
+  hydrateToken?: number;
 }
 
 const GRID_SIZE = 0.5; // Snap-to-grid size
@@ -44,7 +56,9 @@ const GRID_SIZE = 0.5; // Snap-to-grid size
 export function Builder3DCanvas({ 
   className, 
   onObjectSelect,
-  onObjectsChange 
+  onObjectsChange,
+  hydrate,
+  hydrateToken = 0,
 }: Builder3DCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -399,6 +413,47 @@ export function Builder3DCanvas({
     setSelectedObjectId(null);
     onObjectsChange?.([]);
   };
+
+  // Rebuild the bench from a saved setup (e.g. an opened .vlb file).
+  useEffect(() => {
+    if (!hydrateToken || !sceneRef.current) return;
+    const scene = sceneRef.current;
+
+    setPlacedObjects((prev) => {
+      prev.forEach((obj) => scene.remove(obj.mesh));
+
+      const rebuilt: PlacedObject[] = [];
+      (hydrate ?? []).forEach((item, index) => {
+        const component = builder3DComponents.find((c) => c.id === item.componentId);
+        if (!component) return;
+
+        const mesh = createMeshFromComponent(component);
+        mesh.position.set(item.x, groundOffsetFor(mesh), item.z);
+        scene.add(mesh);
+
+        rebuilt.push({
+          id: `obj_${Date.now()}_${index}`,
+          componentId: component.id,
+          mesh,
+          position: mesh.position.clone(),
+          rotation: new THREE.Euler(),
+          scale: new THREE.Vector3(1, 1, 1),
+          properties:
+            item.properties ??
+            Object.fromEntries(
+              Object.entries(component.properties).map(([key, prop]) => [key, prop.default]),
+            ),
+        });
+      });
+
+      onObjectsChange?.(rebuilt);
+      return rebuilt;
+    });
+
+    setSelectedObjectId(null);
+    onObjectSelect?.(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrateToken]);
 
   // Get filtered components
   const filteredComponents = searchQuery 
