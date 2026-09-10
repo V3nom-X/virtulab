@@ -56,7 +56,9 @@ const GRID_SIZE = 0.5; // Snap-to-grid size
 export function Builder3DCanvas({ 
   className, 
   onObjectSelect,
-  onObjectsChange 
+  onObjectsChange,
+  hydrate,
+  hydrateToken = 0,
 }: Builder3DCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
