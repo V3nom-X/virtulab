@@ -33,10 +33,22 @@ export interface PlacedObject {
   properties: Record<string, any>;
 }
 
+/** A saved bench item, as stored in a `.vlb` file. */
+export interface Placeable3D {
+  componentId: string;
+  x: number;
+  z: number;
+  properties?: Record<string, any>;
+}
+
 interface Builder3DCanvasProps {
   className?: string;
   onObjectSelect?: (object: PlacedObject | null) => void;
   onObjectsChange?: (objects: PlacedObject[]) => void;
+  /** Bench items to rebuild the scene from (e.g. an opened `.vlb` file). */
+  hydrate?: Placeable3D[];
+  /** Bump this to re-apply `hydrate`; the scene is cleared first. */
+  hydrateToken?: number;
 }
 
 const GRID_SIZE = 0.5; // Snap-to-grid size
