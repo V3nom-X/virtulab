@@ -25,7 +25,20 @@ export type OutboxEntry =
       experimentId: string;
       seconds?: number;
       completed?: boolean;
+    }
+  | {
+      kind: "labSetup";
+      id: string;
+      queuedAt: number;
+      clientKey: string;
+      name: string;
+      data: unknown;
+      /** Bench seconds accumulated since the last queued entry (added on sync). */
+      benchSeconds: number;
+      completedLabs: string[];
     };
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 type Listener = (pending: number) => void;
 const listeners = new Set<Listener>();
@@ -82,6 +95,36 @@ async function send(entry: OutboxEntry): Promise<boolean> {
       });
       return !error;
     }
+
+    if (entry.kind === "labSetup") {
+      const { data: auth } = await supabase.auth.getUser();
+      const uid = auth.user?.id;
+      if (!uid) return false;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const table = (supabase as any).from("lab_setups");
+      const { data: existing } = await table
+        .select("bench_seconds, completed_labs")
+        .eq("user_id", uid)
+        .eq("client_key", entry.clientKey)
+        .maybeSingle();
+      const labs = Array.from(new Set([...(existing?.completed_labs ?? []), ...entry.completedLabs]));
+      const { error } = await (supabase as any).from("lab_setups").upsert(
+        {
+          user_id: uid,
+          client_key: entry.clientKey,
+          name: entry.name.slice(0, 120),
+          data: entry.data,
+          bench_seconds: (existing?.bench_seconds ?? 0) + Math.max(0, Math.round(entry.benchSeconds)),
+          completed_labs: labs,
+          updated_at: new Date(entry.queuedAt).toISOString(),
+        },
+        { onConflict: "user_id,client_key" },
+      );
+      return !error;
+    }
+
+    // Built-in modules use text ids that only live on the device; nothing to send.
+    if (!UUID_RE.test(entry.experimentId)) return true;
 
     if (entry.seconds && entry.seconds > 0) {
       const { error } = await supabase.rpc("record_experiment_time", {
