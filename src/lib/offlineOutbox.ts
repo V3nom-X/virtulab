@@ -78,6 +78,22 @@ type NewEntry = OutboxEntry extends infer E
 
 export async function enqueue(entry: NewEntry): Promise<void> {
   const queue = await readQueue();
+  // Coalesce lab setup saves so autosave never floods the queue.
+  if (entry.kind === "labSetup") {
+    const prev = queue.find(
+      (e): e is Extract<OutboxEntry, { kind: "labSetup" }> =>
+        e.kind === "labSetup" && e.clientKey === entry.clientKey,
+    );
+    if (prev) {
+      prev.name = entry.name;
+      prev.data = entry.data;
+      prev.benchSeconds += entry.benchSeconds;
+      prev.completedLabs = Array.from(new Set([...prev.completedLabs, ...entry.completedLabs]));
+      prev.queuedAt = Date.now();
+      await writeQueue(queue);
+      return;
+    }
+  }
   queue.push({
     ...entry,
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
