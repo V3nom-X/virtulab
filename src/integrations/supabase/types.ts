@@ -349,6 +349,39 @@ export type Database = {
         }
         Relationships: []
       }
+      lab_setups: {
+        Row: {
+          bench_seconds: number
+          client_key: string
+          completed_labs: string[]
+          data: Json
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bench_seconds?: number
+          client_key: string
+          completed_labs?: string[]
+          data?: Json
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bench_seconds?: number
+          client_key?: string
+          completed_labs?: string[]
+          data?: Json
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
