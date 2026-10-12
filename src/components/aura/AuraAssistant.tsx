@@ -354,13 +354,13 @@ export function AuraAssistant() {
             <Button
               variant="ghost"
               size="icon"
-              className={cn("h-7 w-7", voiceEnabled && "text-primary")}
+              aria-label={voiceEnabled ? "Mute voice" : "Turn on voice"} className={cn("h-7 w-7", voiceEnabled && "text-primary")}
               onClick={() => { setVoiceEnabled(!voiceEnabled); if (voiceEnabled) stopAudio(); }}
               title={voiceEnabled ? "Disable voice" : "Enable voice"}
             >
               {voiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
             </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setIsOpen(false); stopAudio(); }}>
+            <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Close AURA" onClick={() => { setIsOpen(false); stopAudio(); }}>
               <X className="w-4 h-4" />
             </Button>
           </div>
@@ -413,7 +413,7 @@ export function AuraAssistant() {
             className="flex-1 bg-muted rounded-full px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
             disabled={isLoading}
           />
-          <Button type="submit" size="icon" className="rounded-full h-9 w-9" disabled={isLoading || !input.trim()}>
+          <Button type="submit" size="icon" aria-label="Send message" className="rounded-full h-9 w-9" disabled={isLoading || !input.trim()}>
             <Send className="w-4 h-4" />
           </Button>
         </form>

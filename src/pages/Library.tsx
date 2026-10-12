@@ -196,6 +196,19 @@ const Library = () => {
                     </div>
                   </div>
                 </Link>
+                <Link to="/lab" className="block group">
+                  <div className="rounded-xl overflow-hidden border hover-lift" style={{ background: "linear-gradient(135deg, hsl(260 45% 25%), hsl(220 60% 20%))" }}>
+                    <div className="p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center gap-4">
+                      <div className="text-4xl" aria-hidden="true">🧫⚖️</div>
+                      <div className="flex-1 text-white min-w-0">
+                        <Badge className="bg-white/20 text-white border-white/30 mb-2">New</Badge>
+                        <h3 className="text-xl font-bold mb-1">Lab Module</h3>
+                        <p className="text-white/70 text-sm break-words">Build your own bench with drag-and-drop apparatus, plus guided labs: Titration, Pendulum & Archimedes' Principle</p>
+                      </div>
+                      <Button className="bg-black text-white hover:bg-black/80 shrink-0">Open Lab →</Button>
+                    </div>
+                  </div>
+                </Link>
               </div>
             )}
 

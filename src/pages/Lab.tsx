@@ -20,6 +20,9 @@ import { PropertiesPanel } from "@/components/builder/PropertiesPanel";
 import { VariableControls, Variable } from "@/components/builder/VariableControls";
 import { downloadVlb, readVlbFile, VLB_EXTENSION } from "@/lib/vlbFormat";
 import { useAuth } from "@/contexts/AuthContext";
+import { Link } from "react-router-dom";
+import { labExperiments } from "@/data/labExperiments";
+import { queueLabSync } from "@/lib/labSync";
 
 const STORAGE_KEY = "virtulab-lab-setup-v1";
 
@@ -85,7 +88,34 @@ const Lab = () => {
     } catch {
       /* storage full or unavailable */
     }
-  }, [restored, name, mode, components, bench3D, variables]);
+    // Queue for the cloud (coalesced; replays on reconnect). Signed-in only.
+    if (!user) return;
+    const t = window.setTimeout(() => void queueLabSync(), 2500);
+    return () => window.clearTimeout(t);
+  }, [restored, name, mode, components, bench3D, variables, user]);
+
+  // Bench time: count visible seconds, flush every minute and on leave.
+  const benchSecondsRef = useRef(0);
+  useEffect(() => {
+    if (!user) return;
+    const tick = window.setInterval(() => {
+      if (document.visibilityState === "visible") benchSecondsRef.current += 1;
+    }, 1000);
+    const flush = () => {
+      const s = benchSecondsRef.current;
+      if (s <= 0) return;
+      benchSecondsRef.current = 0;
+      void queueLabSync({ benchSeconds: s });
+    };
+    const every = window.setInterval(flush, 60_000);
+    document.addEventListener("visibilitychange", flush);
+    return () => {
+      flush();
+      window.clearInterval(tick);
+      window.clearInterval(every);
+      document.removeEventListener("visibilitychange", flush);
+    };
+  }, [user]);
 
   const handleAddComponent = useCallback((comp: PaletteComponent) => {
     setComponents((prev) => [
@@ -194,6 +224,19 @@ const Lab = () => {
             Drag apparatus onto the bench, set the conditions, then run it to watch it behave. Your
             bench is kept on this device, so it is still here without a connection.
           </p>
+          <nav aria-label="Guided labs" className="mt-4 grid gap-3 sm:grid-cols-3">
+            {labExperiments.map((l) => (
+              <Link
+                key={l.id}
+                to={`/lab/${l.id}`}
+                className="rounded-xl border bg-card p-4 min-h-11 hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <div className="text-2xl" aria-hidden="true">{l.icon}</div>
+                <div className="font-semibold mt-1">{l.title}</div>
+                <p className="text-xs text-muted-foreground mt-1">{l.subject} · procedure, simulation &amp; quiz</p>
+              </Link>
+            ))}
+          </nav>
         </header>
 
         <div className="flex-1 flex flex-col lg:flex-row">
@@ -230,7 +273,7 @@ const Lab = () => {
                       onClick={() => setMode("2d")}
                     >
                       <Layers className="w-4 h-4 sm:mr-1" />
-                      <span className="hidden sm:inline">2D</span>
+                      <span className="sr-only sm:not-sr-only sm:inline">2D</span>
                     </Button>
                     <Button
                       variant={mode === "3d" ? "secondary" : "ghost"}
@@ -240,7 +283,7 @@ const Lab = () => {
                       onClick={() => setMode("3d")}
                     >
                       <Box className="w-4 h-4 sm:mr-1" />
-                      <span className="hidden sm:inline">3D</span>
+                      <span className="sr-only sm:not-sr-only sm:inline">3D</span>
                     </Button>
                   </div>
                 )}
@@ -252,7 +295,7 @@ const Lab = () => {
                   onClick={() => setIsRunning((r) => !r)}
                 >
                   {isRunning ? <Pause className="w-4 h-4 sm:mr-1" /> : <Eye className="w-4 h-4 sm:mr-1" />}
-                  <span className="hidden sm:inline">{isRunning ? "Stop" : "Run"}</span>
+                  <span className="sr-only sm:not-sr-only sm:inline">{isRunning ? "Stop" : "Run"}</span>
                 </Button>
                 <Button
                   variant="outline"
@@ -261,11 +304,11 @@ const Lab = () => {
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <FolderOpen className="w-4 h-4 sm:mr-1" />
-                  <span className="hidden sm:inline">Open</span>
+                  <span className="sr-only sm:not-sr-only sm:inline">Open</span>
                 </Button>
                 <Button variant="outline" size="sm" className="h-9" onClick={handleExport}>
                   <FileDown className="w-4 h-4 sm:mr-1" />
-                  <span className="hidden sm:inline">Save file</span>
+                  <span className="sr-only sm:not-sr-only sm:inline">Save file</span>
                 </Button>
               </div>
             </div>

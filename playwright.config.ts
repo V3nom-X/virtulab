@@ -15,5 +15,6 @@ export default defineConfig({
     baseURL: process.env.E2E_BASE_URL ?? "http://localhost:8080",
     ...devices["Desktop Chrome"],
     trace: "off",
+    launchOptions: process.env.PW_CHROME ? { executablePath: process.env.PW_CHROME } : {},
   },
 });

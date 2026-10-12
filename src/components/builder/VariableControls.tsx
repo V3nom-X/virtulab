@@ -71,7 +71,7 @@ export function VariableControls({
           </CardTitle>
           <div className="flex items-center gap-1">
             {onReset && (
-              <Button variant="ghost" size="sm" onClick={onReset} className="h-7 w-7 p-0">
+              <Button variant="ghost" size="sm" onClick={onReset} className="h-7 w-7 p-0" aria-label="Reset variables">
                 <RotateCcw className="h-3.5 w-3.5" />
               </Button>
             )}
