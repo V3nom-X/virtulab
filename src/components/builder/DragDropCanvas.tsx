@@ -362,11 +362,11 @@ export function DragDropCanvas({
             </div>
             
             {/* Actions */}
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7"
+                className="h-7 w-7" aria-label={`Edit ${comp.name}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   onComponentSelect?.(comp);
@@ -377,7 +377,7 @@ export function DragDropCanvas({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7"
+                className="h-7 w-7" aria-label={`Duplicate ${comp.name}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   handleDuplicate(comp);
@@ -388,7 +388,7 @@ export function DragDropCanvas({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-destructive"
+                className="h-7 w-7 text-destructive" aria-label={`Remove ${comp.name}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   handleDelete(comp.id);

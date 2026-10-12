@@ -147,7 +147,7 @@ export function DataOutput({
               <Button
                 variant="outline"
                 size="sm"
-                className="h-7 w-7 p-0"
+                className="h-7 w-7 p-0" aria-label="Previous"
                 onClick={onToggleRecording}
               >
                 {isRecording ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
@@ -157,7 +157,7 @@ export function DataOutput({
               <Button
                 variant="outline"
                 size="sm"
-                className="h-7 w-7 p-0"
+                className="h-7 w-7 p-0" aria-label="Next"
                 onClick={onClearData}
               >
                 <Trash2 className="h-3.5 w-3.5" />
