@@ -85,7 +85,34 @@ const Lab = () => {
     } catch {
       /* storage full or unavailable */
     }
-  }, [restored, name, mode, components, bench3D, variables]);
+    // Queue for the cloud (coalesced; replays on reconnect). Signed-in only.
+    if (!user) return;
+    const t = window.setTimeout(() => void queueLabSync(), 2500);
+    return () => window.clearTimeout(t);
+  }, [restored, name, mode, components, bench3D, variables, user]);
+
+  // Bench time: count visible seconds, flush every minute and on leave.
+  const benchSecondsRef = useRef(0);
+  useEffect(() => {
+    if (!user) return;
+    const tick = window.setInterval(() => {
+      if (document.visibilityState === "visible") benchSecondsRef.current += 1;
+    }, 1000);
+    const flush = () => {
+      const s = benchSecondsRef.current;
+      if (s <= 0) return;
+      benchSecondsRef.current = 0;
+      void queueLabSync({ benchSeconds: s });
+    };
+    const every = window.setInterval(flush, 60_000);
+    document.addEventListener("visibilitychange", flush);
+    return () => {
+      flush();
+      window.clearInterval(tick);
+      window.clearInterval(every);
+      document.removeEventListener("visibilitychange", flush);
+    };
+  }, [user]);
 
   const handleAddComponent = useCallback((comp: PaletteComponent) => {
     setComponents((prev) => [
