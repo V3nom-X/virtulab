@@ -157,7 +157,7 @@ export function DataOutput({
               <Button
                 variant="outline"
                 size="sm"
-                className="h-7 w-7 p-0" aria-label="Next"
+                className="h-7 w-7 p-0" aria-label="Clear data"
                 onClick={onClearData}
               >
                 <Trash2 className="h-3.5 w-3.5" />
