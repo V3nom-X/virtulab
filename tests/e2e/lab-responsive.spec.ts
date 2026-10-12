@@ -7,6 +7,9 @@ const LABS = ["titration", "pendulum", "buoyancy"];
 for (const width of WIDTHS) {
   test.describe(`${width}px`, () => {
     test.use({ viewport: { width, height: 900 } });
+    test.beforeEach(async ({ page }) => {
+      await page.addInitScript(() => localStorage.setItem("virtulab-onboarding-completed-v1", "1"));
+    });
 
     test("lab page fits, links to guided labs, passes axe", async ({ page }) => {
       await page.goto("/lab");
