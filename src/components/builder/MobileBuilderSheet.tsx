@@ -26,7 +26,7 @@ export function MobileBuilderSheet({
     <Sheet>
       <SheetTrigger asChild>
         {trigger || (
-          <Button variant="outline" size="icon" className="lg:hidden h-9 w-9">
+          <Button variant="outline" size="icon" className="lg:hidden h-9 w-9" aria-label="Open lab tools">
             <Menu className="h-4 w-4" />
           </Button>
         )}
