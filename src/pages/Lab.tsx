@@ -273,7 +273,7 @@ const Lab = () => {
                       onClick={() => setMode("2d")}
                     >
                       <Layers className="w-4 h-4 sm:mr-1" />
-                      <span className="hidden sm:inline">2D</span>
+                      <span className="sr-only sm:not-sr-only sm:inline">2D</span>
                     </Button>
                     <Button
                       variant={mode === "3d" ? "secondary" : "ghost"}
@@ -283,7 +283,7 @@ const Lab = () => {
                       onClick={() => setMode("3d")}
                     >
                       <Box className="w-4 h-4 sm:mr-1" />
-                      <span className="hidden sm:inline">3D</span>
+                      <span className="sr-only sm:not-sr-only sm:inline">3D</span>
                     </Button>
                   </div>
                 )}
@@ -295,7 +295,7 @@ const Lab = () => {
                   onClick={() => setIsRunning((r) => !r)}
                 >
                   {isRunning ? <Pause className="w-4 h-4 sm:mr-1" /> : <Eye className="w-4 h-4 sm:mr-1" />}
-                  <span className="hidden sm:inline">{isRunning ? "Stop" : "Run"}</span>
+                  <span className="sr-only sm:not-sr-only sm:inline">{isRunning ? "Stop" : "Run"}</span>
                 </Button>
                 <Button
                   variant="outline"
@@ -304,11 +304,11 @@ const Lab = () => {
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <FolderOpen className="w-4 h-4 sm:mr-1" />
-                  <span className="hidden sm:inline">Open</span>
+                  <span className="sr-only sm:not-sr-only sm:inline">Open</span>
                 </Button>
                 <Button variant="outline" size="sm" className="h-9" onClick={handleExport}>
                   <FileDown className="w-4 h-4 sm:mr-1" />
-                  <span className="hidden sm:inline">Save file</span>
+                  <span className="sr-only sm:not-sr-only sm:inline">Save file</span>
                 </Button>
               </div>
             </div>
