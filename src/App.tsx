@@ -41,6 +41,8 @@ const ReproductiveSystem = lazy(() => import("./pages/ReproductiveSystem"));
 const ReproductiveExperiment = lazy(() => import("./pages/ReproductiveExperiment"));
 const Experiment101 = lazy(() => import("./pages/Experiment101"));
 const Experiment101Detail = lazy(() => import("./pages/Experiment101Detail"));
+const Lab = lazy(() => import("./pages/Lab"));
+const LabExperimentDetail = lazy(() => import("./pages/LabExperimentDetail"));
 
 function AccessibilityProvider({ children }: { children: React.ReactNode }) {
   useAccessibility();
@@ -88,6 +90,8 @@ const App = () => (
                     <Route path="/reproductive-system/:experimentId" element={<ReproductiveExperiment />} />
                     <Route path="/experiment-101" element={<Experiment101 />} />
                     <Route path="/experiment-101/:experimentId" element={<Experiment101Detail />} />
+                    <Route path="/lab" element={<Lab />} />
+                    <Route path="/lab/:labId" element={<LabExperimentDetail />} />
                     <Route path="/help" element={<Help />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>

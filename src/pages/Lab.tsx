@@ -20,6 +20,9 @@ import { PropertiesPanel } from "@/components/builder/PropertiesPanel";
 import { VariableControls, Variable } from "@/components/builder/VariableControls";
 import { downloadVlb, readVlbFile, VLB_EXTENSION } from "@/lib/vlbFormat";
 import { useAuth } from "@/contexts/AuthContext";
+import { Link } from "react-router-dom";
+import { labExperiments } from "@/data/labExperiments";
+import { queueLabSync } from "@/lib/labSync";
 
 const STORAGE_KEY = "virtulab-lab-setup-v1";
 
@@ -221,6 +224,19 @@ const Lab = () => {
             Drag apparatus onto the bench, set the conditions, then run it to watch it behave. Your
             bench is kept on this device, so it is still here without a connection.
           </p>
+          <nav aria-label="Guided labs" className="mt-4 grid gap-3 sm:grid-cols-3">
+            {labExperiments.map((l) => (
+              <Link
+                key={l.id}
+                to={`/lab/${l.id}`}
+                className="rounded-xl border bg-card p-4 min-h-11 hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <div className="text-2xl" aria-hidden="true">{l.icon}</div>
+                <div className="font-semibold mt-1">{l.title}</div>
+                <p className="text-xs text-muted-foreground mt-1">{l.subject} · procedure, simulation &amp; quiz</p>
+              </Link>
+            ))}
+          </nav>
         </header>
 
         <div className="flex-1 flex flex-col lg:flex-row">
