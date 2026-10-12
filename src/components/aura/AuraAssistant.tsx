@@ -354,13 +354,13 @@ export function AuraAssistant() {
             <Button
               variant="ghost"
               size="icon"
-              className={cn("h-7 w-7", voiceEnabled && "text-primary")}
+              aria-label={voiceEnabled ? "Mute voice" : "Turn on voice"} className={cn("h-7 w-7", voiceEnabled && "text-primary")}
               onClick={() => { setVoiceEnabled(!voiceEnabled); if (voiceEnabled) stopAudio(); }}
               title={voiceEnabled ? "Disable voice" : "Enable voice"}
             >
               {voiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
             </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setIsOpen(false); stopAudio(); }}>
+            <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Close AURA" onClick={() => { setIsOpen(false); stopAudio(); }}>
               <X className="w-4 h-4" />
             </Button>
           </div>
