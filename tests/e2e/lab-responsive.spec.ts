@@ -29,11 +29,10 @@ for (const width of WIDTHS) {
         const { labExperiments } = await import("../../src/data/labExperiments");
         const exp = labExperiments.find((l) => l.id === id)!;
         for (const [qi, q] of exp.quiz.entries()) {
-          await page.getByRole("radio", { name: q.options[q.correctIndex], exact: true }).nth(0).evaluate(() => {});
-          await page.locator(`[id="q${qi}-${q.correctIndex}"]`).click();
+          await page.locator(`[id="q${qi}o${q.correctIndex}"]`).click();
         }
         await page.getByRole("button", { name: /submit/i }).click();
-        await expect(page.getByText(/passed|well done|4\s*\/\s*4/i).first()).toBeVisible();
+        await expect(page.getByText(/Lab complete!/).first()).toBeVisible();
         const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("virtulab-lab-progress") || "{}"));
         expect(saved[id].completed).toBe(true);
       });
