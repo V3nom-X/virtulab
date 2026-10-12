@@ -147,7 +147,7 @@ export function DataOutput({
               <Button
                 variant="outline"
                 size="sm"
-                className="h-7 w-7 p-0" aria-label="Previous"
+                className="h-7 w-7 p-0" aria-label={isRecording ? "Pause recording" : "Start recording"}
                 onClick={onToggleRecording}
               >
                 {isRecording ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
