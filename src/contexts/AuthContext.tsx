@@ -90,6 +90,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signUp = async (email: string, password: string, metadata?: { username?: string; full_name?: string }) => {
     const redirectUrl = `${window.location.origin}/`;
+    try {
+      const { data, error } = await supabase.functions.invoke('validate-email', { body: { email: email.trim() } });
+      if (error || data?.valid !== true) {
+        return { error: new Error(data?.message || 'Email verification is unavailable. Please try again later.') };
+      }
+    } catch {
+      return { error: new Error('Email verification is unavailable. Please try again later.') };
+    }
     
     const { error } = await supabase.auth.signUp({
       email,
