@@ -20,7 +20,9 @@ export async function queueLabSync(opts: { benchSeconds?: number; completedLabs?
   } catch {
     /* ignore */
   }
-  const done = Object.entries(readLabProgress())
+  const progress = readLabProgress();
+  if (data && typeof data === "object") data = { ...data, progress };
+  const done = Object.entries(progress)
     .filter(([, r]) => r.completed)
     .map(([id]) => id);
   await enqueue({

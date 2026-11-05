@@ -37,6 +37,7 @@ const LabExperimentDetail = () => {
     setSteps(next);
     const rec = readLabProgress()[exp.id];
     writeLabProgress(exp.id, { quizScore: rec?.quizScore ?? 0, completed: rec?.completed ?? false, stepsDone: next });
+    void queueLabSync();
   };
 
   const submit = () => {
@@ -65,7 +66,7 @@ const LabExperimentDetail = () => {
 
   return (
     <Layout>
-      <main id="main-content" className="container py-6 space-y-6 max-w-4xl">
+      <div className="container py-6 space-y-6 max-w-4xl">
         <Link to="/lab" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="w-4 h-4" /> Back to the lab
         </Link>
@@ -145,7 +146,7 @@ const LabExperimentDetail = () => {
             )}
           </CardContent>
         </Card>
-      </main>
+      </div>
       <Footer />
     </Layout>
   );
