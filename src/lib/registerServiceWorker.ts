@@ -16,9 +16,12 @@ function isRefusedContext(): boolean {
     return true; // cross-origin frame
   }
 
-  const { hostname, search } = window.location;
+  const { search } = window.location;
+  const hostname = window.location.hostname.toLowerCase();
   if (new URLSearchParams(search).get("sw") === "off") return true;
-  if (hostname.startsWith("id-preview--") || hostname.startsWith("preview--")) return true;
+  const previewZone = ["lovable.app", "gpt-eng.com", "gptengineer.run"].some((zone) => hostname.endsWith(`.${zone}`));
+  const label = hostname.split(".")[0];
+  if (previewZone && (/^(?:id-preview|preview)(?:-[a-z0-9]+)?--.+$/.test(label) || /^project--.+-dev$/.test(label))) return true;
 
   const blockedSuffixes = [
     "lovableproject.com",

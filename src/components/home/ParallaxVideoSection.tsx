@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Parallax } from "@/components/ui/Parallax";
 import { useReducedMotion, useCinematicVideoEnabled } from "@/hooks/useAccessibility";
 import { useIsMobile } from "@/hooks/use-mobile";
-import videoAsset from "../../../public/videos/parallax-hero.mp4.asset.json";
-import posterImg from "../../../public/videos/parallax-hero-poster.jpg";
+import videoAsset from "@/assets/videos/parallax-hero.mp4.asset.json";
+const posterImg = "/videos/parallax-hero-poster.jpg";
 import { LoopQualityOverlay } from "@/components/dev/LoopQualityOverlay";
 import { trackVideoEvent } from "@/lib/analytics";
 
