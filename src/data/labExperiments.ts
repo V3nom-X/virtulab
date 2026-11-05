@@ -15,7 +15,7 @@ export interface LabBenchItem {
 }
 
 export interface LabExperiment {
-  id: "titration" | "pendulum" | "buoyancy";
+  id: "titration" | "pendulum" | "buoyancy" | "ohms-law" | "hookes-law" | "diffusion";
   title: string;
   icon: string;
   subject: string;
@@ -30,6 +30,59 @@ export interface LabExperiment {
 export const LAB_PASS_MARK = 3;
 
 export const labExperiments: LabExperiment[] = [
+  {
+    id: "ohms-law", title: "Ohm’s Law", icon: "⚡", subject: "Physics",
+    summary: "Measure current through a resistor as voltage changes.",
+    objective: "Verify V = IR and compare the current through different resistances.",
+    apparatus: ["Variable DC supply", "Resistor", "Ammeter", "Voltmeter", "Connecting leads"],
+    procedure: ["Connect the ammeter and resistor in series with the supply.", "Place the voltmeter across the resistor.", "Set resistance to 100 Ω and voltage to 2 V; record the current.", "Repeat at 4 V, 6 V and 8 V, keeping resistance constant.", "Change resistance to 200 Ω and compare current at the same voltage."],
+    bench: [
+      { type: "battery", name: "DC supply", icon: "🔋", x: 40, y: 40, properties: { voltage: 6 } },
+      { type: "resistor", name: "Resistor", icon: "〓", x: 220, y: 40, properties: { resistance: 100 } },
+      { type: "ammeter", name: "Ammeter", icon: "A", x: 40, y: 160, properties: {} },
+    ],
+    quiz: [
+      { question: "6 V across 100 Ω produces what current?", options: ["0.06 A", "6 A", "100 A", "600 A"], correctIndex: 0, explanation: "I = V/R = 6/100 = 0.06 A." },
+      { question: "Doubling voltage at constant resistance makes current…", options: ["Halve", "Double", "Stay the same", "Zero"], correctIndex: 1, explanation: "Current is directly proportional to voltage." },
+      { question: "An ammeter is connected…", options: ["In parallel", "Across the supply only", "In series", "Without leads"], correctIndex: 2, explanation: "An ammeter measures the current passing through it in series." },
+      { question: "Doubling resistance at constant voltage makes current…", options: ["Double", "Halve", "Quadruple", "Stay constant"], correctIndex: 1, explanation: "I = V/R, so doubling R halves I." },
+    ],
+  },
+  {
+    id: "hookes-law", title: "Hooke’s Law", icon: "〰️", subject: "Physics",
+    summary: "Load a spring and measure its extension.",
+    objective: "Verify F = kx within the elastic limit using a 50 N/m spring.",
+    apparatus: ["Retort stand", "Spring", "Mass hanger", "Slotted masses", "Metre ruler"],
+    procedure: ["Attach the unloaded spring to the stand and note its length.", "Set the spring constant to 50 N/m.", "Add a 100 g mass and let the oscillation settle.", "Record the extension, then repeat with 200 g, 300 g and 400 g.", "Calculate F = mg and divide by extension to check the spring constant."],
+    bench: [
+      { type: "spring", name: "Spring", icon: "〰️", x: 60, y: 40, properties: { k: 50, mass: 0.1, displacement: 0.02 } },
+      { type: "ruler", name: "Ruler", icon: "📏", x: 240, y: 40, properties: { unit: "cm" } },
+    ],
+    quiz: [
+      { question: "A force of 1 N extends a 50 N/m spring by…", options: ["50 m", "0.02 m", "2 m", "0.5 m"], correctIndex: 1, explanation: "x = F/k = 1/50 = 0.02 m." },
+      { question: "Doubling load within the elastic limit makes extension…", options: ["Double", "Halve", "Stay unchanged", "Zero"], correctIndex: 0, explanation: "F and x are proportional in Hooke’s law." },
+      { question: "The unit of spring constant is…", options: ["kg", "m/s", "N/m", "J/s"], correctIndex: 2, explanation: "k is force divided by extension, measured in N/m." },
+      { question: "Beyond the elastic limit a spring may…", options: ["Lose all mass", "Deform permanently", "Become weightless", "Always obey F = kx"], correctIndex: 1, explanation: "Beyond the elastic limit it may not return to its original length." },
+    ],
+  },
+  {
+    id: "diffusion", title: "Diffusion in Water", icon: "💧", subject: "Chemistry",
+    summary: "Compare how dye spreads through cold and warm water.",
+    objective: "Observe concentration equalising as particles move, and investigate temperature’s effect on diffusion.",
+    apparatus: ["Beaker of water", "Dye", "Thermometer", "Stopwatch"],
+    procedure: ["Set the water temperature to 20 °C.", "Reset the beaker to place dye at its centre.", "Start diffusion and observe the spread without stirring.", "Repeat at 60 °C with the same amount of dye.", "Compare the spread after equal times and explain the effect of temperature."],
+    bench: [
+      { type: "beaker", name: "Water and dye", icon: "🧪", x: 60, y: 80, properties: { volume: 250, content: "water" } },
+      { type: "thermometer", name: "Thermometer", icon: "🌡️", x: 240, y: 40, properties: { unit: "C" } },
+      { type: "stopwatch", name: "Stopwatch", icon: "⏱️", x: 240, y: 160, properties: {} },
+    ],
+    quiz: [
+      { question: "Net diffusion moves particles from…", options: ["Low to high concentration", "High to low concentration", "Cold to hot only", "Bottom to top only"], correctIndex: 1, explanation: "Random motion produces net movement down the concentration gradient." },
+      { question: "Warmer water generally makes diffusion…", options: ["Faster", "Slower", "Stop", "Reverse"], correctIndex: 0, explanation: "Higher temperature increases particle motion." },
+      { question: "After concentration becomes uniform, particles…", options: ["Stop moving", "Disappear", "Keep moving randomly", "All sink"], correctIndex: 2, explanation: "Dynamic equilibrium has random motion but no net concentration change." },
+      { question: "Which should stay the same when testing temperature?", options: ["The amount of dye", "Nothing", "The temperature", "The final colour only"], correctIndex: 0, explanation: "Keep dye amount and water volume constant for a fair comparison." },
+    ],
+  },
   {
     id: "titration",
     title: "Acid–Base Titration",

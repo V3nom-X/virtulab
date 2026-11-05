@@ -23,6 +23,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { labExperiments } from "@/data/labExperiments";
 import { queueLabSync } from "@/lib/labSync";
+import { supabase } from "@/integrations/supabase/client";
+import { onOutboxChange } from "@/lib/offlineOutbox";
 
 const STORAGE_KEY = "virtulab-lab-setup-v1";
 
@@ -56,6 +58,25 @@ const Lab = () => {
   const [selected, setSelected] = useState<CanvasComponent | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [restored, setRestored] = useState(false);
+  const [pending, setPending] = useState(0);
+  const [online, setOnline] = useState(navigator.onLine);
+  const [cloudSeconds, setCloudSeconds] = useState<number | null>(null);
+
+  useEffect(() => onOutboxChange(setPending), []);
+  useEffect(() => {
+    const change = () => setOnline(navigator.onLine);
+    window.addEventListener("online", change);
+    window.addEventListener("offline", change);
+    return () => { window.removeEventListener("online", change); window.removeEventListener("offline", change); };
+  }, []);
+  useEffect(() => {
+    if (!user || !online || pending) return;
+    let cancelled = false;
+    supabase.from("lab_setups").select("bench_seconds").eq("user_id", user.id).eq("client_key", "default-bench").maybeSingle().then(({ data }) => {
+      if (!cancelled && data) setCloudSeconds(data.bench_seconds);
+    });
+    return () => { cancelled = true; };
+  }, [user, pending, online]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -107,13 +128,17 @@ const Lab = () => {
       benchSecondsRef.current = 0;
       void queueLabSync({ benchSeconds: s });
     };
-    const every = window.setInterval(flush, 60_000);
+    const every = window.setInterval(flush, 10_000);
     document.addEventListener("visibilitychange", flush);
+    window.addEventListener("online", flush);
+    window.addEventListener("pagehide", flush);
     return () => {
       flush();
       window.clearInterval(tick);
       window.clearInterval(every);
       document.removeEventListener("visibilitychange", flush);
+      window.removeEventListener("online", flush);
+      window.removeEventListener("pagehide", flush);
     };
   }, [user]);
 
@@ -220,6 +245,10 @@ const Lab = () => {
 
         <header className="px-4 pt-6 pb-3 max-w-4xl">
           <h1 className="text-2xl sm:text-3xl font-bold">Lab module</h1>
+          <p role="status" aria-live="polite" className="text-sm text-muted-foreground mt-2">
+            {!user ? "Saved on this device" : !online ? "Offline · saved on this device" : pending ? "Syncing lab work…" : "Saved to your account"}
+            {user && cloudSeconds !== null && <span> · Cloud bench time: {cloudSeconds} s</span>}
+          </p>
           <p className="text-sm text-muted-foreground mt-1">
             Drag apparatus onto the bench, set the conditions, then run it to watch it behave. Your
             bench is kept on this device, so it is still here without a connection.

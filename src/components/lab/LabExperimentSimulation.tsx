@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { OhmsLawLab, HookesLawLab, DiffusionLab } from "./AdditionalLabSimulations";
+import { useDeviceTier } from "@/hooks/useDeviceTier";
 
 /** pH of 25 mL 0.10 M HCl after adding v mL of 0.10 M NaOH. */
 export function titrationPH(v: number): number {
@@ -19,6 +21,7 @@ export function pendulumPeriod(lengthM: number, g = 9.8) {
 
 function useCanvas(draw: (ctx: CanvasRenderingContext2D, w: number, h: number, t: number) => void, deps: unknown[]) {
   const ref = useRef<HTMLCanvasElement>(null);
+  const { budget, degraded } = useDeviceTier();
   useEffect(() => {
     const c = ref.current;
     if (!c) return;
@@ -27,20 +30,23 @@ function useCanvas(draw: (ctx: CanvasRenderingContext2D, w: number, h: number, t
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let raf = 0;
     const start = performance.now();
+    let last = -Infinity;
     const frame = (now: number) => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      if (now - last < 1000 / budget.targetFps) { raf = requestAnimationFrame(frame); return; }
+      last = now;
+      const dpr = Math.min(window.devicePixelRatio || 1, budget.pixelRatio);
       const w = c.clientWidth;
       const h = c.clientHeight;
       if (c.width !== w * dpr) { c.width = w * dpr; c.height = h * dpr; }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
       draw(ctx, w, h, reduce ? 0 : (now - start) / 1000);
-      if (!reduce) raf = requestAnimationFrame(frame);
+      if (!reduce && !degraded) raf = requestAnimationFrame(frame);
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps);
+  }, [...deps, budget.pixelRatio, budget.targetFps, degraded]);
   return ref;
 }
 
@@ -154,6 +160,9 @@ function Buoyancy() {
 }
 
 export function LabExperimentSimulation({ id }: { id: string }) {
+  if (id === "ohms-law") return <OhmsLawLab />;
+  if (id === "hookes-law") return <HookesLawLab />;
+  if (id === "diffusion") return <DiffusionLab />;
   if (id === "titration") return <Titration />;
   if (id === "pendulum") return <Pendulum />;
   return <Buoyancy />;

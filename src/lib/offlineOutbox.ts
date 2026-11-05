@@ -76,7 +76,15 @@ type NewEntry = OutboxEntry extends infer E
     : never
   : never;
 
+let mutation: Promise<unknown> = Promise.resolve();
+function mutate<T>(operation: () => Promise<T>): Promise<T> {
+  const next = mutation.then(operation, operation);
+  mutation = next.catch(() => {});
+  return next;
+}
+
 export async function enqueue(entry: NewEntry): Promise<void> {
+  return mutate(async () => {
   const queue = await readQueue();
   // Coalesce lab setup saves so autosave never floods the queue.
   if (entry.kind === "labSetup") {
@@ -90,16 +98,18 @@ export async function enqueue(entry: NewEntry): Promise<void> {
       prev.benchSeconds += entry.benchSeconds;
       prev.completedLabs = Array.from(new Set([...prev.completedLabs, ...entry.completedLabs]));
       prev.queuedAt = Date.now();
+      prev.id = crypto.randomUUID();
       await writeQueue(queue);
       return;
     }
   }
   queue.push({
     ...entry,
-    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    id: crypto.randomUUID(),
     queuedAt: Date.now(),
   } as OutboxEntry);
   await writeQueue(queue);
+  });
 }
 
 async function send(entry: OutboxEntry): Promise<boolean> {
@@ -179,18 +189,21 @@ export async function flushOutbox(): Promise<{ sent: number; remaining: number }
     }
 
     const queue = await readQueue();
-    const remaining: OutboxEntry[] = [];
     let sent = 0;
 
     for (const entry of queue) {
       // eslint-disable-next-line no-await-in-loop -- order matters for progress
       const ok = await send(entry);
-      if (ok) sent += 1;
-      else remaining.push(entry);
+      if (ok) {
+        sent += 1;
+        await mutate(async () => {
+          const current = await readQueue();
+          await writeQueue(current.filter((item) => item.id !== entry.id));
+        });
+      }
     }
 
-    await writeQueue(remaining);
-    return { sent, remaining: remaining.length };
+    return { sent, remaining: await pendingCount() };
   } finally {
     flushing = false;
   }
@@ -204,10 +217,20 @@ export function initOutboxSync(): () => void {
     void flushOutbox();
   };
   window.addEventListener("online", onOnline);
-  document.addEventListener("visibilitychange", () => {
+  const onVisible = () => {
     if (document.visibilityState === "visible" && navigator.onLine) void flushOutbox();
+  };
+  document.addEventListener("visibilitychange", onVisible);
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    if (session && event === "SIGNED_IN") window.setTimeout(onOnline, 0);
   });
+  const retry = window.setInterval(onOnline, 15_000);
   if (navigator.onLine) void flushOutbox();
 
-  return () => window.removeEventListener("online", onOnline);
+  return () => {
+    window.removeEventListener("online", onOnline);
+    document.removeEventListener("visibilitychange", onVisible);
+    window.clearInterval(retry);
+    subscription.unsubscribe();
+  };
 }

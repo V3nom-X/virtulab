@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
 const WIDTHS = [320, 375, 414, 768];
-const LABS = ["titration", "pendulum", "buoyancy"];
+const LABS = ["titration", "pendulum", "buoyancy", "ohms-law", "hookes-law", "diffusion"];
 
 for (const width of WIDTHS) {
   test.describe(`${width}px`, () => {
@@ -15,7 +15,7 @@ for (const width of WIDTHS) {
       await page.goto("/lab");
       const guided = page.getByRole("navigation", { name: "Guided labs" });
       await expect(guided).toBeVisible({ timeout: 15_000 });
-      await expect(guided.getByRole("link")).toHaveCount(3);
+      await expect(guided.getByRole("link")).toHaveCount(6);
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
       expect(overflow).toBeLessThanOrEqual(1);
       const axe = await new AxeBuilder({ page })
@@ -30,7 +30,19 @@ for (const width of WIDTHS) {
         await page.goto(`/lab/${id}`);
         await expect(page.getByRole("heading", { level: 1 })).toBeVisible({ timeout: 15_000 });
         const { labExperiments } = await import("../../src/data/labExperiments");
-        const exp = labExperiments.find((l) => l.id === id)!;
+        const exp = labExperiments.find((l) => l.id === id);
+        if (!exp) throw new Error(`Missing lab ${id}`);
+        await page.getByRole("checkbox").first().focus();
+        await page.keyboard.press("Space");
+        await expect(page.getByRole("checkbox").first()).toBeChecked();
+        const slider = page.getByRole("slider").first();
+        await slider.focus();
+        const before = await slider.getAttribute("aria-valuenow");
+        await page.keyboard.press("ArrowRight");
+        await expect(slider).not.toHaveAttribute("aria-valuenow", before ?? "");
+        expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(1);
+        const axe = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).disableRules(["color-contrast"]).analyze();
+        expect(axe.violations.filter((v) => v.impact === "critical")).toEqual([]);
         for (const [qi, q] of exp.quiz.entries()) {
           await page.locator(`[id="q${qi}o${q.correctIndex}"]`).click();
         }
